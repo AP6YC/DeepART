@@ -1,3 +1,7 @@
+# Generated file ignores
+*.h5
+*.jpg
+
 # IDE ignores
 .vscode
 
