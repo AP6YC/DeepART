@@ -1,6 +1,12 @@
+name = "DeepART"
+uuid = "2f2b42e1-d110-40e3-96de-4cff2a12a718"
+authors = ["Sasha Petrenko <sap625@umsystem.edu>"]
+version = "0.1.0"
+
 [deps]
 AdaptiveResonance = "3d72adc0-63d3-4141-bf9b-84450dd0395b"
 DelimitedFiles = "8bb1440f-4735-579b-a4ab-409b98df4dab"
+DocStringExtensions = "ffbed154-4ef7-542d-bbb7-c09d3a79fcae"
 DrWatson = "634d3b9d-ee7a-5ddf-bec9-22491ea816e1"
 HDF5 = "f67ccb44-e63f-5c2f-98bd-6dc0ccc4ba2f"
 MLDataUtils = "cc2ba9b6-d476-5e6d-8eaf-a92d5412d41d"
