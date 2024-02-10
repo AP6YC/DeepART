@@ -31,6 +31,7 @@ module DeepART
 using
     AdaptiveResonance,
     DocStringExtensions,
-    DrWatson
+    DrWatson,
+    Flux
 
 end
