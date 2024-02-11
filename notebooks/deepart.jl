@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.37
+# v0.19.38
 
 using Markdown
 using InteractiveUtils
@@ -19,14 +19,14 @@ begin
 	cd(joinpath(@__DIR__, ".."))
 	using Pkg
 	Pkg.activate(".")
-	@info "Local CART project activated"
+	@info "Local DeepART project activated"
 end
 
 # ╔═╡ 6b2ec3f0-a4ef-11ee-198f-e7efe4d5ed49
 begin
 	using Revise
 	using PlutoUI
-	using CART
+	using DeepART
 	using DataStructures
 
 	@info "Dependencies loaded"
@@ -34,7 +34,7 @@ end
 
 # ╔═╡ 90927cb7-6d97-46a1-8e3b-37a3cce394b1
 md"""
-# CART Project Drafting Notebook
+# DeepART Project Drafting Notebook
 """
 
 # ╔═╡ 9e191ddb-6915-4d90-b214-340702bd3acd
@@ -58,13 +58,13 @@ config_dict = OrderedDict(
 )
 
 # ╔═╡ b2ff33a2-f746-4228-8787-d0f52d4d9528
-@bind config confirm(CART.config_input(config_dict))
+@bind config confirm(DeepART.config_input(config_dict))
 
 # ╔═╡ 6a536ecd-b256-4fc1-ae38-d0bf5a1dd6bd
-# CART.inspect_truth_errors(data.test, y_hat, selected, n_show)
+# DeepART.inspect_truth_errors(data.test, y_hat, selected, n_show)
 
 # ╔═╡ 084cb7df-5c4d-432f-baa5-7db92cceefd6
-# CART.inspect_prediction_errors(data.test, y_hat, selected, n_show)
+# DeepART.inspect_prediction_errors(data.test, y_hat, selected, n_show)
 
 # ╔═╡ c8b4db44-dcce-48c7-a327-8ffcc528b574
 md"""
@@ -72,10 +72,13 @@ md"""
 """
 
 # ╔═╡ b7a0014f-5155-4350-9e1d-b3f77e2d256e
-data = CART.get_mnist()
+data = DeepART.get_mnist()
 
 # ╔═╡ aee8d6c2-4c69-4b7a-a458-5a91f8f44536
-# CART.view_filts(convart.model)
+# DeepART.view_filts(convart.model)
+
+# ╔═╡ feef3708-184f-413c-a801-d02f2fa2f5fd
+DeepART.tryit()
 
 # ╔═╡ e376f339-ea0e-452f-8a86-ac2cb43f6a37
 md"### 1: Cats and Dogs"
@@ -134,6 +137,7 @@ hint(md"Don't forget to bring a towel")
 # ╟─c8b4db44-dcce-48c7-a327-8ffcc528b574
 # ╠═b7a0014f-5155-4350-9e1d-b3f77e2d256e
 # ╠═aee8d6c2-4c69-4b7a-a458-5a91f8f44536
+# ╠═feef3708-184f-413c-a801-d02f2fa2f5fd
 # ╟─e376f339-ea0e-452f-8a86-ac2cb43f6a37
 # ╟─c5d75792-2d7c-4c6b-abea-c1ec48c73a95
 # ╟─6234a9b7-a17a-412b-996f-7a70c4d3274c
