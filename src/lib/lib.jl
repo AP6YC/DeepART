@@ -1,0 +1,40 @@
+"""
+    lib.jl
+
+# Description
+This file aggregates the library code from other files for the `DeepART` project.
+
+# Authors
+- Sasha Petrenko <petrenkos@mst.edu> @AP6YC
+"""
+
+# -----------------------------------------------------------------------------
+# INCLUDES
+# -----------------------------------------------------------------------------
+
+# Color definitions
+include("colors.jl")
+
+# Constant values
+include("constants.jl")
+
+# Docstring variables and templates
+include("docstrings.jl")
+
+# Datasets and their utilities
+include("data.jl")
+
+# DrWatson added functionality
+include("drwatson.jl")
+
+# Machine learning models and functions
+include("models.jl")
+
+# Utilities
+include("utils.jl")
+
+# Plotting functions
+include("plots.jl")
+
+# Pluto utils
+include("pluto.jl")
