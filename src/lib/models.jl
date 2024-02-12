@@ -78,7 +78,7 @@ function get_model()
 # function get_model(config::NamedTuple)
     size_tuple = (28, 28, 1, 1)
 
-	n_kernels = 5
+	n_kernels = 4
 	conv_width = 4
 	pad_width = 2
 	pool_width = 2
@@ -92,15 +92,16 @@ function get_model()
             # 1 => total_n_kernels,
 			1 => n_kernels,
 			sigmoid;
-			init=Flux.glorot_normal,
+			# init=Flux.glorot_normal,
 			# init = ones_function,
-			# init = Flux.orthogonal,
+			init = Flux.orthogonal,
 			# pad=(2,2),
             # pad=(config.pad_width, config.pad_width),
 			pad=(pad_width, pad_width),
 		),
 		# MaxPool((config.pool_width, config.pool_width)),
 		MaxPool((pool_width, pool_width)),
+		Flux.flatten,
 	    # softmax
 	)
 
@@ -126,8 +127,9 @@ function SimpleDeepART()
 
 	opts = opts_FuzzyART()
 	art = FuzzyART(opts)
-	model_dim = Flux.output_size(model, size_tuple)
-	art.config = DataConfig(0, 1, model_dim)
+	model_dim = Flux.outputsize(model, size_tuple)
+	# @info model_dim
+	art.config = DataConfig(0, 1, model_dim[1])
 
 	return SimpleDeepART(
 		model,
@@ -144,7 +146,10 @@ function tryit()
 	dim = 28
 	local_data = reshape(data.train.x[:, :, 1], dim, dim, 1, :)
 
-	return get_features(a, local_data)
+	features = get_features(a, local_data)
+
+	train!(a.art, features)
+	return a
 end
 
 
