@@ -82,6 +82,7 @@ function get_model()
 	conv_width = 4
 	pad_width = 2
 	pool_width = 2
+
     # total_n_kernels = config.n_kernels * config.n_scales
 	model = @autosize (size_tuple,) Chain(
 	    Conv(
@@ -103,17 +104,34 @@ function get_model()
 	    # softmax
 	)
 
+	# model = Chain(
+	# 	Conv((5,5),1 => 6, relu),
+	# 	MaxPool((2,2)),
+	# 	Conv((5,5),6 => 16, relu),
+	# 	MaxPool((2,2)),
+	# 	Flux.flatten,
+	# 	Dense(256=>120,relu),
+	# 	Dense(120=>84, relu),
+	# 	Dense(84=>10, sigmoid),
+	# 	softmax
+	# )
+
 	return model
 end
 
 function SimpleDeepART()
-	# size_tuple = (28, 28, 1, 1)
+	size_tuple = (28, 28, 1, 1)
 	# total_n_kernels = config.n_kernels
 	model = get_model()
 
+	opts = opts_FuzzyART()
+	art = FuzzyART(opts)
+	model_dim = Flux.output_size(model, size_tuple)
+	art.config = DataConfig(0, 1, model_dim)
+
 	return SimpleDeepART(
 		model,
-		FuzzyART(),
+		art,
 	)
 end
 
