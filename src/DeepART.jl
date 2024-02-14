@@ -53,6 +53,11 @@ import PrecompileSignatures: @precompile_signatures
 # VARIABLES
 # -----------------------------------------------------------------------------
 
+"""
+Internal alias for the AdaptiveResonance.jl package.
+"""
+const ART = AdaptiveResonance
+
 # Authorize downloads to prevent interactive download blocking
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 

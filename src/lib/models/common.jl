@@ -1,9 +1,10 @@
 """
-    models.jl
+    common.jl
 
 # Description
-Machine learning models and their functions for training and testing.
+Common model code for the DeepART project.
 """
+
 
 """
 Common docstring; the configuration tuple.
@@ -27,32 +28,32 @@ struct SimpleDeepART{T <: Flux.Chain}
 	art::FuzzyART
 end
 
-function init_node()
-	# size_tuple = (28, 28, 1, 1)
-	size_tuple = (28, 28, 1, 1)
-	conv_width = 4
-	pad_width = 2
-	pool_width = 2
-	n_kernels = 1
-	model = @autosize (size_tuple,) Chain(
-	    Conv(
-			(conv_width, conv_width),
-            1 => n_kernels,
-			sigmoid;
-			# init=Flux.glorot_normal,
-			# init = ones_function,
-			init = Flux.orthogonal,
-            pad=(pad_width, pad_width),
-		),
-		MaxPool((pool_width, pool_width)),
-	)
+# function init_node()
+# 	# size_tuple = (28, 28, 1, 1)
+# 	size_tuple = (28, 28, 1, 1)
+# 	conv_width = 4
+# 	pad_width = 2
+# 	pool_width = 2
+# 	n_kernels = 1
+# 	model = @autosize (size_tuple,) Chain(
+# 	    Conv(
+# 			(conv_width, conv_width),
+#             1 => n_kernels,
+# 			sigmoid;
+# 			# init=Flux.glorot_normal,
+# 			# init = ones_function,
+# 			init = Flux.orthogonal,
+#             pad=(pad_width, pad_width),
+# 		),
+# 		MaxPool((pool_width, pool_width)),
+# 	)
 
-	return model
-end
+# 	return model
+# end
 
-function add_node!(model::SimpleDeepART)
-	push!(model.F2, init_node())
-end
+# function add_node!(model::SimpleDeepART)
+# 	push!(model.F2, init_node())
+# end
 
 # function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
 # 	return get_features(model, data.x[:, :, index])
@@ -88,18 +89,13 @@ function get_model()
 	    Conv(
 			# (config.conv_width, config.conv_width),
 			(conv_width, conv_width),
-			# 1=>config.n_kernels,
-            # 1 => total_n_kernels,
 			1 => n_kernels,
 			sigmoid;
 			# init=Flux.glorot_normal,
 			# init = ones_function,
 			init = Flux.orthogonal,
-			# pad=(2,2),
-            # pad=(config.pad_width, config.pad_width),
 			pad=(pad_width, pad_width),
 		),
-		# MaxPool((config.pool_width, config.pool_width)),
 		MaxPool((pool_width, pool_width)),
 		Flux.flatten,
 	    # softmax
@@ -120,6 +116,9 @@ function get_model()
 	return model
 end
 
+"""
+Empty constructor for a SimpleDeepART.
+"""
 function SimpleDeepART()
 	size_tuple = (28, 28, 1, 1)
 	# total_n_kernels = config.n_kernels
@@ -137,20 +136,22 @@ function SimpleDeepART()
 	)
 end
 
+# """
+# TEMP: development function.
+# """
+# function tryit()
+# 	a = SimpleDeepART()
+# 	# add_node!(a)
+# 	data = get_mnist()
 
-function tryit()
-	a = SimpleDeepART()
-	# add_node!(a)
-	data = get_mnist()
+# 	dim = 28
+# 	local_data = reshape(data.train.x[:, :, 1], dim, dim, 1, :)
 
-	dim = 28
-	local_data = reshape(data.train.x[:, :, 1], dim, dim, 1, :)
+# 	features = get_features(a, local_data)
 
-	features = get_features(a, local_data)
-
-	train!(a.art, features)
-	return a
-end
+# 	train!(a.art, features)
+# 	return a
+# end
 
 
 # """

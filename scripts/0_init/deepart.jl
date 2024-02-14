@@ -25,7 +25,8 @@ for ix = 1:15
 
     features = vec(DeepART.get_features(a, local_data))
     # @info size(features)
-    bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
+    # bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
+    bmu = DeepART.train_deepART!(a.art, features, y=local_y)
     # bmu = AdaptiveResonance.train!(a.art, features)
     @info bmu
 end
