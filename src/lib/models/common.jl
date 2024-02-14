@@ -58,6 +58,9 @@ function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Inte
     # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
     dim = 28
     local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
+    # local_data = data.x[:, :, :, index]
+    # @info local_data
+    # @info size(local_data)
     features = vec(get_features(model, local_data))
     return features
 	# return get_features(model, data.x[:, :, index])
@@ -82,6 +85,7 @@ $ARG_CONFIG
 function get_model()
 # function get_model(config::NamedTuple)
     size_tuple = (28, 28, 1, 1)
+    # size_tuple = (28, 28, 1)
 
 	n_kernels = 4
 	conv_width = 4

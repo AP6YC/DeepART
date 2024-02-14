@@ -97,9 +97,14 @@ function get_mnist()
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
 
+    # dataset = tensorize_datasplit(dataset)
+
     return dataset
 end
 
+"""
+Turns the features of a dataset into a tensor.
+"""
 function tensorize_dataset(data::SupervisedDataset)
     dims = size(data.x)
     new_dataset = SupervisedDataset(
@@ -109,8 +114,10 @@ function tensorize_dataset(data::SupervisedDataset)
     return new_dataset
 end
 
+"""
+Tensorizes both the training and testing components of a [`DataSplit`](@ref).
+"""
 function tensorize_datasplit(data::DataSplit)
-    # for
     new_dataset = DataSplit(
         tensorize_dataset(data.train),
         tensorize_dataset(data.test),
