@@ -99,3 +99,21 @@ function get_mnist()
 
     return dataset
 end
+
+function tensorize_dataset(data::SupervisedDataset)
+    dims = size(data.x)
+    new_dataset = SupervisedDataset(
+        reshape(data.x, dims[1:end-1]..., 1, :),
+        data.y,
+    )
+    return new_dataset
+end
+
+function tensorize_datasplit(data::DataSplit)
+    # for
+    new_dataset = DataSplit(
+        tensorize_dataset(data.train),
+        tensorize_dataset(data.test),
+    )
+    return new_dataset
+end

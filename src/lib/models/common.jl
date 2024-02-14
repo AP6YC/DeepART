@@ -5,7 +5,6 @@
 Common model code for the DeepART project.
 """
 
-
 """
 Common docstring; the configuration tuple.
 """
@@ -55,9 +54,14 @@ end
 # 	push!(model.F2, init_node())
 # end
 
-# function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
-# 	return get_features(model, data.x[:, :, index])
-# end
+function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
+    # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
+    dim = 28
+    local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
+    features = vec(get_features(model, local_data))
+    return features
+	# return get_features(model, data.x[:, :, index])
+end
 
 function get_features(model::SimpleDeepART, x::RealArray)
 	return model.model(x)
