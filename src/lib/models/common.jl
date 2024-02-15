@@ -71,7 +71,8 @@ function get_features(model::SimpleDeepART, x::RealArray)
 end
 
 function get_weights(model::SimpleDeepART, index::Integer)
-	return Flux.params(model[:, :, 1, 1])
+	# return Flux.params(model[:, :, 1, 1])
+	return Flux.params(model.model)[index]
 end
 
 # Flux.params(model)[1][:, :, 1, m_ix] = new_filt

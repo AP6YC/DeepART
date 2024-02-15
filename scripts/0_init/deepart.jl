@@ -23,7 +23,6 @@ for ix = 1:15
     local_y = data.train.y[ix]
     # local_data = reshape(data.train.x[:, :, ix], dim, dim, 1, :)
     # features = vec(DeepART.get_features(a, local_data))
-    # @info size(features)
     features = DeepART.get_features(a, data.train, ix)
     # bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
     bmu = DeepART.train_deepART!(a.art, features, y=local_y)
@@ -31,7 +30,7 @@ for ix = 1:15
     @info bmu
 end
 
-a.art.n_categories
+@info "n categories: " a.art.n_categories
 
 # AdaptiveResonance.art_learn(a.art, features,)
 # n_kernels = 6
