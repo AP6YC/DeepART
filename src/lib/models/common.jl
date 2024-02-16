@@ -216,7 +216,37 @@ function SimpleDeepART(
 	)
 end
 
+function supervised_train!(
+	model::SimpleDeepART,
+	data::SupervisedDataset,
+	n_train::Integer=0,
+)
+	# Determine how much data to train on
+	n_samples = length(data.y)
+	if n_train > 0
+		local_n_train = min(n_train, n_samples)
+	else
+		local_n_train = n_samples
+	end
 
+	for ix = 1:n_train
+		# local_y = data.train.y[ix]
+		local_y = data.y[ix]
+		# features = vec(DeepART.get_features(a, local_data))
+		# features = DeepART.get_features(model, data.train, ix)
+		features = DeepART.get_features(model, data, ix)
+
+		# @info size(features)
+		# @info typeof(features)
+
+		# bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
+		bmu = DeepART.train_deepART!(model.art, features, y=local_y)
+		# bmu = AdaptiveResonance.train!(a.art, features)
+		# @info bmu
+	end
+
+	return
+end
 
 # model = Chain(
 # 	Conv((5,5),1 => 6, relu),

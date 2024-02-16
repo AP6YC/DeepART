@@ -7,8 +7,6 @@ This script is a development zone for common workflow elements of the `CART` pro
 
 using Revise
 using DeepART
-# using Flux
-# using AdaptiveResonance
 
 n_train = 10
 
@@ -16,23 +14,11 @@ n_train = 10
 # a = DeepART.tryit()
 # a = DeepART.SimpleDeepART((28, 28, 1, 1), true)
 a = DeepART.SimpleDeepART()
-data = DeepART.get_mnist()
+mnist = DeepART.get_mnist()
 
 a.art.opts.rho = 0.4
 
-for ix = 1:n_train
-    local_y = data.train.y[ix]
-    # features = vec(DeepART.get_features(a, local_data))
-    features = DeepART.get_features(a, data.train, ix)
-
-    @info size(features)
-    @info typeof(features)
-
-    # bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
-    bmu = DeepART.train_deepART!(a.art, features, y=local_y)
-    # bmu = AdaptiveResonance.train!(a.art, features)
-    @info bmu
-end
+DeepART.supervised_train!(a, mnist.train, n_train)
 
 @info "n categories: " a.art.n_categories
 
@@ -44,18 +30,24 @@ all_data = DeepART.load_all_datasets()
 
 data = all_data["moon"]
 
-for ix = 1:n_train
-    local_y = data.train.y[ix]
-    features = DeepART.get_features(b, data.train, ix)
-
-    @info size(features)
-    @info typeof(features)
-
-    bmu = DeepART.train_deepART!(b.art, features, y=local_y)
-    @info bmu
-end
+DeepART.supervised_train!(b, data.train, n_train)
 
 @info "n categories: " b.art.n_categories
+
+
+# for ix = 1:n_train
+#     local_y = data.train.y[ix]
+#     # features = vec(DeepART.get_features(a, local_data))
+#     features = DeepART.get_features(a, data.train, ix)
+
+#     @info size(features)
+#     @info typeof(features)
+
+#     # bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
+#     bmu = DeepART.train_deepART!(a.art, features, y=local_y)
+#     # bmu = AdaptiveResonance.train!(a.art, features)
+#     @info bmu
+# end
 
 # AdaptiveResonance.art_learn(a.art, features,)
 # n_kernels = 6
