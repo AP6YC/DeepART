@@ -7,7 +7,6 @@
 TODO
 """
 
-
 """
 In place learning function.
 

@@ -13,17 +13,20 @@ using AdaptiveResonance
 # data = DeepART.get_mnist()
 
 # a = DeepART.tryit()
-a = DeepART.SimpleDeepART()
+a = DeepART.SimpleDeepART((28, 28, 1, 1), true)
+# a = DeepART.SimpleDeepART((10,), false)
 data = DeepART.get_mnist()
-dim = 28
 
 a.art.opts.rho = 0.4
 
 for ix = 1:15
     local_y = data.train.y[ix]
-    # local_data = reshape(data.train.x[:, :, ix], dim, dim, 1, :)
     # features = vec(DeepART.get_features(a, local_data))
     features = DeepART.get_features(a, data.train, ix)
+
+    @info size(features)
+    @info typeof(features)
+
     # bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
     bmu = DeepART.train_deepART!(a.art, features, y=local_y)
     # bmu = AdaptiveResonance.train!(a.art, features)

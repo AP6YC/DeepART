@@ -27,6 +27,132 @@ struct SimpleDeepART{T <: Flux.Chain}
 	art::FuzzyART
 end
 
+function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
+    # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
+    dim = 28
+    local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
+    # local_data = data.x[:, :, :, index]
+    # @info local_data
+    # @info size(local_data)
+    features = vec(get_features(model, local_data))
+    return features
+	# return get_features(model, data.x[:, :, index])
+end
+
+function get_features(model::SimpleDeepART, x::RealArray)
+	return model.model(x)
+end
+
+function get_weights(model::SimpleDeepART, index::Integer)
+	# return Flux.params(model[:, :, 1, 1])
+	return Flux.params(model.model)[index]
+end
+
+# Flux.params(model)[1][:, :, 1, m_ix] = new_filt
+
+"""
+The model input size tuple argument docstring.
+"""
+const ARG_SIZE_TUPLE = """
+- `size_tuple::Tuple{Int}`: a tuple of the model input dimensions.
+"""
+
+"""
+Type alias for the model input size tuple.
+"""
+const SizeTuple = Tuple
+
+"""
+Generates the feature extractor model for the ART network.
+
+# Arguments
+$ARG_SIZE_TUPLE
+"""
+function get_conv_model(
+	size_tuple::SizeTuple
+)
+	n_kernels = 4
+	conv_width = 4
+	pad_width = 2
+	pool_width = 2
+
+    # total_n_kernels = config.n_kernels * config.n_scales
+	model = @autosize (size_tuple,) Chain(
+	    Conv(
+			# (config.conv_width, config.conv_width),
+			(conv_width, conv_width),
+			1 => n_kernels,
+			sigmoid;
+			# init=Flux.glorot_normal,
+			# init = ones_function,
+			init = Flux.orthogonal,
+			pad=(pad_width, pad_width),
+		),
+		MaxPool((pool_width, pool_width)),
+		Flux.flatten,
+	    # softmax
+	)
+
+	return model
+end
+
+"""
+Constructs a dense model.
+
+# Arguments
+$ARG_SIZE_TUPLE
+"""
+function get_dense_model(
+	size_tuple::SizeTuple
+)
+	return Chain(
+		Dense(size_tuple[1]=>120, sigmoid),
+		Dense(120=>84, sigmoid),
+		Dense(84=>10, sigmoid),
+		# softmax
+	)
+end
+
+"""
+Empty constructor for a SimpleDeepART.
+
+# Arguments
+$ARG_SIZE_TUPLE
+- `conv::Bool`: flag for if the model is convolutional, default true.
+"""
+function SimpleDeepART(
+	size_tuple::SizeTuple = (28, 28, 1, 1),
+	conv::Bool = true,
+)
+	model = if conv
+		get_conv_model(size_tuple)
+	else
+		get_dense_model(size_tuple)
+	end
+
+	opts = opts_FuzzyART()
+	art = FuzzyART(opts)
+	model_dim = Flux.outputsize(model, size_tuple)
+	art.config = DataConfig(0, 1, model_dim[1])
+
+	return SimpleDeepART(
+		model,
+		art,
+	)
+end
+
+# model = Chain(
+# 	Conv((5,5),1 => 6, relu),
+# 	MaxPool((2,2)),
+# 	Conv((5,5),6 => 16, relu),
+# 	MaxPool((2,2)),
+# 	Flux.flatten,
+# 	Dense(256=>120,relu),
+# 	Dense(120=>84, relu),
+# 	Dense(84=>10, sigmoid),
+# 	softmax
+# )
+
 # function init_node()
 # 	# size_tuple = (28, 28, 1, 1)
 # 	size_tuple = (28, 28, 1, 1)
@@ -53,97 +179,6 @@ end
 # function add_node!(model::SimpleDeepART)
 # 	push!(model.F2, init_node())
 # end
-
-function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
-    # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
-    dim = 28
-    local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
-    # local_data = data.x[:, :, :, index]
-    # @info local_data
-    # @info size(local_data)
-    features = vec(get_features(model, local_data))
-    return features
-	# return get_features(model, data.x[:, :, index])
-end
-
-function get_features(model::SimpleDeepART, x::RealArray)
-	return model.model(x)
-end
-
-function get_weights(model::SimpleDeepART, index::Integer)
-	# return Flux.params(model[:, :, 1, 1])
-	return Flux.params(model.model)[index]
-end
-
-# Flux.params(model)[1][:, :, 1, m_ix] = new_filt
-
-"""
-Generates the feature extractor model for the ART network.
-
-# Arguments
-$ARG_CONFIG
-"""
-function get_model()
-# function get_model(config::NamedTuple)
-    size_tuple = (28, 28, 1, 1)
-    # size_tuple = (28, 28, 1)
-
-	n_kernels = 4
-	conv_width = 4
-	pad_width = 2
-	pool_width = 2
-
-    # total_n_kernels = config.n_kernels * config.n_scales
-	model = @autosize (size_tuple,) Chain(
-	    Conv(
-			# (config.conv_width, config.conv_width),
-			(conv_width, conv_width),
-			1 => n_kernels,
-			sigmoid;
-			# init=Flux.glorot_normal,
-			# init = ones_function,
-			init = Flux.orthogonal,
-			pad=(pad_width, pad_width),
-		),
-		MaxPool((pool_width, pool_width)),
-		Flux.flatten,
-	    # softmax
-	)
-
-	# model = Chain(
-	# 	Conv((5,5),1 => 6, relu),
-	# 	MaxPool((2,2)),
-	# 	Conv((5,5),6 => 16, relu),
-	# 	MaxPool((2,2)),
-	# 	Flux.flatten,
-	# 	Dense(256=>120,relu),
-	# 	Dense(120=>84, relu),
-	# 	Dense(84=>10, sigmoid),
-	# 	softmax
-	# )
-
-	return model
-end
-
-"""
-Empty constructor for a SimpleDeepART.
-"""
-function SimpleDeepART()
-	size_tuple = (28, 28, 1, 1)
-	# total_n_kernels = config.n_kernels
-	model = get_model()
-
-	opts = opts_FuzzyART()
-	art = FuzzyART(opts)
-	model_dim = Flux.outputsize(model, size_tuple)
-	# @info model_dim
-	art.config = DataConfig(0, 1, model_dim[1])
-
-	return SimpleDeepART(
-		model,
-		art,
-	)
-end
 
 # """
 # TEMP: development function.
