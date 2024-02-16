@@ -129,8 +129,15 @@ const ARG_SIM_OPTS = """
 """
 
 """
-$COMMON_DOC argument for [`DataSplit`](@ref)
+$COMMON_DOC argument for [`DataSplit`](@ref).
 """
 const ARG_DATASPLIT = """
 - `data::DataSplit`: a [`DataSplit`](@ref) container of a supervised train/test split.
+"""
+
+"""
+$COMMON_DOC argument for [`SupervisedDataset`](@ref).
+"""
+const ARG_SUPERVISEDDATASET = """
+- `data::SupervisedDataset`: a [`SupervisedDataset`](@ref) containing samples and their labels.
 """

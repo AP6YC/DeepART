@@ -18,10 +18,15 @@ In place learning function.
 function learn_deepART!(art::ART.AbstractFuzzyART, x::RealVector, index::Integer)
     # Compute the updated weight W
     new_vec = ART.art_learn(art, x, index)
+
+    # NEW: get the weight update difference
+    w_diff = new_vec - art.W[:, index]
+
     # Replace the weight in place
     ART.replace_mat_index!(art.W, new_vec, index)
-    # Return empty
-    return
+
+    # Return the weight diff
+    return w_diff
 end
 
 # Taken from AdaptiveResonance.jl
@@ -70,7 +75,7 @@ function train_deepART!(art::FuzzyART, x::RealVector ; y::Integer=0, preprocesse
 
             # Learn the sample
             # ART.learn!(art, sample, bmu)
-			learn_deepART!(art, sample, bmu)
+			w_diff = learn_deepART!(art, sample, bmu)
 
             # Increment the instance counting
             art.n_instance[bmu] += 1

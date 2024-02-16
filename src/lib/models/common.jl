@@ -216,6 +216,15 @@ function SimpleDeepART(
 	)
 end
 
+"""
+Runs the supervised training of a [`SimpleDeepART`](@ref) module.
+
+# Arguments
+$ARG_SIMPLEDEEPART
+$ARG_SUPERVISEDDATASET
+- `n_train::Integer`: the upper-bound of number of samples to train, default 0.
+If this is not manually set, all samples are trained upon.
+"""
 function supervised_train!(
 	model::SimpleDeepART,
 	data::SupervisedDataset,
@@ -223,13 +232,13 @@ function supervised_train!(
 )
 	# Determine how much data to train on
 	n_samples = length(data.y)
-	if n_train > 0
-		local_n_train = min(n_train, n_samples)
+	local_n_train = if n_train > 0
+		min(n_train, n_samples)
 	else
-		local_n_train = n_samples
+		n_samples
 	end
 
-	for ix = 1:n_train
+	for ix = 1:local_n_train
 		# local_y = data.train.y[ix]
 		local_y = data.y[ix]
 		# features = vec(DeepART.get_features(a, local_data))
@@ -246,6 +255,20 @@ function supervised_train!(
 	end
 
 	return
+end
+
+Flux.Optimisers.@def struct Instar <: Flux.Optimisers.AbstractRule
+	eta::Float = 0.01
+end
+
+function Flux.Optimisers.apply!(o::Instar, state, x, dx)
+	eta = convert(float(eltype(x)), o.eta)
+
+	return state, @lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
+end
+
+function Flux.Optimisers.init(o::Instar, x::AbstractArray)
+	return zero(x)
 end
 
 # model = Chain(
