@@ -77,6 +77,11 @@ makedocs(
     ),
     pages=[
         "Home" => "index.md",
+        "Internals" => [
+            "Index" => "man/full-index.md",
+            "Dev Index" => "man/dev-index.md",
+            "Contributing" => "man/contributing.md",
+        ],
     ],
     modules = [DeepART],
     repo = "https://github.com/AP6YC/DeepART/blob/{commit}{path}#L{line}",

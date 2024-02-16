@@ -10,18 +10,17 @@ using DeepART
 # using Flux
 # using AdaptiveResonance
 
+n_train = 10
+
 # data = DeepART.get_mnist()
-
 # a = DeepART.tryit()
-
 # a = DeepART.SimpleDeepART((28, 28, 1, 1), true)
 a = DeepART.SimpleDeepART()
-# a = DeepART.SimpleDeepART((10,), false)
 data = DeepART.get_mnist()
 
 a.art.opts.rho = 0.4
 
-for ix = 1:15
+for ix = 1:n_train
     local_y = data.train.y[ix]
     # features = vec(DeepART.get_features(a, local_data))
     features = DeepART.get_features(a, data.train, ix)
@@ -36,6 +35,9 @@ for ix = 1:15
 end
 
 @info "n categories: " a.art.n_categories
+
+b = DeepART.SimpleDeepART((10,), false)
+all_data = DeepART.load_all_datasets()
 
 # AdaptiveResonance.art_learn(a.art, features,)
 # n_kernels = 6

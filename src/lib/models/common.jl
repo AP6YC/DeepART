@@ -66,7 +66,7 @@ struct SimpleDeepART{T <: Flux.Chain}
 	art::FuzzyART
 
 	"""
-	The options and flags for the module.
+	The [`opts_SimpleDeepART`](@ref) options and flags for the module.
 	"""
 	opts::opts_SimpleDeepART
 end
@@ -76,23 +76,33 @@ Runs inference on the [`SimpleDeepART`](@ref) model's feature extractor.
 
 # Arguments
 $ARG_SIMPLEDEEPART
-- `data::SupervisedDataset`: the dataset with the features to run inference on.
+- `data::SupervisedDataset`: the [`SupervisedDataset`](@ref) dataset with the features to run inference on.
 - `index::Integer`: the sample index to extract features of.
 """
 function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
     # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
-    dim = 28
-    local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
-    # local_data = data.x[:, :, :, index]
-    # @info local_data
-    # @info size(local_data)
-    features = vec(get_features(model, local_data))
+	if model.opts.conv
+		dim = 28
+		local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
+		# local_data = data.x[:, :, :, index]
+		# @info local_data
+		# @info size(local_data)
+		features = vec(get_features(model, local_data))
+	else
+		local_data = data.x[:, index]
+		features = get_features(model, local_data)
+	end
+
     return features
 	# return get_features(model, data.x[:, :, index])
 end
 
 """
 Runs inference on the feature extractor of a [`SimpleDeepART`](@ref) model on a provided sample array.
+
+# Arguments
+$ARG_SIMPLEDEEPART
+- `x::RealArray`: the sample to process with the deep model.
 """
 function get_features(model::SimpleDeepART, x::RealArray)
 	return model.model(x)

@@ -16,7 +16,7 @@ const DPI = 600
 """
 Plotting linewidth.
 """
-const LINEWIDTH=4.0
+const LINEWIDTH = 4.0
 
 """
 Plotting colorscheme.
