@@ -33,6 +33,8 @@ using
     ColorSchemes,
     Colors,
     DataFrames,
+    DrWatson,
+    DelimitedFiles,
     DocStringExtensions,
     Flux,
     HypertextLiteral,

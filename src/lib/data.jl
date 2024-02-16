@@ -124,3 +124,49 @@ function tensorize_datasplit(data::DataSplit)
     )
     return new_dataset
 end
+
+
+
+"""
+Loads a dataset from a local file.
+
+# Arguments
+- `filename::AbstractString`: the location of the file to load with a default value.
+"""
+function load_dataset(
+    filename::AbstractString,
+)
+    # Load the data
+    data = readdlm(filename, ',', header=false)
+
+    return data
+end
+
+
+"""
+Loades the datasets from the data package experiment.
+
+# Arguments
+- `topdir::AbstractString`: default `data_dir("data-package")`, the directory containing the CSV data package files.
+"""
+function load_all_datasets(
+    topdir::AbstractString=data_dir("data-package"),
+)
+    # opts = Dict{String, Any}()
+    # opts["data"] = Dict{String, Any}()
+
+    data = Dict{String, Any}()
+
+    # Walk the directory
+    for (root, _, files) in walkdir(topdir)
+        # Iterate over all of the files
+        for file in files
+            # Get the full filename for the current data file
+            filename = joinpath(root, file)
+            data_name = splitext(file)[1]
+            data[data_name] = load_dataset(filename)
+        end
+    end
+
+    return data
+end

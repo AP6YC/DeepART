@@ -21,11 +21,11 @@ include("constants.jl")
 # Docstring variables and templates
 include("docstrings.jl")
 
-# Datasets and their utilities
-include("data.jl")
-
 # DrWatson added functionality
 include("drwatson.jl")
+
+# Datasets and their utilities
+include("data.jl")
 
 # Machine learning models and functions
 include("models/lib.jl")
