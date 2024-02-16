@@ -13,42 +13,11 @@ const ARG_CONFIG = """
 """
 
 """
-Container for a simple DeepART module
+[`SimpleDeepART`](@ref) argument docstring.
 """
-struct SimpleDeepART{T <: Flux.Chain}
-	"""
-    The `Flux.Chain` feature extractor model.
-    """
-    model::T
-
-	"""
-	The FuzzyART module.
-	"""
-	art::FuzzyART
-end
-
-function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
-    # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
-    dim = 28
-    local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
-    # local_data = data.x[:, :, :, index]
-    # @info local_data
-    # @info size(local_data)
-    features = vec(get_features(model, local_data))
-    return features
-	# return get_features(model, data.x[:, :, index])
-end
-
-function get_features(model::SimpleDeepART, x::RealArray)
-	return model.model(x)
-end
-
-function get_weights(model::SimpleDeepART, index::Integer)
-	# return Flux.params(model[:, :, 1, 1])
-	return Flux.params(model.model)[index]
-end
-
-# Flux.params(model)[1][:, :, 1, m_ix] = new_filt
+const ARG_SIMPLEDEEPART = """
+- `model::SimpleDeepART`: the [`SimpleDeepART`](@ref) model.
+"""
 
 """
 The model input size tuple argument docstring.
@@ -61,6 +30,86 @@ const ARG_SIZE_TUPLE = """
 Type alias for the model input size tuple.
 """
 const SizeTuple = Tuple
+
+"""
+Options for the construction and usage of a [`SimpleDeepART`](@ref) module.
+"""
+@with_kw struct opts_SimpleDeepART
+	"""
+	The model input size tuple.
+	"""
+	size_tuple::SizeTuple = (28, 28, 1, 1)
+
+	"""
+	Flag for if the model is convolutional.
+	"""
+	conv::Bool = true
+
+	"""
+	The FuzzyART module options.
+	"""
+	opts_fuzzyart::opts_FuzzyART = opts_FuzzyART()
+end
+
+"""
+Container for a simple DeepART module.
+"""
+struct SimpleDeepART{T <: Flux.Chain}
+	"""
+    The `Flux.Chain` feature extractor model.
+    """
+    model::T
+
+	"""
+	The FuzzyART module.
+	"""
+	art::FuzzyART
+
+	"""
+	The options and flags for the module.
+	"""
+	opts::opts_SimpleDeepART
+end
+
+"""
+Runs inference on the [`SimpleDeepART`](@ref) model's feature extractor.
+
+# Arguments
+$ARG_SIMPLEDEEPART
+- `data::SupervisedDataset`: the dataset with the features to run inference on.
+- `index::Integer`: the sample index to extract features of.
+"""
+function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
+    # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
+    dim = 28
+    local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
+    # local_data = data.x[:, :, :, index]
+    # @info local_data
+    # @info size(local_data)
+    features = vec(get_features(model, local_data))
+    return features
+	# return get_features(model, data.x[:, :, index])
+end
+
+"""
+Runs inference on the feature extractor of a [`SimpleDeepART`](@ref) model on a provided sample array.
+"""
+function get_features(model::SimpleDeepART, x::RealArray)
+	return model.model(x)
+end
+
+"""
+Returns the weights of a `model` at the layer `index`.
+
+# Arguments
+$ARG_SIMPLEDEEPART
+- `index::Integer`: the layer index to return weights for.
+"""
+function get_weights(model::SimpleDeepART, index::Integer)
+	# return Flux.params(model[:, :, 1, 1])
+	return Flux.params(model.model)[index]
+end
+# Flux.params(model)[1][:, :, 1, m_ix] = new_filt
 
 """
 Generates the feature extractor model for the ART network.
@@ -114,32 +163,50 @@ function get_dense_model(
 end
 
 """
-Empty constructor for a SimpleDeepART.
+Keyword argument constructor for a [`SimpleDeepART`](@ref) module passing the keyword arguments to the [`opts_SimpleDeepART`](@ref) for the module.
 
 # Arguments
-$ARG_SIZE_TUPLE
-- `conv::Bool`: flag for if the model is convolutional, default true.
+- `kwargs...`: the options keyword arguments.
+"""
+function SimpleDeepART(;kwargs...)
+    # Create the options from the keyword arguments
+    opts = opts_SimpleDeepART(;kwargs...)
+
+    # Instantiate and return a constructed module
+    return SimpleDeepART(
+		opts,
+	)
+end
+
+"""
+Main constructor for a [`SimpleDeepART`](@ref) module.
+
+# Arguments
+- `opts::opts_SimpleDeepART`: the [`opts_SimpleDeepART`] options driving the construction.
 """
 function SimpleDeepART(
-	size_tuple::SizeTuple = (28, 28, 1, 1),
-	conv::Bool = true,
+	opts::opts_SimpleDeepART
 )
-	model = if conv
-		get_conv_model(size_tuple)
+	# Create the deep model
+	model = if opts.conv
+		get_conv_model(opts.size_tuple)
 	else
-		get_dense_model(size_tuple)
+		get_dense_model(opts.size_tuple)
 	end
 
-	opts = opts_FuzzyART()
-	art = FuzzyART(opts)
-	model_dim = Flux.outputsize(model, size_tuple)
+	# opts_fuzzyart = opts_FuzzyART()
+	art = FuzzyART(opts.opts_fuzzyart)
+	model_dim = Flux.outputsize(model, opts.size_tuple)
 	art.config = DataConfig(0, 1, model_dim[1])
 
 	return SimpleDeepART(
 		model,
 		art,
+		opts,
 	)
 end
+
+
 
 # model = Chain(
 # 	Conv((5,5),1 => 6, relu),

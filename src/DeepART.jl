@@ -44,6 +44,7 @@ using
     MLUtils,
     MLBase,                 # confusmat
     NumericalTypeAliases,
+    Parameters,
     Plots,
     Pluto,
     PlutoUI

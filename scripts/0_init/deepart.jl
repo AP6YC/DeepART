@@ -8,12 +8,14 @@ This script is a development zone for common workflow elements of the `CART` pro
 using Revise
 using DeepART
 # using Flux
-using AdaptiveResonance
+# using AdaptiveResonance
 
 # data = DeepART.get_mnist()
 
 # a = DeepART.tryit()
-a = DeepART.SimpleDeepART((28, 28, 1, 1), true)
+
+# a = DeepART.SimpleDeepART((28, 28, 1, 1), true)
+a = DeepART.SimpleDeepART()
 # a = DeepART.SimpleDeepART((10,), false)
 data = DeepART.get_mnist()
 
