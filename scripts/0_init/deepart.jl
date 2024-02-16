@@ -36,8 +36,26 @@ end
 
 @info "n categories: " a.art.n_categories
 
-b = DeepART.SimpleDeepART((10,), false)
+b = DeepART.SimpleDeepART(
+    size_tuple=(2,),
+    conv=false,
+)
 all_data = DeepART.load_all_datasets()
+
+data = all_data["moon"]
+
+for ix = 1:n_train
+    local_y = data.train.y[ix]
+    features = DeepART.get_features(b, data.train, ix)
+
+    @info size(features)
+    @info typeof(features)
+
+    bmu = DeepART.train_deepART!(b.art, features, y=local_y)
+    @info bmu
+end
+
+@info "n categories: " b.art.n_categories
 
 # AdaptiveResonance.art_learn(a.art, features,)
 # n_kernels = 6

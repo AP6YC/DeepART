@@ -79,6 +79,50 @@ function DataSplit(
     )
 end
 
+"""
+Wrapper for shuffling features and their labels.
+
+# Arguments
+- `features`: the set of data features.
+- `labels`: the set of labels corresponding to the features.
+"""
+function shuffle_pairs(features, labels)
+    # Use the MLUtils function for shuffling
+    ls, ll = shuffleobs((features, labels))
+
+    # Return the pairs
+    return ls, ll
+end
+
+"""
+Constructor for a [`OAR.DataSplit`](@ref) taking a set of features and options for the split ratio and shuffle flag.
+"""
+function DataSplit(
+    features::RealArray,
+    labels::IntegerVector;
+    p::Float=DEFAULT_P,
+    shuffle::Bool=true,
+)
+    # Get the features and labels
+    ls, ll = if shuffle
+        # ls, ll = shuffleobs((features, labels))
+        shuffle_pairs(features, labels)
+    else
+        (features, labels)
+    end
+
+    # Create a train/test split
+    (X_train, y_train), (X_test, y_test) = splitobs((ls, ll); at=p)
+
+    # Create and return a single container for this train/test split
+    return DataSplit(
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+    )
+end
+
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
@@ -89,8 +133,6 @@ Loads the MNIST dataset using MLDatasets.
 function get_mnist()
     trainset = MLDatasets.MNIST(:train)
     testset = MLDatasets.MNIST(:test)
-
-    # d = MNIST
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
@@ -125,8 +167,6 @@ function tensorize_datasplit(data::DataSplit)
     return new_dataset
 end
 
-
-
 """
 Loads a dataset from a local file.
 
@@ -142,7 +182,6 @@ function load_dataset(
     return data
 end
 
-
 """
 Loades the datasets from the data package experiment.
 
@@ -151,13 +190,14 @@ Loades the datasets from the data package experiment.
 """
 function load_all_datasets(
     topdir::AbstractString=data_dir("data-package"),
+    shuffle::Bool=true,
+    p::Float=0.8,
 )
     # opts = Dict{String, Any}()
     # opts["data"] = Dict{String, Any}()
 
-    data = Dict{String, Any}()
-
     # Walk the directory
+    data = Dict{String, Any}()
     for (root, _, files) in walkdir(topdir)
         # Iterate over all of the files
         for file in files
@@ -168,5 +208,26 @@ function load_all_datasets(
         end
     end
 
-    return data
+    # Turn each dataset into a SupervisedDataset
+    data_splits = Dict{String, DataSplit}()
+    for (name, dataset) in data
+        n_features = size(dataset)[2] - 1
+
+        # Get the features and labels
+        features = dataset[:, 1:n_features]'
+        labels = Vector{Int}(dataset[:, end])
+
+        # @info name size(features) size(labels) typeof(labels)
+        # Create a DataSplit
+        ds = DataSplit(
+            features,
+            labels,
+            shuffle=shuffle,
+            p=p,
+        )
+        data_splits[name] = ds
+    end
+
+    # return data
+    return data_splits
 end

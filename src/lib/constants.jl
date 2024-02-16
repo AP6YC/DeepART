@@ -9,6 +9,21 @@ The constant values for the project.
 """
 
 """
+The default split ration for train/test datasets.
+"""
+const DEFAULT_P = 0.7
+
+"""
+The default number of processes to start in distributed experiments on Windows.
+"""
+const DEFAULT_N_PROCS_WINDOWS = 11
+
+"""
+The default number of processes to start in distributed experiments on Linux.
+"""
+const DEFAULT_N_PROCS_UNIX = 31
+
+"""
 The default plotting dots-per-inch for saving.
 """
 const DPI = 600
