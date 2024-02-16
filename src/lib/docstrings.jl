@@ -83,7 +83,14 @@ const ARG_CONFIG_DICT = """
 $COMMON_DOC argument for a split ratio `p`.
 """
 const ARG_P = """
-- `p::Float=0.8`: kwarg, the split ratio ∈ `(0, 1)`.
+- `p::Float`: kwarg, the split ratio ∈ `(0, 1)`, default $(DEFAULT_P).
+"""
+
+"""
+$COMMON_DOC argument for a training dataset shuffle flag.
+"""
+const ARG_SHUFFLE = """
+- `shuffle::Bool`: flag for shuffling the data, default $(DEFAULT_SHUFFLE).
 """
 
 """
@@ -119,4 +126,11 @@ $COMMON_DOC argument for additional simulation options.
 """
 const ARG_SIM_OPTS = """
 - `opts::AbstractDict`: additional options for the simulation.
+"""
+
+"""
+$COMMON_DOC argument for [`DataSplit`](@ref)
+"""
+const ARG_DATASPLIT = """
+- `data::DataSplit`: a [`DataSplit`](@ref) container of a supervised train/test split.
 """

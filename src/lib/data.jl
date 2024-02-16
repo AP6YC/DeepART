@@ -83,10 +83,10 @@ end
 Wrapper for shuffling features and their labels.
 
 # Arguments
-- `features`: the set of data features.
-- `labels`: the set of labels corresponding to the features.
+- `features::AbstractArray`: the set of data features.
+- `labels::AbstractArray`: the set of labels corresponding to the features.
 """
-function shuffle_pairs(features, labels)
+function shuffle_pairs(features::AbstractArray, labels::AbstractArray)
     # Use the MLUtils function for shuffling
     ls, ll = shuffleobs((features, labels))
 
@@ -95,13 +95,19 @@ function shuffle_pairs(features, labels)
 end
 
 """
-Constructor for a [`OAR.DataSplit`](@ref) taking a set of features and options for the split ratio and shuffle flag.
+Constructor for a [`DataSplit`](@ref) taking a set of features and options for the split ratio and shuffle flag.
+
+# Arguments
+- `features::RealArray`: the input features as an array of samples.
+- `labels::IntegerVector`: the supervised labels as a vector of integers.
+$ARG_P
+$ARG_SHUFFLE
 """
 function DataSplit(
     features::RealArray,
     labels::IntegerVector;
     p::Float=DEFAULT_P,
-    shuffle::Bool=true,
+    shuffle::Bool=DEFAULT_SHUFFLE,
 )
     # Get the features and labels
     ls, ll = if shuffle
@@ -146,6 +152,9 @@ end
 
 """
 Turns the features of a dataset into a tensor.
+
+# Arguments
+- `data::SupervisedDataset`: the
 """
 function tensorize_dataset(data::SupervisedDataset)
     dims = size(data.x)
@@ -158,6 +167,9 @@ end
 
 """
 Tensorizes both the training and testing components of a [`DataSplit`](@ref).
+
+# Arguments
+$ARG_DATASPLIT
 """
 function tensorize_datasplit(data::DataSplit)
     new_dataset = DataSplit(
@@ -187,15 +199,14 @@ Loades the datasets from the data package experiment.
 
 # Arguments
 - `topdir::AbstractString`: default `data_dir("data-package")`, the directory containing the CSV data package files.
+$ARG_SHUFFLE
+$ARG_P
 """
 function load_all_datasets(
     topdir::AbstractString=data_dir("data-package"),
     shuffle::Bool=true,
     p::Float=0.8,
 )
-    # opts = Dict{String, Any}()
-    # opts["data"] = Dict{String, Any}()
-
     # Walk the directory
     data = Dict{String, Any}()
     for (root, _, files) in walkdir(topdir)
@@ -211,22 +222,20 @@ function load_all_datasets(
     # Turn each dataset into a SupervisedDataset
     data_splits = Dict{String, DataSplit}()
     for (name, dataset) in data
+        # Assume that the last column is the labels, all others are features
         n_features = size(dataset)[2] - 1
 
-        # Get the features and labels
-        # features = dataset[:, 1:n_features]'
+        # Get the features and labels (Float32 precision for Flux dense networks)
         features = Matrix{Float32}(dataset[:, 1:n_features]')
         labels = Vector{Int}(dataset[:, end])
 
-        # @info name size(features) size(labels) typeof(labels)
         # Create a DataSplit
-        ds = DataSplit(
+        data_splits[name] = DataSplit(
             features,
             labels,
             shuffle=shuffle,
             p=p,
         )
-        data_splits[name] = ds
     end
 
     # return data

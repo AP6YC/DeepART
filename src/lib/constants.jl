@@ -11,7 +11,12 @@ The constant values for the project.
 """
 The default split ration for train/test datasets.
 """
-const DEFAULT_P = 0.7
+const DEFAULT_P = 0.8
+
+"""
+The default shuffle flag for setting up training datasets.
+"""
+const DEFAULT_SHUFFLE = true
 
 """
 The default number of processes to start in distributed experiments on Windows.
