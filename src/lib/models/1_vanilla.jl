@@ -44,7 +44,8 @@ function train_deepART!(art::FuzzyART, x::RealVector ; y::Integer=0, preprocesse
         # Initialize the module with the first sample and label
         ART.initialize!(art, sample, y=y_hat)
         # Return the selected label
-        return y_hat
+        w_diff = zero(art.W[:, 1])
+        return y_hat, w_diff
     end
 
     # If we have a new supervised category, create a new category
@@ -62,6 +63,8 @@ function train_deepART!(art::FuzzyART, x::RealVector ; y::Integer=0, preprocesse
     # Initialize mismatch as true
     mismatch_flag = true
 
+    w_diff = zero(art.W[:, 1])
+
     # Loop over all categories
     for j = 1:art.n_categories
         # Best matching unit
@@ -76,7 +79,7 @@ function train_deepART!(art::FuzzyART, x::RealVector ; y::Integer=0, preprocesse
             # Learn the sample
             # ART.learn!(art, sample, bmu)
 			w_diff = learn_deepART!(art, sample, bmu)
-
+            # @info size(w_diff)
             # Increment the instance counting
             art.n_instance[bmu] += 1
 
@@ -105,5 +108,5 @@ function train_deepART!(art::FuzzyART, x::RealVector ; y::Integer=0, preprocesse
     ART.log_art_stats!(art, bmu, mismatch_flag)
 
     # Return the training label
-    return y_hat
+    return y_hat, w_diff
 end

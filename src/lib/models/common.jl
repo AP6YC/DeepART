@@ -258,13 +258,13 @@ function supervised_train!(
 end
 
 Flux.Optimisers.@def struct Instar <: Flux.Optimisers.AbstractRule
-	eta::Float = 0.01
+	eta = 0.01
 end
 
 function Flux.Optimisers.apply!(o::Instar, state, x, dx)
 	eta = convert(float(eltype(x)), o.eta)
 
-	return state, @lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
+	return state, Flux.Optimisers.@lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
 end
 
 function Flux.Optimisers.init(o::Instar, x::AbstractArray)
