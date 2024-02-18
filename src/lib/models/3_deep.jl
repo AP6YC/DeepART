@@ -38,7 +38,7 @@ end
 """
 Container for a multihead [`DeeperART`](@ref) neural network field.
 """
-struct MultiHeadField{T <: Flux.Chain}
+struct MultiHeadField{T <: Flux.Chain, J <: Flux.Chain}
     """
     The single shared layers object.
     """
@@ -47,10 +47,28 @@ struct MultiHeadField{T <: Flux.Chain}
     """
     The heads of the network as a list of layers.
     """
-    heads::Vector{T}
+    heads::Vector{J}
+
+    """
+    Container of the [`opts_MultiHeadField`](@ref) that created this field.
+    """
+    opts::opts_MultiHeadField
 end
 
-# function get_
+
+"""
+Overload of the show function for [`MultiHeadField`](@ref).
+
+# Arguments
+- `io::IO`: the current IO stream.
+- `field::MultiHeadField`: the [`MultiHeadField`](@ref) to print/display.
+"""
+function Base.show(
+    io::IO,
+    field::MultiHeadField,
+)
+    print(io, "MultiHeadField(shared: $(field.opts.n_shared), heads: $(length(field.heads)) x $(field.opts.n_heads))")
+end
 
 """
 """
@@ -59,19 +77,18 @@ function get_dense(
 # function get_head(
     # opts::opts_MultiHeadField
 )
-    local_chain = Chain(
-        # [
-        (
-            Dense(
-                n_hidden[ix] => n_hidden[ix + 1],
-                sigmoid,
-            ) for ix in range(1, length(n_hidden) - 1)
-        )...
-                # ]
-		# Dense(size_tuple[1]=>120, sigmoid),
-		# Dense(84=>10, sigmoid),
-		# softmax
-	)
+    chain_list = [
+        Dense(
+            n_hidden[ix] => n_hidden[ix + 1],
+            sigmoid,
+        ) for ix in range(1, length(n_hidden) - 1)
+    ]
+
+    # Broadcast until the types are more stable
+    # https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain
+    local_chain = Chain(chain_list...)
+
+    # Return the chain
     return local_chain
 end
 
@@ -89,31 +106,25 @@ end
 #     return
 # end
 
+"""
+Constructor for a [`MultiHeadField`](@ref) taking a [`opts_MultiHeadField`](@ref) for construction options.
+"""
 function MultiHeadField(
     opts::opts_MultiHeadField
 )
-    # shared = Chain(
-	# 	Dense(size_tuple[1]=>120, sigmoid),
-	# 	Dense(120=>84, sigmoid),
-	# 	Dense(84=>10, sigmoid),
-	# 	# softmax
-	# )
-
+    # Create the shared network base
     shared = get_dense(opts.n_shared)
 
-    heads = []
-    # for ix = 1:5
-    for _ = 1:5
-        # add_head!()
-        push!(heads, get_dense(opts.n_heads))
-    end
+    # Create the heads
+    heads = [get_dense(opts.n_heads) for _ = 1:5]
 
+    # Construct and return the field
     return MultiHeadField(
         shared,
         heads,
+        opts,
     )
 end
-
 
 """
 Keyword argument constructor for a [`MultiHeadField`](@ref) module passing the keyword arguments to the [`opts_MultiHeadField`](@ref) for the module.
