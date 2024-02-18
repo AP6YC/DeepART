@@ -55,7 +55,6 @@ struct MultiHeadField{T <: Flux.Chain, J <: Flux.Chain}
     opts::opts_MultiHeadField
 end
 
-
 """
 Overload of the show function for [`MultiHeadField`](@ref).
 
