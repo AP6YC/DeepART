@@ -5,3 +5,5 @@ scikit-learn
 numpy
 pandas
 tensorflow-hub
+l2metrics
+l2logger
