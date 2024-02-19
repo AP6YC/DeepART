@@ -12,6 +12,21 @@ m = DeepART.MultiHeadField(
 # typeof(j)
 # j([1])
 
-@info m
+# @info m
 
 Flux.activations(m.shared, [1,2])
+
+# m = DeepART.MultiHeadField(
+#     n_shared = [],
+#     n_heads = [3, 10, 2],
+# )
+
+outs = DeepART.forward(m, [1,2])
+
+all_data = DeepART.load_all_datasets()
+data = all_data["moon"]
+
+for ix = 1:length(data.train.y)
+    outs = DeepART.forward(m, data.train.x[:, ix])
+    # @info outs
+end

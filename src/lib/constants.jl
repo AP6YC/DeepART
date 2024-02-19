@@ -9,6 +9,11 @@ The constant values for the project.
 """
 
 """
+Definition of the precision used for Flux computations; used for loading data and constructing objects depending on Flux elements.
+"""
+const FluxFloat = Float32
+
+"""
 The default split ration for train/test datasets.
 """
 const DEFAULT_P = 0.8

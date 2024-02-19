@@ -36,6 +36,13 @@ The options container for a [`MultiHeadField`](@ref) module.
 end
 
 """
+"""
+struct ChainContainer{T <: Flux.Chain}
+    chain::T
+    activations::Vector{Vector{FluxFloat}}
+end
+
+"""
 Container for a multihead [`DeeperART`](@ref) neural network field.
 """
 struct MultiHeadField{T <: Flux.Chain, J <: Flux.Chain}
@@ -73,8 +80,6 @@ end
 """
 function get_dense(
     n_hidden::DenseSpecifier
-# function get_head(
-    # opts::opts_MultiHeadField
 )
     chain_list = [
         Dense(
@@ -90,7 +95,6 @@ function get_dense(
     # Return the chain
     return local_chain
 end
-
 
 # """
 
@@ -141,6 +145,18 @@ function MultiHeadField(;kwargs...)
     )
 end
 
+"""
+
+# Arguments
+- `field::MultiHeadField`: the [`MultiHeadField`](@ref) object to compute activations for.
+"""
+function forward(field::MultiHeadField, input::RealArray)
+    outs_shared = field.shared(input)
+    outs_heads = [
+        field.heads[ix](outs_shared) for ix = 1:length(field.heads)
+    ]
+    return outs_heads
+end
 
 """
 Options container for a [`DeeperART`](@ref) module.
