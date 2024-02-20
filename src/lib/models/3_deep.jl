@@ -77,15 +77,19 @@ function Base.show(
 end
 
 """
+Creates a Flux.Chain of Flux.Dense layers according to the hidden layers [`DenseSpecifier`](@ref).
+
+# Arguments
+- `n_neurons::DenseSpecifier`: the [`DenseSpecifier`](@ref) that specifies the number of neurons per layer, including the input and output layers.
 """
 function get_dense(
-    n_hidden::DenseSpecifier
+    n_neurons::DenseSpecifier
 )
     chain_list = [
         Dense(
-            n_hidden[ix] => n_hidden[ix + 1],
+            n_neurons[ix] => n_neurons[ix + 1],
             sigmoid,
-        ) for ix in range(1, length(n_hidden) - 1)
+        ) for ix in range(1, length(n_neurons) - 1)
     ]
 
     # Broadcast until the types are more stable
@@ -111,6 +115,9 @@ end
 
 """
 Constructor for a [`MultiHeadField`](@ref) taking a [`opts_MultiHeadField`](@ref) for construction options.
+
+# Arguments
+- `opts::opts_MultiHeadField`: the [`opts_MultiHeadField`](@ref) that specifies the construction options.
 """
 function MultiHeadField(
     opts::opts_MultiHeadField
@@ -146,6 +153,7 @@ function MultiHeadField(;kwargs...)
 end
 
 """
+Computes the forward pass for a [`MultiHeadField`](@ref).
 
 # Arguments
 - `field::MultiHeadField`: the [`MultiHeadField`](@ref) object to compute activations for.
@@ -162,7 +170,10 @@ end
 Options container for a [`DeeperART`](@ref) module.
 """
 @with_kw struct opts_DeeperART
-    rho::Float = 0.6
+    """
+    The vigilance parameter of the [`DeeperART`](@ref) module, rho ∈ (0.0, 1.0].
+    """
+    rho::Float = 0.6; @assert rho > 0.0 && rho <= 1.0
 end
 
 """

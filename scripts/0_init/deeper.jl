@@ -1,5 +1,6 @@
 using Revise
 using DeepART
+
 using Flux
 # d = DeepART.DeeperART()
 
@@ -30,3 +31,5 @@ for ix = 1:length(data.train.y)
     outs = DeepART.forward(m, data.train.x[:, ix])
     # @info outs
 end
+
+DeepART.opts_DeeperART()
