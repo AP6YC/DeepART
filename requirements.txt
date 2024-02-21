@@ -4,6 +4,6 @@ matplotlib
 scikit-learn
 numpy
 pandas
-tensorflow-hub
+# tensorflow-hub
 l2metrics
 l2logger
