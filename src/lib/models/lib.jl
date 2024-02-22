@@ -9,6 +9,8 @@ Machine learning models and their functions for training and testing.
 # Common model code
 include("common.jl")
 
+include("0_wta_deep.jl")
+
 # Vanilla
 include("1_vanilla.jl")
 
