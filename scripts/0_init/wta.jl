@@ -10,13 +10,15 @@ using DeepART
 using Flux
 using CUDA
 using ProgressMeter
+using Parameters
+using NumericalTypeAliases
 
 # all_data = DeepART.load_all_datasets()
 # data = all_data["moon"]
 
 # n_classes = unique(data.train.y)
 
-# model = Chain(
+# small_model = Chain(
 #     Dense(2 => 3, tanh),   # activation function inside layer
 #     BatchNorm(3),
 #     Dense(3 => 2),
@@ -24,14 +26,17 @@ using ProgressMeter
 #     # softmax,
 # ) |> gpu
 
-# opt = Flux.setup(Flux.Momentum(), model)
+# opt = Flux.setup(Flux.Momentum(), small_model)
+# Momentum |> fieldnames
+# Flux.Optimisers.adjust!(opt, rho=0.1)
 
-Flux.Optimisers.@def struct EWC <: Flux.Optimisers.AbstractRule
-	# eta = 0.01
-    eta = 0.01      # learning rate
-    lambda = 0.1    # regularization strength
-    decay = 0.9     # decay rate
-    alpha = 0.1
+# Flux.Optimisers.@def struct EWC <: Flux.Optimisers.AbstractRule
+@with_kw mutable struct EWC <: Flux.Optimisers.AbstractRule
+    eta::Float = 0.01      # learning rate
+    lambda::Float = 0.1    # regularization strength
+    decay::Float = 0.9     # decay rate
+    alpha::Float = 0.1
+    enabled::Bool = true
 end
 
 mutable struct EWCState
@@ -42,30 +47,23 @@ end
 function Flux.Optimisers.apply!(o::EWC, state, x, dx)
     # Because the FIM is a function of the gradients, initialize it here
     if isnothing(state.FIM)
-        # new_state = dx .* dx
-        state.FIM = dx .* dx
+        # state.FIM = dx .* dx
+        state.FIM = dx .^ 2
     else
-        # new_state = (1 - o.alpha) .* state + o.alpha .* dx .* dx
-        state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
+        # state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
+        state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .^ 2
     end
 	# eta = convert(float(eltype(x)), o.eta)
     # Flux.params(model)[ix] .-= (lambda / 2) * (Flux.params(model)[ix] .- mu[ix]) .* local_FIM
-    # (o.lambda / 2) * (x .- state.old_params) .* local_FIM
     return state, (o.lambda / 2) * (x .- state.old_params) .* state.FIM
-	# return new_state, (o.lambda / 2) *
     # return state, Flux.Optimisers.@lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
 end
 
 function Flux.Optimisers.init(o::EWC, x::AbstractArray)
-    # State is the FIM
-    # new_FIM = [(1 - alpha) * FIM[ix] + alpha * (gradients[ix] .* gradients[ix]) for ix in eachindex(gradients)]
-    # new_FIM = [(1 - alpha) * FIM[ix] + alpha * (gradients[ix] .* gradients[ix]) for ix in eachindex(gradients)]
     return EWCState(nothing, x)
-    # return nothing
 end
 
 # optim = Flux.setup(Flux.Adam(0.01), model)  # will store optimiser momentum, etc.
-
 # Flux.train!(model, train_set, optim) do m, x, y
 #     loss(m(x), y)
 # end
@@ -80,20 +78,28 @@ model = Chain(
 
 optim = Flux.setup(EWC(), model)  # will store optimiser momentum, etc.
 
+Flux.Optimisers.adjust!(optim, enabled = false)
+Flux.Optimisers.adjust!(optim, enabled = true)
+
 loss(x, y) = Flux.crossentropy(x, y)
 
 mnist = DeepART.get_mnist()
-ix = 1
-x = reshape(mnist.train.x[:, :, ix], 784)
-y = mnist.train.y[ix]
-# gradient = Flux.gradient(() -> loss(x, y), Flux.params(model))
-grads = Flux.gradient(model) do m
-    result = m(x)
-    loss(result, y)
+
+n_train = 10
+for ix = 1:n_train
+    x = reshape(mnist.train.x[:, :, ix], 784)
+    y = mnist.train.y[ix]
+
+    grads = Flux.gradient(model) do m
+        result = m(x)
+        loss(result, y)
+    end
+
+    Flux.update!(optim, model, grads[1])
+    # Flux.Optimisers.adjust!(optim, enabled = false)
 end
 
-Flux.update!(optim, model, grads[1])
-
+# Optimisers.adjust!(opt, rho = 0.95)  # change ρ for the whole model
 # train_set = (x, y)
 # Flux.train!(model, train_set, optim) do m, x, y
 #     loss(m(x), y)
