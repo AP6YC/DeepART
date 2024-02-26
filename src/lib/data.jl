@@ -48,6 +48,46 @@ struct DataSplit
     test::SupervisedDataset
 end
 
+struct ClassIncrementalDataSplit
+    train::Vector{SupervisedDataset}
+    test::Vector{SupervisedDataset}
+end
+
+function class_incrementalize(data::SupervisedDataset)
+    # Initialize the new class incremental vector
+    new_data = Vector{SupervisedDataset}()
+    n_classes = length(unique(data.y))
+    n_dim = length(size(data.x))
+
+    # Iterate over all integer class labels
+    for ix = 1:n_classes
+        # Get all of the indices corresponding to the integer class label
+        class_indices = findall(x->x==ix, data.y)
+        # Fragile, but it works for now
+        local_features = if n_dim == 3
+            data.x[:, :, class_indices]
+        elseif n_dim == 2
+            data.x[:, class_indices]
+        end
+        # Create a new dataset from just these features and labels
+        local_dataset = SupervisedDataset(
+            local_features,
+            data.y[class_indices],
+        )
+        # Add the local dataset to the vector of datasets to return
+        push!(new_data, local_dataset)
+    end
+
+    return new_data
+end
+
+function ClassIncrementalDataSplit(datasplit::DataSplit)
+    return ClassIncrementalDataSplit(
+        class_incrementalize(datasplit.train),
+        class_incrementalize(datasplit.test),
+    )
+end
+
 # -----------------------------------------------------------------------------
 # CONSTRUCTORS
 # -----------------------------------------------------------------------------

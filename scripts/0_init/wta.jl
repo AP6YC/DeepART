@@ -10,11 +10,9 @@ using DeepART
 using Flux
 using CUDA
 using ProgressMeter
-using Parameters
-using NumericalTypeAliases
 
-# all_data = DeepART.load_all_datasets()
-# data = all_data["moon"]
+all_data = DeepART.load_all_datasets()
+data = all_data["moon"]
 
 # n_classes = unique(data.train.y)
 
@@ -30,39 +28,6 @@ using NumericalTypeAliases
 # Momentum |> fieldnames
 # Flux.Optimisers.adjust!(opt, rho=0.1)
 
-# Flux.Optimisers.@def struct EWC <: Flux.Optimisers.AbstractRule
-@with_kw mutable struct EWC <: Flux.Optimisers.AbstractRule
-    eta::Float = 0.01      # learning rate
-    lambda::Float = 0.1    # regularization strength
-    decay::Float = 0.9     # decay rate
-    alpha::Float = 0.1
-    enabled::Bool = true
-end
-
-mutable struct EWCState
-    FIM
-    old_params
-end
-
-function Flux.Optimisers.apply!(o::EWC, state, x, dx)
-    # Because the FIM is a function of the gradients, initialize it here
-    if isnothing(state.FIM)
-        # state.FIM = dx .* dx
-        state.FIM = dx .^ 2
-    else
-        # state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
-        state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .^ 2
-    end
-	# eta = convert(float(eltype(x)), o.eta)
-    # Flux.params(model)[ix] .-= (lambda / 2) * (Flux.params(model)[ix] .- mu[ix]) .* local_FIM
-    return state, (o.lambda / 2) * (x .- state.old_params) .* state.FIM
-    # return state, Flux.Optimisers.@lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
-end
-
-function Flux.Optimisers.init(o::EWC, x::AbstractArray)
-    return EWCState(nothing, x)
-end
-
 # optim = Flux.setup(Flux.Adam(0.01), model)  # will store optimiser momentum, etc.
 # Flux.train!(model, train_set, optim) do m, x, y
 #     loss(m(x), y)
@@ -75,8 +40,17 @@ model = Chain(
     Dense(64, 10),
     sigmoid,
 )
+# model |> gpu
 
-optim = Flux.setup(EWC(), model)  # will store optimiser momentum, etc.
+# optim = Flux.setup(DeepART.EWC(), model)  # will store optimiser momentum, etc.
+optim = Flux.setup(
+    Flux.Optimisers.OptimiserChain(
+        DeepART.EWC(),
+        Flux.Descent(),
+        # Flux.Optimisers.Adam(0.1)
+    ),
+    model,
+)
 
 Flux.Optimisers.adjust!(optim, enabled = false)
 Flux.Optimisers.adjust!(optim, enabled = true)
@@ -84,18 +58,84 @@ Flux.Optimisers.adjust!(optim, enabled = true)
 loss(x, y) = Flux.crossentropy(x, y)
 
 mnist = DeepART.get_mnist()
+cimnist = DeepART.ClassIncrementalDataSplit(mnist)
 
-n_train = 10
-for ix = 1:n_train
-    x = reshape(mnist.train.x[:, :, ix], 784)
-    y = mnist.train.y[ix]
+n_train = 1000
+# for ix = 1:n_train
+n_classes = 10
 
-    grads = Flux.gradient(model) do m
-        result = m(x)
-        loss(result, y)
+# @showprogress
+
+# Normal training loop
+for ix = 1:n_classes
+    # x = reshape(mnist.train.x[:, :, ix], 784)
+    # y = mnist.train.y[ix]
+
+    # n_samples = n_train
+    n_samples = length(cimnist.train[ix].y)
+    x = reshape(
+        cimnist.train[ix].x[:,:,1:n_samples],
+        784, n_samples
+    )
+    # x |> gpu
+
+    y_cold = cimnist.train[ix].y[1:n_samples]
+    y_hot = zeros(Int, n_classes, n_samples)
+    for jx = 1:n_samples
+        y_hot[y_cold[jx], jx] = 1
     end
 
-    Flux.update!(optim, model, grads[1])
+    dataloader = Flux.DataLoader((x, y_hot), batchsize=32)
+
+    Flux.Optimisers.adjust!(optim, enabled = true)
+
+    for (lx, ly) in dataloader
+        # y_hot |> gpu
+
+        val, grads = Flux.withgradient(model) do m
+            result = m(lx)
+            loss(result, ly)
+        end
+        @info "$ix: $val"
+
+        Flux.update!(optim, model, grads[1])
+    end
+    # Flux.Optimisers.adjust!(optim, enabled = false)
+end
+
+for ix = 1:n_classes
+    # x = reshape(mnist.train.x[:, :, ix], 784)
+    # y = mnist.train.y[ix]
+
+    # n_samples = n_train
+    n_samples = length(cimnist.train[ix].y)
+    x = reshape(
+        cimnist.train[ix].x[:,:,1:n_samples],
+        784, n_samples
+    )
+    # x |> gpu
+
+    y_cold = cimnist.train[ix].y[1:n_samples]
+    y_hot = zeros(Int, n_classes, n_samples)
+    for jx = 1:n_samples
+        y_hot[y_cold[jx], jx] = 1
+    end
+
+    dataloader = Flux.DataLoader((x, y_hot), batchsize=32)
+
+    Flux.Optimisers.adjust!(optim, enabled = true)
+
+    for (lx, ly) in dataloader
+        # y_hot |> gpu
+
+        val, grads = Flux.withgradient(model) do m
+            result = m(lx)
+            loss(result, ly)
+        end
+        @info "$ix: $val"
+
+        Flux.update!(optim, model, grads[1])
+    end
     # Flux.Optimisers.adjust!(optim, enabled = false)
 end
 
