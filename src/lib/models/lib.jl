@@ -9,14 +9,14 @@ Machine learning models and their functions for training and testing.
 # Common model code
 include("common.jl")
 
+# Custom 'optimisers'
+include("Optimisers/lib.jl")
+
 # Simple WTA network
-include("WTANet.jl")
+include("WTANet/lib.jl")
 
-# Vanilla
-include("FeatureART.jl")
-
-# EWC
-include("EWC.jl")
+# SimpleDeepART
+include("SimpleDeepART/lib.jl")
 
 # Fully deep
-include("DeepART.jl")
+include("DeepART/lib.jl")

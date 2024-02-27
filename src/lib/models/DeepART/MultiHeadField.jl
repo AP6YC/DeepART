@@ -1,16 +1,3 @@
-"""
-    deep.jl
-
-3. Both fields are deep.
-
-# Description
-TODO
-"""
-
-"""
-A specifier for the number of nodes per layer in a dense feedforward network.
-"""
-const DenseSpecifier = Vector{Int}
 
 """
 The default shared hidden layer as a list of a number of nodes per layer, including the inputs.
@@ -74,30 +61,6 @@ function Base.show(
     field::MultiHeadField,
 )
     print(io, "MultiHeadField(shared: $(field.opts.n_shared), heads: $(length(field.heads)) x $(field.opts.n_heads))")
-end
-
-"""
-Creates a Flux.Chain of Flux.Dense layers according to the hidden layers [`DenseSpecifier`](@ref).
-
-# Arguments
-- `n_neurons::DenseSpecifier`: the [`DenseSpecifier`](@ref) that specifies the number of neurons per layer, including the input and output layers.
-"""
-function get_dense(
-    n_neurons::DenseSpecifier
-)
-    chain_list = [
-        Dense(
-            n_neurons[ix] => n_neurons[ix + 1],
-            sigmoid,
-        ) for ix in range(1, length(n_neurons) - 1)
-    ]
-
-    # Broadcast until the types are more stable
-    # https://fluxml.ai/Flux.jl/stable/models/layers/#Flux.Chain
-    local_chain = Chain(chain_list...)
-
-    # Return the chain
-    return local_chain
 end
 
 # """
@@ -164,100 +127,4 @@ function forward(field::MultiHeadField, input::RealArray)
         field.heads[ix](outs_shared) for ix = 1:length(field.heads)
     ]
     return outs_heads
-end
-
-"""
-Options container for a [`DeeperART`](@ref) module.
-"""
-@with_kw struct opts_DeeperART
-    """
-    The vigilance parameter of the [`DeeperART`](@ref) module, rho ∈ (0.0, 1.0].
-    """
-    rho::Float = 0.6; @assert rho > 0.0 && rho <= 1.0
-
-    """
-    Simple dense specifier for the F1 layer.
-    """
-    F1_spec::DenseSpecifier = [2, 5, 3]
-
-    """
-    Simple dense specifier for the F2 layer.
-    """
-    F2_spec::DenseSpecifier = [3, 5, 3]
-end
-
-"""
-Stateful information of a DeeperART module.
-"""
-struct DeeperART{T <: Flux.Chain, U <: Flux.Chain}
-    """
-    Feature presentation layer.
-    """
-    F1::T
-
-    """
-    Feedback expectancy layer.
-    """
-    F2::U
-
-    """
-    An [`opts_DeeperART`](@ref) options container.
-    """
-    opts::opts_DeeperART
-end
-
-"""
-Keyword argument constructor for a [`DeeperART`](@ref) module passing the keyword arguments to the [`opts_DeeperART`](@ref) for the module.
-
-# Arguments
-- `kwargs...`: the options keyword arguments.
-"""
-function DeeperART(;kwargs...)
-    # Create the options from the keyword arguments
-    opts = opts_DeeperART(;kwargs...)
-
-    # Instantiate and return a constructed module
-    return DeeperART(
-        opts,
-    )
-end
-
-"""
-Constructor for a [`DeeperART`](@ref) taking a [`opts_DeeperART`](@ref) for construction options.
-
-# Arguments
-- `opts::opts_DeeperART`: the [`opts_DeeperART`](@ref) that specifies the construction options.
-"""
-function DeeperART(
-    opts::opts_DeeperART
-)
-    # # Create the shared network base
-    # shared = get_dense(opts.n_shared)
-
-    # # Create the heads
-    # heads = [get_dense(opts.n_heads) for _ = 1:5]
-
-    F1 = get_dense(opts.F1_spec)
-    F2 = get_dense(opts.F2_spec)
-
-    # Construct and return the field
-    return DeeperART(
-        F1,
-        F2,
-        opts,
-    )
-end
-
-"""
-Overload of the show function for [`DeeperART`](@ref).
-
-# Arguments
-- `io::IO`: the current IO stream.
-- `field::DeeperART`: the [`DeeperART`](@ref) to print/display.
-"""
-function Base.show(
-    io::IO,
-    field::DeeperART,
-)
-    print(io, "DeeperART(F1: $(field.opts.F1_spec), F2: $(field.opts.F2_spec))")
 end

@@ -5,6 +5,10 @@
 Common model code for the DeepART project.
 """
 
+# -----------------------------------------------------------------------------
+# DOCSTRINGS
+# -----------------------------------------------------------------------------
+
 """
 Common docstring; the configuration tuple.
 """
@@ -31,95 +35,9 @@ Type alias for the model input size tuple.
 """
 const SizeTuple = Tuple
 
-"""
-Options for the construction and usage of a [`SimpleDeepART`](@ref) module.
-"""
-@with_kw struct opts_SimpleDeepART
-	"""
-	The model input size tuple.
-	"""
-	size_tuple::SizeTuple = (28, 28, 1, 1)
-
-	"""
-	Flag for if the model is convolutional.
-	"""
-	conv::Bool = true
-
-	"""
-	The FuzzyART module options.
-	"""
-	opts_fuzzyart::opts_FuzzyART = opts_FuzzyART()
-end
-
-"""
-Container for a simple DeepART module.
-"""
-struct SimpleDeepART{T <: Flux.Chain}
-	"""
-    The `Flux.Chain` feature extractor model.
-    """
-    model::T
-
-	"""
-	The FuzzyART module.
-	"""
-	art::FuzzyART
-
-	"""
-	The [`opts_SimpleDeepART`](@ref) options and flags for the module.
-	"""
-	opts::opts_SimpleDeepART
-end
-
-"""
-Runs inference on the [`SimpleDeepART`](@ref) model's feature extractor.
-
-# Arguments
-$ARG_SIMPLEDEEPART
-- `data::SupervisedDataset`: the [`SupervisedDataset`](@ref) dataset with the features to run inference on.
-- `index::Integer`: the sample index to extract features of.
-"""
-function get_features(model::SimpleDeepART, data::SupervisedDataset, index::Integer)
-    # local_data = reshape(data.train.x[:, :, index], dim, dim, 1, :)
-	if model.opts.conv
-		dim = 28
-		local_data = reshape(data.x[:, :, index], dim, dim, 1, :)
-		# local_data = data.x[:, :, :, index]
-		# @info local_data
-		# @info size(local_data)
-		features = vec(get_features(model, local_data))
-	else
-		local_data = data.x[:, index]
-		features = get_features(model, local_data)
-	end
-
-    return features
-	# return get_features(model, data.x[:, :, index])
-end
-
-"""
-Runs inference on the feature extractor of a [`SimpleDeepART`](@ref) model on a provided sample array.
-
-# Arguments
-$ARG_SIMPLEDEEPART
-- `x::RealArray`: the sample to process with the deep model.
-"""
-function get_features(model::SimpleDeepART, x::RealArray)
-	return model.model(x)
-end
-
-"""
-Returns the weights of a `model` at the layer `index`.
-
-# Arguments
-$ARG_SIMPLEDEEPART
-- `index::Integer`: the layer index to return weights for.
-"""
-function get_weights(model::SimpleDeepART, index::Integer)
-	# return Flux.params(model[:, :, 1, 1])
-	return Flux.params(model.model)[index]
-end
-# Flux.params(model)[1][:, :, 1, m_ix] = new_filt
+# -----------------------------------------------------------------------------
+# FUNCTIONS
+# -----------------------------------------------------------------------------
 
 """
 Generates the feature extractor model for the ART network.
@@ -172,90 +90,6 @@ function get_dense_model(
 	)
 end
 
-"""
-Keyword argument constructor for a [`SimpleDeepART`](@ref) module passing the keyword arguments to the [`opts_SimpleDeepART`](@ref) for the module.
-
-# Arguments
-- `kwargs...`: the options keyword arguments.
-"""
-function SimpleDeepART(;kwargs...)
-    # Create the options from the keyword arguments
-    opts = opts_SimpleDeepART(;kwargs...)
-
-    # Instantiate and return a constructed module
-    return SimpleDeepART(
-		opts,
-	)
-end
-
-"""
-Main constructor for a [`SimpleDeepART`](@ref) module.
-
-# Arguments
-- `opts::opts_SimpleDeepART`: the [`opts_SimpleDeepART`] options driving the construction.
-"""
-function SimpleDeepART(
-	opts::opts_SimpleDeepART
-)
-	# Create the deep model
-	model = if opts.conv
-		get_conv_model(opts.size_tuple)
-	else
-		get_dense_model(opts.size_tuple)
-	end
-
-	# opts_fuzzyart = opts_FuzzyART()
-	art = FuzzyART(opts.opts_fuzzyart)
-	model_dim = Flux.outputsize(model, opts.size_tuple)
-	art.config = DataConfig(0, 1, model_dim[1])
-
-	return SimpleDeepART(
-		model,
-		art,
-		opts,
-	)
-end
-
-"""
-Runs the supervised training of a [`SimpleDeepART`](@ref) module.
-
-# Arguments
-$ARG_SIMPLEDEEPART
-$ARG_SUPERVISEDDATASET
-- `n_train::Integer`: the upper-bound of number of samples to train, default 0.
-If this is not manually set, all samples are trained upon.
-"""
-function supervised_train!(
-	model::SimpleDeepART,
-	data::SupervisedDataset,
-	n_train::Integer=0,
-)
-	# Determine how much data to train on
-	n_samples = length(data.y)
-	local_n_train = if n_train > 0
-		min(n_train, n_samples)
-	else
-		n_samples
-	end
-
-	for ix = 1:local_n_train
-		# local_y = data.train.y[ix]
-		local_y = data.y[ix]
-		# features = vec(DeepART.get_features(a, local_data))
-		# features = DeepART.get_features(model, data.train, ix)
-		features = DeepART.get_features(model, data, ix)
-
-		# @info size(features)
-		# @info typeof(features)
-
-		# bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
-		bmu = DeepART.train_deepART!(model.art, features, y=local_y)
-		# bmu = AdaptiveResonance.train!(a.art, features)
-		# @info bmu
-	end
-
-	return
-end
 
 # Flux.Optimisers.@def struct Instar <: Flux.Optimisers.AbstractRule
 # 	eta = 0.01

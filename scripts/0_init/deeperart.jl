@@ -15,9 +15,11 @@ size(data.train.x)
 ix = 20
 x = data.train.x[:, ix]
 
+x = [1.0, 1.0]
+
 f1 = a.F1(x)
 f2 = a.F2(f1)
-for jx = 1:3
+for jx = 1:4
     f2 = a.F2(f1 .+ f2)
     @info f2
 end
