@@ -1,17 +1,30 @@
+"""
+    mnist.jl
+
+# Description
+Boilerplate MNIST training and testing with no modifications.
+"""
+
+# -----------------------------------------------------------------------------
+# DEPENDENCIES
+# -----------------------------------------------------------------------------
 
 using Revise
 using DeepART
 using Flux
 using CUDA
 using ProgressMeter
+using UnicodePlots
+
+# -----------------------------------------------------------------------------
+# DATA
+# -----------------------------------------------------------------------------
 
 mnist = DeepART.get_mnist()
 
 # -----------------------------------------------------------------------------
-# Normal training loop
+# MODEL
 # -----------------------------------------------------------------------------
-
-loss(x, y) = Flux.crossentropy(x, y)
 
 # Make a simple multilayer perceptron
 model = Chain(
@@ -23,10 +36,13 @@ model = Chain(
 # model |> gpu
 
 # optim = Flux.setup(DeepART.EWC(), model)  # will store optimiser momentum, etc.
-optim = Flux.setup(
-    Flux.Adam(),
-    model,
-)
+optim = Flux.setup(Flux.Adam(), model)
+
+# -----------------------------------------------------------------------------
+# Normal training loop
+# -----------------------------------------------------------------------------
+
+loss(x, y) = Flux.crossentropy(x, y)
 
 n_classes = 10
 
@@ -83,5 +99,8 @@ for (lx, ly) in dataloader
 
     Flux.update!(optim, model, grads[1])
 end
+
+lineplot(acc_log)
+
 # Flux.Optimisers.adjust!(optim, enabled = false)
 # end

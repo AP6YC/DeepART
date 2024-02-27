@@ -9,13 +9,14 @@ Machine learning models and their functions for training and testing.
 # Common model code
 include("common.jl")
 
-include("0_wta_deep.jl")
+# Simple WTA network
+include("WTANet.jl")
 
 # Vanilla
-include("1_vanilla.jl")
+include("FeatureART.jl")
 
 # EWC
-include("2_ewc.jl")
+include("EWC.jl")
 
 # Fully deep
-include("3_deep.jl")
+include("DeepART.jl")

@@ -220,6 +220,38 @@ function tensorize_datasplit(data::DataSplit)
 end
 
 """
+Specifically for the MNIST dataset as an example, flattens the feature dimensions and one-hot encodes the labels.
+"""
+function flatty_hotty(data::SupervisedDataset, n_class::Int=0)
+
+    # If the number of classes is specified, use that, otherwise infer from the training labels
+    n_classes = if n_class == 0
+        length(unique(data.train.y))
+    else
+        n_class
+    end
+
+    n_samples = length(mnist.train.y)
+    x = reshape(
+        mnist.train.x[:,:,1:n_samples],
+        784, n_samples
+    )
+    # x |> gpu
+
+    n_test_samples = length(mnist.test.y)
+    x_test = reshape(
+        mnist.test.x[:,:,1:n_test_samples],
+        784, n_test_samples
+    )
+
+    y_cold = mnist.train.y[1:n_samples]
+    y_hot = zeros(Int, n_classes, n_samples)
+    for jx = 1:n_samples
+        y_hot[y_cold[jx], jx] = 1
+    end
+end
+
+"""
 Loads a dataset from a local file.
 
 # Arguments
