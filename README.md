@@ -2,9 +2,9 @@
 
 TODO:
 
-1. Simple deep art
+1. WTANet
    1. SGD
-   2. SGD + EWC
+   2. EWC
    3. Hebbian
    4. Instar
 2. Deep features and deep weights

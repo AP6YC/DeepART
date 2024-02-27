@@ -60,48 +60,9 @@ loss(x, y) = Flux.crossentropy(x, y)
 mnist = DeepART.get_mnist()
 cimnist = DeepART.ClassIncrementalDataSplit(mnist)
 
-n_train = 1000
-# for ix = 1:n_train
-n_classes = 10
-
-# @showprogress
-
-# Normal training loop
-for ix = 1:n_classes
-    # x = reshape(mnist.train.x[:, :, ix], 784)
-    # y = mnist.train.y[ix]
-
-    # n_samples = n_train
-    n_samples = length(cimnist.train[ix].y)
-    x = reshape(
-        cimnist.train[ix].x[:,:,1:n_samples],
-        784, n_samples
-    )
-    # x |> gpu
-
-    y_cold = cimnist.train[ix].y[1:n_samples]
-    y_hot = zeros(Int, n_classes, n_samples)
-    for jx = 1:n_samples
-        y_hot[y_cold[jx], jx] = 1
-    end
-
-    dataloader = Flux.DataLoader((x, y_hot), batchsize=32)
-
-    Flux.Optimisers.adjust!(optim, enabled = true)
-
-    for (lx, ly) in dataloader
-        # y_hot |> gpu
-
-        val, grads = Flux.withgradient(model) do m
-            result = m(lx)
-            loss(result, ly)
-        end
-        @info "$ix: $val"
-
-        Flux.update!(optim, model, grads[1])
-    end
-    # Flux.Optimisers.adjust!(optim, enabled = false)
-end
+# -----------------------------------------------------------------------------
+# Class incremental
+# -----------------------------------------------------------------------------
 
 for ix = 1:n_classes
     # x = reshape(mnist.train.x[:, :, ix], 784)
