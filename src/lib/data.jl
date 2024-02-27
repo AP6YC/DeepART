@@ -162,10 +162,10 @@ function DataSplit(
 
     # Create and return a single container for this train/test split
     return DataSplit(
-        X_train,
-        y_train,
-        X_test,
-        y_test,
+        copy(X_train),
+        copy(y_train),
+        copy(X_test),
+        copy(y_test),
     )
 end
 
@@ -219,36 +219,61 @@ function tensorize_datasplit(data::DataSplit)
     return new_dataset
 end
 
-"""
-Specifically for the MNIST dataset as an example, flattens the feature dimensions and one-hot encodes the labels.
-"""
-function flatty_hotty(data::SupervisedDataset, n_class::Int=0)
-
+function n_classor(y::Vector{Int}, n_class::Int=0)
     # If the number of classes is specified, use that, otherwise infer from the training labels
     n_classes = if n_class == 0
-        length(unique(data.train.y))
+        length(unique(y))
     else
         n_class
     end
 
-    n_samples = length(mnist.train.y)
-    x = reshape(
-        mnist.train.x[:,:,1:n_samples],
-        784, n_samples
-    )
-    # x |> gpu
+    return n_classes
+end
 
-    n_test_samples = length(mnist.test.y)
-    x_test = reshape(
-        mnist.test.x[:,:,1:n_test_samples],
-        784, n_test_samples
-    )
+function flatten(x::RealArray)
+    dims = size(x)
+    n_dims = length(dims)
 
-    y_cold = mnist.train.y[1:n_samples]
+    # Fragile, but it works for now
+    x_new = if n_dims == 2
+        x
+    else
+        flat_dim = prod([dims[ix] for ix = 1:n_dims-1])
+        reshape(x, flat_dim, :)
+    end
+
+    return x_new
+end
+
+function one_hot(y::Vector{Int}, n_class::Int=0)
+    n_samples = length(y)
+    n_classes = n_classor(y, n_class)
+
+    # y_cold = y[1:n_samples]
     y_hot = zeros(Int, n_classes, n_samples)
     for jx = 1:n_samples
-        y_hot[y_cold[jx], jx] = 1
+        y_hot[y[jx], jx] = 1
     end
+    return y_hot
+end
+
+"""
+Specifically for the MNIST dataset as an example, flattens the feature dimensions and one-hot encodes the labels.
+"""
+function flatty_hotty(data::SupervisedDataset, n_class::Int=0)
+    x_flat = flatten(data.x)
+    # x |> gpu
+
+    y_hot = one_hot(data.y, n_class)
+    # y_hot |> gpu
+
+    return x_flat, y_hot
+end
+
+function flatty_hotty(data::DataSplit, n_class::Int=0)
+    x, y = flatty_hotty(data.train, n_class)
+    xt, yt = flatty_hotty(data.test, n_class)
+    return x, y, xt, yt
 end
 
 """
@@ -288,6 +313,7 @@ function load_all_datasets(
             filename = joinpath(root, file)
             data_name = splitext(file)[1]
             data[data_name] = load_dataset(filename)
+            # @info typeof(data[data_name])
         end
     end
 
@@ -300,7 +326,8 @@ function load_all_datasets(
         # Get the features and labels (Float32 precision for Flux dense networks)
         features = Matrix{FluxFloat}(dataset[:, 1:n_features]')
         labels = Vector{Int}(dataset[:, end])
-
+        # @info typeof(features)
+        # @info typeof(labels)
         # Create a DataSplit
         data_splits[name] = DataSplit(
             features,
