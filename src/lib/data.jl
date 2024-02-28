@@ -14,8 +14,18 @@ A collection of types and utilities for loading and handling datasets for the pr
 
 # abstract type  end
 
+# -----------------------------------------------------------------------------
+# TYPE ALIASES
+# -----------------------------------------------------------------------------
+
+"""
+Abstract type alias for features.
+"""
 const AbstractFeatures = RealArray
 
+"""
+Abstract type alias for labels.
+"""
 const AbstractLabels = IntegerArray
 
 # -----------------------------------------------------------------------------
@@ -25,7 +35,7 @@ const AbstractLabels = IntegerArray
 """
 A struct containing a supervised set of features in a matrix `x` mapping to integer labels `y`.
 """
-struct SupervisedDataset{T <: RealArray, U <: IntegerArray}
+struct SupervisedDataset{T <: AbstractFeatures, U <: AbstractLabels}
     """
     A set of features.
     """
@@ -52,11 +62,27 @@ struct DataSplit
     test::SupervisedDataset
 end
 
+"""
+A class-incremental variant of a [`DataSplit`](@ref) containing instead vectors of [`SupervisedDataset`](@ref)s.
+"""
 struct ClassIncrementalDataSplit
+    """
+    The vector of training class datasets.
+    """
     train::Vector{SupervisedDataset}
+
+    """
+    The vector of testing class datasets.
+    """
     test::Vector{SupervisedDataset}
 end
 
+"""
+Turns a normal [`SupervisedDataset`](@ref) into a class-incremental vector of [`SupervisedDataset`](@ref)s.
+
+# Arguments
+$ARG_SUPERVISEDDATASET
+"""
 function class_incrementalize(data::SupervisedDataset)
     # Initialize the new class incremental vector
     new_data = Vector{SupervisedDataset}()
@@ -85,6 +111,12 @@ function class_incrementalize(data::SupervisedDataset)
     return new_data
 end
 
+"""
+Constructor for a [`ClassIncrementalDataSplit`](@ref) taking a normal [`DataSplit`](@ref).
+
+# Arguments
+$ARG_DATASPLIT
+"""
 function ClassIncrementalDataSplit(datasplit::DataSplit)
     return ClassIncrementalDataSplit(
         class_incrementalize(datasplit.train),
@@ -100,16 +132,16 @@ end
 Convenience constructor for a supervised [`DataSplit`](@ref) that takes each set of features `x` and labels `y`separately.
 
 # Arguments
-- `X_train::RealArray`: the training features.
-- `y_train::IntegerArray`: the training integer labels.
-- `X_test::RealArray`: the testing features.
-- `y_test::IntegerArray`: the testing integer labels.
+- `X_train::AbstractFeatures`: the training features.
+- `y_train::AbstractLabels`: the training integer labels.
+- `X_test::AbstractFeatures`: the testing features.
+- `y_test::AbstractLabels`: the testing integer labels.
 """
 function DataSplit(
-    X_train::RealArray,
-    y_train::IntegerArray,
-    X_test::RealArray,
-    y_test::IntegerArray,
+    X_train::AbstractFeatures,
+    y_train::AbstractLabels,
+    X_test::AbstractFeatures,
+    y_test::AbstractLabels,
 )
     return DataSplit(
         SupervisedDataset(
@@ -130,7 +162,10 @@ Wrapper for shuffling features and their labels.
 - `features::AbstractArray`: the set of data features.
 - `labels::AbstractArray`: the set of labels corresponding to the features.
 """
-function shuffle_pairs(features::AbstractArray, labels::AbstractArray)
+function shuffle_pairs(
+    features::AbstractArray,
+    labels::AbstractArray,
+)
     # Use the MLUtils function for shuffling
     ls, ll = shuffleobs((features, labels))
 
@@ -142,14 +177,14 @@ end
 Constructor for a [`DataSplit`](@ref) taking a set of features and options for the split ratio and shuffle flag.
 
 # Arguments
-- `features::RealArray`: the input features as an array of samples.
-- `labels::IntegerVector`: the supervised labels as a vector of integers.
+- `features::AbstractFeatures`: the input features as an array of samples.
+- `labels::AbstractLabels`: the supervised labels.
 $ARG_P
 $ARG_SHUFFLE
 """
 function DataSplit(
-    features::RealArray,
-    labels::IntegerArray;
+    features::AbstractFeatures,
+    labels::AbstractLabels;
     p::Float=DEFAULT_P,
     shuffle::Bool=DEFAULT_SHUFFLE,
 )
@@ -198,7 +233,7 @@ end
 Turns the features of a dataset into a tensor.
 
 # Arguments
-- `data::SupervisedDataset`: the
+$ARG_SUPERVISEDDATASET
 """
 function tensorize_dataset(data::SupervisedDataset)
     dims = size(data.x)
@@ -223,7 +258,16 @@ function tensorize_datasplit(data::DataSplit)
     return new_dataset
 end
 
-function n_classor(y::Vector{Int}, n_class::Int=0)
+"""
+Returns the number of classes given a vector of labels.
+
+If the number of classes is provided, that is used; otherwise, the number of classes is inferred from the labels.
+
+# Arguments
+- `y::IntegerVector`: the vector of integer labels.
+$ARG_N_CLASS
+"""
+function n_classor(y::IntegerVector, n_class::Int=0)
     # If the number of classes is specified, use that, otherwise infer from the training labels
     n_classes = if n_class == 0
         length(unique(y))
@@ -234,13 +278,22 @@ function n_classor(y::Vector{Int}, n_class::Int=0)
     return n_classes
 end
 
-function flatten(x::RealArray)
+"""
+Flattens a set of features to a 2D matrix.
+
+Every dimension except the last is reshaped into the first dimension.
+
+# Arguments
+- `x::AbstractFeatures`: the array of features to flatten.
+"""
+function flatten(x::AbstractFeatures)
     dims = size(x)
     n_dims = length(dims)
 
-    # Fragile, but it works for now
+    # If the array is already 2D, return it
     x_new = if n_dims == 2
         x
+    # Otherwise, reshape into the product of the first (n_dims-1) dimensions
     else
         flat_dim = prod([dims[ix] for ix = 1:n_dims-1])
         reshape(x, flat_dim, :)
@@ -249,36 +302,71 @@ function flatten(x::RealArray)
     return x_new
 end
 
-function one_hot(y::Vector{Int}, n_class::Int=0)
+"""
+One-hot encodes the vector of labels into a matrix of ones.
+
+# Arguments
+- `y::IntegerVector`: the vector of integer labels.
+$ARG_N_CLASS
+"""
+function one_hot(y::IntegerVector, n_class::Int=0)
+    # Get the number of samples and classes for iteration
     n_samples = length(y)
     n_classes = n_classor(y, n_class)
 
-    # y_cold = y[1:n_samples]
+    # Initialize the one-hot matrix
     y_hot = zeros(Int, n_classes, n_samples)
+
+    # For each sample, set a one at the index of the value of the integer label
     for jx = 1:n_samples
         y_hot[y[jx], jx] = 1
     end
+
     return y_hot
 end
 
 """
-Specifically for the MNIST dataset as an example, flattens the feature dimensions and one-hot encodes the labels.
+Flattens the feature dimensions of a [`SupervisedDataset`](@ref) and one-hot encodes the labels.
+
+# Arguments
+$ARG_SUPERVISEDDATASET
+$ARG_N_CLASS
 """
 function flatty_hotty(data::SupervisedDataset, n_class::Int=0)
+    # Flatten the features
     x_flat = flatten(data.x)
     # x |> gpu
 
+    # One-hot encode the labels
     y_hot = one_hot(data.y, n_class)
     # y_hot |> gpu
 
-    return x_flat, y_hot
+    # return x_flat, y_hot
+    return SupervisedDataset(
+        x_flat,
+        y_hot,
+    )
 end
 
+"""
+Flattens and one-hot encodes a [`DataSplit`](@ref).
+
+# Arguments
+$ARG_DATASPLIT
+$ARG_N_CLASS
+"""
 function flatty_hotty(data::DataSplit, n_class::Int=0)
-    x, y = flatty_hotty(data.train, n_class)
-    xt, yt = flatty_hotty(data.test, n_class)
-    return x, y, xt, yt
+    new_train = flatty_hotty(data.train, n_class)
+    new_test = flatty_hotty(data.test, n_class)
+
+    # Construct and return the new DataSplit
+    return DataSplit(
+        new_train,
+        new_test,
+    )
 end
+
+# function data_shape
 
 """
 Loads a dataset from a local file.

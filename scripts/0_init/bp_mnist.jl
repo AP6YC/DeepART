@@ -41,9 +41,10 @@ data = DeepART.get_mnist()
 n_classes = length(unique(data.train.y))
 
 # Get the flat features and one-hot labels
-x, y, xt, yt = DeepART.flatty_hotty(data)
+# x, y, xt, yt = DeepART.flatty_hotty(data)
+fdata = DeepART.flatty_hotty(data)
 
-n_input = size(x)[1]
+n_input = size(fdata.train.x)[1]
 
 # -----------------------------------------------------------------------------
 # MODEL
@@ -88,7 +89,7 @@ optim = Flux.setup(Flux.Adam(), model)
 loss(x, y) = Flux.crossentropy(x, y)
 
 # dataloader = Flux.DataLoader((x, y_hot), batchsize=32)
-dataloader = Flux.DataLoader((x, y), batchsize=N_BATCH)
+dataloader = Flux.DataLoader((fdata.train.x, fdata.train.y), batchsize=N_BATCH)
 
 # Flux.Optimisers.adjust!(optim, enabled = true)
 
@@ -117,7 +118,7 @@ for ep = 1:N_EPOCH
         Flux.update!(optim, model, grads[1])
 
         if ix_acc % ACC_ITER == 0
-            acc = flux_accuracy(model(xt), data.test.y, n_classes)
+            acc = flux_accuracy(model(fdata.test.x), data.test.y, n_classes)
             push!(acc_log, acc)
             @info "Epoch $ep: $acc"
         end

@@ -141,3 +141,10 @@ $COMMON_DOC argument for [`SupervisedDataset`](@ref).
 const ARG_SUPERVISEDDATASET = """
 - `data::SupervisedDataset`: a [`SupervisedDataset`](@ref) containing samples and their labels.
 """
+
+"""
+$COMMON_DOC argument for the number of classes.
+"""
+const ARG_N_CLASS = """
+- `n_class::Int=0`: the true number of classes (if known).
+"""
