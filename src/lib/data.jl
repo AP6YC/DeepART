@@ -65,7 +65,7 @@ end
 """
 A class-incremental variant of a [`DataSplit`](@ref) containing instead vectors of [`SupervisedDataset`](@ref)s.
 """
-struct ClassIncrementalDataSplit
+struct TaskIncrementalDataSplit
     """
     The vector of training class datasets.
     """
@@ -114,13 +114,13 @@ function class_incrementalize(data::SupervisedDataset)
 end
 
 """
-Constructor for a [`ClassIncrementalDataSplit`](@ref) taking a normal [`DataSplit`](@ref).
+Constructor for a [`TaskIncrementalDataSplit`](@ref) taking a normal [`DataSplit`](@ref).
 
 # Arguments
 $ARG_DATASPLIT
 """
-function ClassIncrementalDataSplit(datasplit::DataSplit)
-    return ClassIncrementalDataSplit(
+function TaskIncrementalDataSplit(datasplit::DataSplit)
+    return TaskIncrementalDataSplit(
         class_incrementalize(datasplit.train),
         class_incrementalize(datasplit.test),
     )
@@ -240,15 +240,15 @@ function Base.show(
 end
 
 """
-Overload of the show function for [`ClassIncrementalDataSplit`](@ref).
+Overload of the show function for [`TaskIncrementalDataSplit`](@ref).
 
 # Arguments
 - `io::IO`: the current IO stream.
-- `field::ClassIncrementalDataSplit`: the [`ClassIncrementalDataSplit`](@ref) to print/display.
+- `field::TaskIncrementalDataSplit`: the [`TaskIncrementalDataSplit`](@ref) to print/display.
 """
 function Base.show(
     io::IO,
-    ds::ClassIncrementalDataSplit,
+    ds::TaskIncrementalDataSplit,
 )
     # Compute all of the dimensions of the dataset
     s_train = size(ds.train[1].x)
@@ -259,7 +259,7 @@ function Base.show(
     n_classes = length(ds.train)
 
     # print(io, "DataSplit(features: $(size(ds.train.x)), test: $(size(ds.test.x)))")
-    print(io, "ClassIncrementalDataSplit(features: $(n_features), n_classes: $(n_classes))")
+    print(io, "TaskIncrementalDataSplit(features: $(n_features), n_classes: $(n_classes))")
 end
 
 # -----------------------------------------------------------------------------

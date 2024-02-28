@@ -58,7 +58,7 @@ Flux.Optimisers.adjust!(optim, enabled = true)
 loss(x, y) = Flux.crossentropy(x, y)
 
 mnist = DeepART.get_mnist()
-cimnist = DeepART.ClassIncrementalDataSplit(mnist)
+cimnist = DeepART.TaskIncrementalDataSplit(mnist)
 
 # -----------------------------------------------------------------------------
 # Class incremental

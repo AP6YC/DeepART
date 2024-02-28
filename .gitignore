@@ -12,6 +12,13 @@ _dev/
 *.h5
 *.jpg
 
+# Ignore work files/folders
+work/**
+# Except for subfolders
+!work/*
+# Except for the gitkeeps in these subfolders
+!work/*/.gitkeep
+
 # -----------------------------------------------------------------------------
 # JULIA GITHUB TEMPLATE IGNORES
 # -----------------------------------------------------------------------------

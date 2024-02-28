@@ -80,13 +80,14 @@ end
 #     )
 # end
 
-# """
-# `DrWatson`-style configs results directory.
+"""
+`DrWatson`-style configs results directory.
 
-# $DRWATSON_ARGS_DOC
-# """
-# function configs_dir(args...)
-#     return work_dir("configs", args...)
-#     # Make the config folder for the experiment if it does not exist
-#     # mkpath(configs_dir())
-# end
+$DRWATSON_ARGS_DOC
+"""
+function configs_dir(args...)
+    # return work_dir("configs", args...)
+    return results_dir("configs", args...)
+    # Make the config folder for the experiment if it does not exist
+    # mkpath(configs_dir())
+end
