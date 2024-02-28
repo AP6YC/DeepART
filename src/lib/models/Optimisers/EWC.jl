@@ -20,10 +20,27 @@ TODO
     # enabled::Bool = true
 end
 
-mutable struct EWCIncrementalState
-    FIM
-    old_params
+mutable struct EWCIncrementalState{T <: AbstractArray, U <: AbstractArray}
+    FIM::T
+    old_params::U
 end
+
+"""
+Overload of the show function for [`EWCIncrementalState`](@ref).
+
+# Arguments
+- `io::IO`: the current IO stream.
+- `field::EWCIncrementalState`: the [`EWCIncrementalState`](@ref) to print/display.
+"""
+function Base.show(
+    io::IO,
+    state::EWCIncrementalState,
+)
+    s1 = size(state.FIM)
+    s2 = size(state.old_params)
+    print(io, "EWCIncrementalState(FIM: $(s1), old_params: $(s2))")
+end
+
 
 function Flux.Optimisers.apply!(o::EWCIncremental, state, x, dx)
     # Because the FIM is a function of the gradients, initialize it here

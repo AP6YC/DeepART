@@ -15,6 +15,7 @@ using Flux
 using CUDA
 using ProgressMeter
 using UnicodePlots
+using Plots
 
 # -----------------------------------------------------------------------------
 # CONFIG
@@ -22,7 +23,7 @@ using UnicodePlots
 
 # N_BATCH = 128
 N_BATCH = 12
-N_EPOCH = 2
+N_EPOCH = 100
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -31,7 +32,9 @@ N_EPOCH = 2
 # Load the dataset
 # data = DeepART.get_mnist()
 all_data = DeepART.load_all_datasets()
-data = all_data["moon"]
+# data = all_data["moon"]
+# data = all_data["ring"]
+data = all_data["spiral"]
 
 # Get the number of classes
 n_classes = length(unique(data.train.y))
@@ -46,14 +49,28 @@ n_input = size(x)[1]
 # -----------------------------------------------------------------------------
 
 # Make a simple multilayer perceptron
+# model = Chain(
+#     Dense(n_input, 128, relu),
+#     Dense(128, 64, relu),
+#     Dense(64, n_classes),
+#     sigmoid,
+# )
+
 model = Chain(
-    Dense(n_input, 128, relu),
-    # Dense(n_input, 128, sigmoid),
-    Dense(128, 64, relu),
-    # Dense(128, 64, sigmoid),
+    # Dense(n_input, 64),
+    Dense(n_input, 128),
+    relu,
+    Dense(128, 64),
+    # sigmoid,
+    relu,
     Dense(64, n_classes),
-    sigmoid,
+    # sigmoid,
+    # relu,
+    softmax,
 )
+
+# model = DeepART.get_dense([n_input, 200, 100, 10, n_classes])
+
 # model |> gpu
 
 # model = DeepART.get_dense([n_input, 128, n_classes])
@@ -71,7 +88,7 @@ loss(x, y) = Flux.crossentropy(x, y)
 # dataloader = Flux.DataLoader((x, y_hot), batchsize=32)
 dataloader = Flux.DataLoader((x, y), batchsize=N_BATCH)
 
-Flux.Optimisers.adjust!(optim, enabled = true)
+# Flux.Optimisers.adjust!(optim, enabled = true)
 
 # flux_accuracy(x, y) = mean(Flux.onecold(flux_model(x), classes) .== y);
 function flux_accuracy(y_hat, y_truth, n_class::Int=0)
@@ -105,7 +122,7 @@ for ep = 1:N_EPOCH
         if ix_acc % acc_iter == 0
             acc = flux_accuracy(model(xt), data.test.y, n_classes)
             push!(acc_log, acc)
-            @info acc
+            @info "Epoch $ep: $acc"
         end
         global ix_acc += 1
     end
@@ -118,5 +135,41 @@ lineplot(
     ylabel="Test Accuracy",
 )
 
+plot(
+    acc_log,
+    title="Accuracy Trend",
+    xlabel="Iteration",
+    ylabel="Test Accuracy",
+)
+
 # Flux.Optimisers.adjust!(optim, enabled = false)
-# end
+
+function plot_f(x, y)
+    classes = collect(1:n_classes)
+    y_hat = model([x, y])
+    return Flux.onecold(y_hat, classes)
+end
+
+p = plot()
+
+ccol = cgrad([RGB(1,.3,.3), RGB(.4,1,.4), RGB(.3,.3,1), RGB(.3,.6,.1)])
+r = 0:.05:1
+
+contour!(
+    p,
+    r,
+    r,
+    plot_f,
+    f=true,
+    nlev=4,
+    c=ccol,
+    # c=DeepART.COLORSCHEME,
+    leg=:none
+)
+
+p = scatter!(
+    p,
+    data.train.x[1, :],
+    data.train.x[2, :],
+    group=data.train.y,
+)

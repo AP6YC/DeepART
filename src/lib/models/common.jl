@@ -60,7 +60,8 @@ function get_dense(
     chain_list = [
         Dense(
             n_neurons[ix] => n_neurons[ix + 1],
-            sigmoid,
+            # sigmoid,
+			relu,
         ) for ix in range(1, length(n_neurons) - 1)
     ]
 
