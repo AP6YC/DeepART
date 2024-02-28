@@ -21,20 +21,21 @@ using Plots
 # CONFIG
 # -----------------------------------------------------------------------------
 
-# N_BATCH = 128
-N_BATCH = 12
-N_EPOCH = 100
+N_BATCH = 128
+# N_BATCH = 12
+N_EPOCH = 1
+ACC_ITER = 10
 
 # -----------------------------------------------------------------------------
 # DATA
 # -----------------------------------------------------------------------------
 
 # Load the dataset
-# data = DeepART.get_mnist()
-all_data = DeepART.load_all_datasets()
+data = DeepART.get_mnist()
+# all_data = DeepART.load_all_datasets()
+# data = all_data["spiral"]
 # data = all_data["moon"]
 # data = all_data["ring"]
-data = all_data["spiral"]
 
 # Get the number of classes
 n_classes = length(unique(data.train.y))
@@ -49,25 +50,26 @@ n_input = size(x)[1]
 # -----------------------------------------------------------------------------
 
 # Make a simple multilayer perceptron
-# model = Chain(
-#     Dense(n_input, 128, relu),
-#     Dense(128, 64, relu),
-#     Dense(64, n_classes),
-#     sigmoid,
-# )
-
 model = Chain(
-    # Dense(n_input, 64),
-    Dense(n_input, 128),
-    relu,
-    Dense(128, 64),
-    # sigmoid,
-    relu,
+    Dense(n_input, 128, relu),
+    Dense(128, 64, relu),
     Dense(64, n_classes),
-    # sigmoid,
-    # relu,
-    softmax,
+    sigmoid,
+    # softmax,
 )
+
+# model = Chain(
+#     # Dense(n_input, 64),
+#     Dense(n_input, 128),
+#     relu,
+#     Dense(128, 64),
+#     # sigmoid,
+#     relu,
+#     Dense(64, n_classes),
+#     # sigmoid,
+#     # relu,
+#     softmax,
+# )
 
 # model = DeepART.get_dense([n_input, 200, 100, 10, n_classes])
 
@@ -98,16 +100,11 @@ function flux_accuracy(y_hat, y_truth, n_class::Int=0)
     Flux.mean(Flux.onecold(y_hat, classes) .== y_truth)
 end
 
-# @showprogress
 ix_acc = 0
-acc_iter = 10
 acc_log = []
 
+# @showprogress
 for ep = 1:N_EPOCH
-    # # @showprogress
-    # ix_acc = 0
-    # acc_iter = 10
-    # acc_log = []
 
     for (lx, ly) in dataloader
         # Compute gradients from the forward pass
@@ -119,7 +116,7 @@ for ep = 1:N_EPOCH
 
         Flux.update!(optim, model, grads[1])
 
-        if ix_acc % acc_iter == 0
+        if ix_acc % ACC_ITER == 0
             acc = flux_accuracy(model(xt), data.test.y, n_classes)
             push!(acc_log, acc)
             @info "Epoch $ep: $acc"
@@ -135,41 +132,41 @@ lineplot(
     ylabel="Test Accuracy",
 )
 
-plot(
-    acc_log,
-    title="Accuracy Trend",
-    xlabel="Iteration",
-    ylabel="Test Accuracy",
-)
+# plot(
+#     acc_log,
+#     title="Accuracy Trend",
+#     xlabel="Iteration",
+#     ylabel="Test Accuracy",
+# )
 
 # Flux.Optimisers.adjust!(optim, enabled = false)
 
-function plot_f(x, y)
-    classes = collect(1:n_classes)
-    y_hat = model([x, y])
-    return Flux.onecold(y_hat, classes)
-end
+# function plot_f(x, y)
+#     classes = collect(1:n_classes)
+#     y_hat = model([x, y])
+#     return Flux.onecold(y_hat, classes)
+# end
 
-p = plot()
+# p = plot()
 
-ccol = cgrad([RGB(1,.3,.3), RGB(.4,1,.4), RGB(.3,.3,1), RGB(.3,.6,.1)])
-r = 0:.05:1
+# ccol = cgrad([RGB(1,.3,.3), RGB(.4,1,.4), RGB(.3,.3,1), RGB(.3,.6,.1)])
+# r = 0:.05:1
 
-contour!(
-    p,
-    r,
-    r,
-    plot_f,
-    f=true,
-    nlev=4,
-    c=ccol,
-    # c=DeepART.COLORSCHEME,
-    leg=:none
-)
+# contour!(
+#     p,
+#     r,
+#     r,
+#     plot_f,
+#     f=true,
+#     nlev=4,
+#     c=ccol,
+#     # c=DeepART.COLORSCHEME,
+#     leg=:none
+# )
 
-p = scatter!(
-    p,
-    data.train.x[1, :],
-    data.train.x[2, :],
-    group=data.train.y,
-)
+# p = scatter!(
+#     p,
+#     data.train.x[1, :],
+#     data.train.x[2, :],
+#     group=data.train.y,
+# )

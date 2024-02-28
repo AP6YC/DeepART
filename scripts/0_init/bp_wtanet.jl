@@ -8,6 +8,9 @@ using DeepART
 all_data = DeepART.load_all_datasets()
 data = all_data["moon"]
 
+x, y, xt, yt = DeepART.flatty_hotty(data)
+
+DeepART.SupervisedDataset(x, y)
 
 n_classes = length(unique(data.train.y))
 

@@ -14,6 +14,10 @@ A collection of types and utilities for loading and handling datasets for the pr
 
 # abstract type  end
 
+const AbstractFeatures = RealArray
+
+const AbstractLabels = IntegerArray
+
 # -----------------------------------------------------------------------------
 # STRUCTS
 # -----------------------------------------------------------------------------
@@ -21,16 +25,16 @@ A collection of types and utilities for loading and handling datasets for the pr
 """
 A struct containing a supervised set of features in a matrix `x` mapping to integer labels `y`.
 """
-struct SupervisedDataset
+struct SupervisedDataset{T <: RealArray, U <: IntegerArray}
     """
     A set of features.
     """
-    x::RealArray
+    x::T
 
     """
     The labels corresponding to each feature.
     """
-    y::IntegerVector
+    y::U
 end
 
 """
@@ -97,15 +101,15 @@ Convenience constructor for a supervised [`DataSplit`](@ref) that takes each set
 
 # Arguments
 - `X_train::RealArray`: the training features.
-- `y_train::IntegerVector`: the training integer labels.
+- `y_train::IntegerArray`: the training integer labels.
 - `X_test::RealArray`: the testing features.
-- `y_test::IntegerVecto`: the testing integer labels.
+- `y_test::IntegerArray`: the testing integer labels.
 """
 function DataSplit(
     X_train::RealArray,
-    y_train::IntegerVector,
+    y_train::IntegerArray,
     X_test::RealArray,
-    y_test::IntegerVector
+    y_test::IntegerArray,
 )
     return DataSplit(
         SupervisedDataset(
@@ -145,7 +149,7 @@ $ARG_SHUFFLE
 """
 function DataSplit(
     features::RealArray,
-    labels::IntegerVector;
+    labels::IntegerArray;
     p::Float=DEFAULT_P,
     shuffle::Bool=DEFAULT_SHUFFLE,
 )
