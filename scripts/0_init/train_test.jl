@@ -11,11 +11,11 @@ Boilerplate MNIST training and testing with no modifications.
 
 using Revise
 using DeepART
-using Flux
-using CUDA
-using ProgressMeter
-using UnicodePlots
-using Plots
+# using Flux
+# using CUDA
+# using ProgressMeter
+# using UnicodePlots
+# using Plots
 
 # -----------------------------------------------------------------------------
 # CONFIG

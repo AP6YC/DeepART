@@ -48,6 +48,7 @@ using
     Plots,
     Pluto,
     PlutoUI,
+    ProgressMeter,
     UnicodePlots
 
 # Precompile concrete type methods
@@ -61,6 +62,11 @@ import PrecompileSignatures: @precompile_signatures
 Internal alias for the AdaptiveResonance.jl package.
 """
 const ART = AdaptiveResonance
+
+"""
+Flag for using Flux.onehotbatch or an internal implementation.
+"""
+const FLUXONEHOT = true
 
 # Authorize downloads to prevent interactive download blocking
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true

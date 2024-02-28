@@ -311,15 +311,19 @@ $ARG_N_CLASS
 """
 function one_hot(y::IntegerVector, n_class::Int=0)
     # Get the number of samples and classes for iteration
-    n_samples = length(y)
+    # n_samples = length(y)
     n_classes = n_classor(y, n_class)
 
-    # Initialize the one-hot matrix
-    y_hot = zeros(Int, n_classes, n_samples)
+    if FLUXONEHOT
+        y_hot = Flux.onehotbatch(y, collect(1:n_classes))
+    else
+        # Initialize the one-hot matrix
+        y_hot = zeros(Int, n_classes, n_samples)
 
-    # For each sample, set a one at the index of the value of the integer label
-    for jx = 1:n_samples
-        y_hot[y[jx], jx] = 1
+        # For each sample, set a one at the index of the value of the integer label
+        for jx = 1:n_samples
+            y_hot[y[jx], jx] = 1
+        end
     end
 
     return y_hot

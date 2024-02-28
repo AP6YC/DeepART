@@ -3,6 +3,26 @@ Implements the variety of training/testing start-to-finish experiments.
 """
 
 """
+"""
+function flux_accuracy(
+    y_hat::AbstractArray,
+    y_truth::AbstractArray,
+    n_class::Int,
+    # n_class::Int=0,
+)
+# flux_accuracy(x, y) = mean(Flux.onecold(flux_model(x), classes) .== y);
+    # If the number of classes is specified, use that, otherwise infer from the training labels
+    # n_classes = DeepART.n_classor(y_truth, n_class)
+    classes = collect(1:n_class)
+
+    return Flux.mean(
+        Flux.onecold(y_hat, classes) .== Flux.onecold(y_truth, classes)
+    )
+    # return Flux.mean(Flux.onecold(y_hat, classes) .== y_truth)
+end
+
+
+"""
 Simple train/test split experiment.
 """
 function train_test!(
@@ -16,6 +36,7 @@ function train_test!(
     # Get the flat features and one-hot labels
     fdata = DeepART.flatty_hotty(data)
 
+    # Get the resulting feature size
     n_input = size(fdata.train.x)[1]
 
     # Make a simple multilayer perceptron
@@ -56,20 +77,19 @@ function train_test!(
     dataloader = Flux.DataLoader((fdata.train.x, fdata.train.y), batchsize=opts["N_BATCH"])
 
     # Flux.Optimisers.adjust!(optim, enabled = true)
-
-    # flux_accuracy(x, y) = mean(Flux.onecold(flux_model(x), classes) .== y);
-    function flux_accuracy(y_hat, y_truth, n_class::Int=0)
-        # If the number of classes is specified, use that, otherwise infer from the training labels
-        n_classes = DeepART.n_classor(y_truth, n_class)
-        classes = collect(1:n_classes)
-        Flux.mean(Flux.onecold(y_hat, classes) .== y_truth)
-    end
-
     acc_log = []
 
     # @showprogress
-    ix_acc = 0
+    generate_showvalues(ep, i_train, acc) = () -> [(:Epoch, ep), (:Iter, i_train), (:Acc, acc)]
+
     for ep = 1:opts["N_EPOCH"]
+
+        i_train = 0
+        acc=0
+
+        p = Progress(length(dataloader); showspeed=true)
+
+        @info "Length: $(length(dataloader))"
 
         for (lx, ly) in dataloader
             # Compute gradients from the forward pass
@@ -79,14 +99,24 @@ function train_test!(
                 Flux.logitcrossentropy(result, ly)
             end
 
+            # Update the model with the optimizer from these gradients
             Flux.update!(optim, model, grads[1])
 
-            if ix_acc % opts["ACC_ITER"] == 0
-                acc = flux_accuracy(model(fdata.test.x), data.test.y, n_classes)
+            # Performance logging
+            if i_train % opts["ACC_ITER"] == 0
+                # acc = flux_accuracy(model(fdata.test.x), data.test.y, n_classes)
+                acc = flux_accuracy(model(fdata.test.x), fdata.test.y, n_classes)
                 push!(acc_log, acc)
-                @info "Epoch $ep: $acc"
+                # @info "Epoch $ep: $acc"
             end
-            ix_acc += 1
+
+            i_train += 1
+
+            next!(
+                p;
+                showvalues = generate_showvalues(ep, i_train, acc)
+                # showvalues = [(:Epoch, ep), (:Iter, i_train), (:Acc, acc)],
+            )
         end
     end
 
@@ -96,6 +126,8 @@ function train_test!(
         xlabel="Iteration",
         ylabel="Test Accuracy",
     )
+
+    return acc_log
 
     # plot(
     #     acc_log,

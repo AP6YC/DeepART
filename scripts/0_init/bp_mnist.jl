@@ -80,6 +80,7 @@ model = Chain(
 
 # optim = Flux.setup(DeepART.EWC(), model)  # will store optimiser momentum, etc.
 optim = Flux.setup(Flux.Adam(), model)
+# Flux.Optimisers.adjust!(optim, enabled = false)
 
 # -----------------------------------------------------------------------------
 # Normal training loop

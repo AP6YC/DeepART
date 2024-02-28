@@ -1,8 +1,8 @@
 """
-    EWC.jl
+    IEWC.jl
 
 # Description
-Elastic Weight Consolidation (EWC) optimiser for Flux.jl via an Optimisers.jl interface.
+Incremental Elastic Weight Consolidation (IEWC) optimiser for Flux.jl via an Optimisers.jl interface.
 """
 
 # -----------------------------------------------------------------------------
@@ -10,9 +10,9 @@ Elastic Weight Consolidation (EWC) optimiser for Flux.jl via an Optimisers.jl in
 # -----------------------------------------------------------------------------
 
 """
-The parameters if an EWCIncremental optimiser.
+The parameters if an IEWC optimiser.
 """
-@with_kw mutable struct EWC <: Flux.Optimisers.AbstractRule
+@with_kw mutable struct IEWC <: Flux.Optimisers.AbstractRule
     # Flux.Optimisers.@def struct EWC <: Flux.Optimisers.AbstractRule
     eta::Float = 0.01      # learning rate
     lambda::Float = 0.1    # regularization strength
@@ -22,32 +22,31 @@ The parameters if an EWCIncremental optimiser.
 end
 
 """
-Custom state for the [`EWCState`](@ref) optimiser.
+Custom state for the [`IEWC`](@ref) optimiser.
 """
-struct EWCState
+mutable struct IEWCState{T <: AbstractArray, U <: AbstractArray}
     """
     The Fisher Information Matrix (FIM) approximation.
     """
-    FIM
+    FIM::T
 
     """
-    The 'old parameters' that the FIM are computed on.
+    The 'old parameters'.
     """
-    old_params
+    old_params::U
 end
 
 # -----------------------------------------------------------------------------
 # OVERLOADS
 # -----------------------------------------------------------------------------
 
-# Init overload for the EWC optimiser
-function Flux.Optimisers.init(o::EWC, x::AbstractArray)
-    return EWCState(nothing, x)
+# Init overload for the IEWC optimiser
+function Flux.Optimisers.init(o::IEWC, x::AbstractArray)
+    return IEWCState(nothing, x)
 end
 
-# Apply overload for the EWC optimiser
-function Flux.Optimisers.apply!(o::EWC, state, x, dx)
-    # If the signal has arrived for a new task, compute the new FIM and do not update weights
+# Apply overload for the IEWC optimiser
+function Flux.Optimisers.apply!(o::IEWC, state, x, dx)    # If the signal has arrived for a new task, compute the new FIM and do not update weights
     if o.new_task
         # Because the FIM is a function of the gradients, initialize it here
         if isnothing(state.FIM)
@@ -69,26 +68,32 @@ function Flux.Optimisers.apply!(o::EWC, state, x, dx)
         return_dx = (o.lambda / 2) * (x .- state.old_params) .* state.FIM
         # return state, return_dx
     end
-
-    return new_state, return_dx
-
-    # eta = convert(float(eltype(x)), o.eta)
-    # Flux.params(model)[ix] .-= (lambda / 2) * (Flux.params(model)[ix] .- mu[ix]) .* local_FIM
-    # return state, Flux.Optimisers.@lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
+    # # Because the FIM is a function of the gradients, initialize it here
+    # if isnothing(state.FIM)
+    #     # state.FIM = dx .* dx
+    #     state.FIM = dx .^ 2
+    # else
+    #     # state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
+    #     state.FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .^ 2
+    # end
+    # # eta = convert(float(eltype(x)), o.eta)
+    # # Flux.params(model)[ix] .-= (lambda / 2) * (Flux.params(model)[ix] .- mu[ix]) .* local_FIM
+    # return state, (o.lambda / 2) * (x .- state.old_params) .* state.FIM
+    # # return state, Flux.Optimisers.@lazy dx * eta  # @lazy creates a Broadcasted, will later fuse with x .= x .- dx
 end
 
 """
-Overload of the show function for [`EWCState`](@ref).
+Overload of the show function for [`IEWCState`](@ref).
 
 # Arguments
 - `io::IO`: the current IO stream.
-- `field::EWCState`: the [`EWCState`](@ref) to print/display.
+- `field::IEWCState`: the [`IEWCState`](@ref) to print/display.
 """
 function Base.show(
     io::IO,
-    state::EWCState,
+    state::IEWCState,
 )
     s1 = size(state.FIM)
     s2 = size(state.old_params)
-    print(io, "EWC(FIM: $(s1), old_params: $(s2))")
+    print(io, "IEWCState(FIM: $(s1), old_params: $(s2))")
 end
