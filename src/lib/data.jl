@@ -94,7 +94,9 @@ function class_incrementalize(data::SupervisedDataset)
         # Get all of the indices corresponding to the integer class label
         class_indices = findall(x->x==ix, data.y)
         # Fragile, but it works for now
-        local_features = if n_dim == 3
+        local_features = if n_dim == 4
+            data.x[:, :, :, class_indices]
+        elseif n_dim == 3
             data.x[:, :, class_indices]
         elseif n_dim == 2
             data.x[:, class_indices]
@@ -209,6 +211,58 @@ function DataSplit(
 end
 
 # -----------------------------------------------------------------------------
+# OVERLOADS
+# -----------------------------------------------------------------------------
+
+"""
+Overload of the show function for [`DataSplit`](@ref).
+
+# Arguments
+- `io::IO`: the current IO stream.
+- `field::DataSplit`: the [`DataSplit`](@ref) to print/display.
+"""
+function Base.show(
+    io::IO,
+    ds::DataSplit,
+)
+    # Compute all of the dimensions of the dataset
+    s_train = size(ds.train.x)
+    s_test = size(ds.test.x)
+
+    # Get the number of features, training samples, and testing samples
+    n_dims = length(s_train)
+    n_features = s_train[1:n_dims - 1]
+    n_train = s_train[end]
+    n_test = s_test[end]
+
+    # print(io, "DataSplit(features: $(size(ds.train.x)), test: $(size(ds.test.x)))")
+    print(io, "DataSplit(features: $(n_features), train: $(n_train), test: $(n_test))")
+end
+
+"""
+Overload of the show function for [`ClassIncrementalDataSplit`](@ref).
+
+# Arguments
+- `io::IO`: the current IO stream.
+- `field::ClassIncrementalDataSplit`: the [`ClassIncrementalDataSplit`](@ref) to print/display.
+"""
+function Base.show(
+    io::IO,
+    ds::ClassIncrementalDataSplit,
+)
+    # Compute all of the dimensions of the dataset
+    s_train = size(ds.train[1].x)
+
+    # Get the number of features, training samples, and testing samples
+    n_dims = length(s_train)
+    n_features = s_train[1:n_dims - 1]
+    n_classes = length(ds.train)
+
+    # print(io, "DataSplit(features: $(size(ds.train.x)), test: $(size(ds.test.x)))")
+    print(io, "ClassIncrementalDataSplit(features: $(n_features), n_classes: $(n_classes))")
+end
+
+# -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
@@ -218,6 +272,23 @@ Loads the MNIST dataset using MLDatasets.
 function get_mnist()
     trainset = MLDatasets.MNIST(:train)
     testset = MLDatasets.MNIST(:test)
+
+    X_train, y_train = trainset[:]
+    X_test, y_test = testset[:]
+
+    dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
+
+    # dataset = tensorize_datasplit(dataset)
+
+    return dataset
+end
+
+"""
+Loads the MNIST dataset using MLDatasets.
+"""
+function get_cifar10()
+    trainset = MLDatasets.CIFAR10(:train)
+    testset = MLDatasets.CIFAR10(:test)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]

@@ -18,22 +18,43 @@ Constant for pretty indentation spacing in JSON files.
 const JSON_INDENT = 4
 
 # Valid types of certain options
-# if !@isdefined BLOCK_TYPES
 """
 The names of the blocks that are encountered during L2 experiments.
 """
 const BLOCK_TYPES = ["train", "test"]
-# end
-# if !@isdefined LOG_STATES
+
 """
 The enumerated states that an L2 logger log can be in.
 """
 const LOG_STATES = ["complete", "incomplete"]
-# end
 
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
+
+"""
+Saves the dictionary to a JSON file.
+
+# Arguments
+- `filepath::AbstractString`: the full file name (with path) to save to.
+- `dict::AbstractDict`: the dictionary to save to the file.
+"""
+function json_save(filepath::AbstractString, dict::AbstractDict)
+    # Use the with open syntax to print directly to the file.
+    open(filepath, "w") do f
+        JSON.print(f, dict, JSON_INDENT)
+    end
+end
+
+"""
+Loads the JSON file, interpreted as a dictionary.
+
+# Arguments
+- `filepath::AbstractString`: the full file name (with path) to load.
+"""
+function json_load(filepath::AbstractString)
+    return JSON.parsefile(filepath)
+end
 
 """
 Sanitizes a selection within a list of acceptable options.
@@ -71,28 +92,4 @@ Sanitize the selected log state against the [`LOG_STATES`](@ref) constant.
 function sanitize_log_state(log_state::AbstractString)
     # Verify that we have a correct log state
     sanitize_in_list("log_state", log_state, LOG_STATES)
-end
-
-"""
-Saves the dictionary to a JSON file.
-
-# Arguments
-- `filepath::AbstractString`: the full file name (with path) to save to.
-- `dict::AbstractDict`: the dictionary to save to the file.
-"""
-function json_save(filepath::AbstractString, dict::AbstractDict)
-    # Use the with open syntax to print directly to the file.
-    open(filepath, "w") do f
-        JSON.print(f, dict, JSON_INDENT)
-    end
-end
-
-"""
-Loads the JSON file, interpreted as a dictionary.
-
-# Arguments
-- `filepath::AbstractString`: the full file name (with path) to load.
-"""
-function json_load(filepath::AbstractString)
-    return JSON.parsefile(filepath)
 end
