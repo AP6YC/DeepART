@@ -47,7 +47,8 @@ using
     Parameters,
     Plots,
     Pluto,
-    PlutoUI
+    PlutoUI,
+    UnicodePlots
 
 # Precompile concrete type methods
 import PrecompileSignatures: @precompile_signatures

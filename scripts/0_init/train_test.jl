@@ -21,7 +21,7 @@ using Plots
 # CONFIG
 # -----------------------------------------------------------------------------
 
-tt_dict = Dict(
+opts = Dict(
     # N_BATCH = 12
     "N_BATCH" => 128,
     "N_EPOCH" => 1,
@@ -39,14 +39,18 @@ data = DeepART.get_mnist()
 # data = all_data["moon"]
 # data = all_data["ring"]
 
-DeepART.train_test!(model, data)
-
-lineplot(
-    acc_log,
-    title="Accuracy Trend",
-    xlabel="Iteration",
-    ylabel="Test Accuracy",
+DeepART.train_test!(
+    # model,
+    data,
+    opts,
 )
+
+# lineplot(
+#     acc_log,
+#     title="Accuracy Trend",
+#     xlabel="Iteration",
+#     ylabel="Test Accuracy",
+# )
 
 # plot(
 #     acc_log,
