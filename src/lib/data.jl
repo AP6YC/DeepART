@@ -8,6 +8,24 @@ A collection of types and utilities for loading and handling datasets for the pr
 - Sasha Petrenko <petrenkos@mst.edu> @AP6YC
 """
 
+"""
+Wrapper for shuffling features and their labels.
+
+# Arguments
+- `features::AbstractArray`: the set of data features.
+- `labels::AbstractArray`: the set of labels corresponding to the features.
+"""
+function shuffle_pairs(
+    features::AbstractArray,
+    labels::AbstractArray,
+)
+    # Use the MLUtils function for shuffling
+    ls, ll = shuffleobs((features, labels))
+
+    # Return the pairs
+    return ls, ll
+end
+
 # -----------------------------------------------------------------------------
 # ABTRACT TYPES
 # -----------------------------------------------------------------------------
@@ -65,7 +83,7 @@ end
 """
 A class-incremental variant of a [`DataSplit`](@ref) containing instead vectors of [`SupervisedDataset`](@ref)s.
 """
-struct TaskIncrementalDataSplit
+struct ClassIncrementalDataSplit
     """
     The vector of training class datasets.
     """
@@ -86,13 +104,22 @@ $ARG_SUPERVISEDDATASET
 function class_incrementalize(data::SupervisedDataset)
     # Initialize the new class incremental vector
     new_data = Vector{SupervisedDataset}()
-    n_classes = length(unique(data.y))
-    n_dim = length(size(data.x))
+
+    local_y = if ndims(data.y) == 2
+        Flux.onecold(data.y)
+    else
+        data.y
+    end
+
+    n_classes = length(unique(local_y))
+    n_dim = ndims(data.x)
 
     # Iterate over all integer class labels
     for ix = 1:n_classes
         # Get all of the indices corresponding to the integer class label
-        class_indices = findall(x->x==ix, data.y)
+
+        class_indices = findall(x->x==ix, local_y)
+
         # Fragile, but it works for now
         local_features = if n_dim == 4
             data.x[:, :, :, class_indices]
@@ -101,10 +128,17 @@ function class_incrementalize(data::SupervisedDataset)
         elseif n_dim == 2
             data.x[:, class_indices]
         end
+
+        local_labels = if ndims(data.y) == 2
+            data.y[:, class_indices]
+        else
+            data.y[class_indices]
+        end
+
         # Create a new dataset from just these features and labels
         local_dataset = SupervisedDataset(
             local_features,
-            data.y[class_indices],
+            local_labels,
         )
         # Add the local dataset to the vector of datasets to return
         push!(new_data, local_dataset)
@@ -114,15 +148,80 @@ function class_incrementalize(data::SupervisedDataset)
 end
 
 """
-Constructor for a [`TaskIncrementalDataSplit`](@ref) taking a normal [`DataSplit`](@ref).
+Constructor for a [`ClassIncrementalDataSplit`](@ref) taking a normal [`DataSplit`](@ref).
 
 # Arguments
 $ARG_DATASPLIT
 """
-function TaskIncrementalDataSplit(datasplit::DataSplit)
-    return TaskIncrementalDataSplit(
+function ClassIncrementalDataSplit(datasplit::DataSplit)
+    return ClassIncrementalDataSplit(
         class_incrementalize(datasplit.train),
         class_incrementalize(datasplit.test),
+    )
+end
+
+# """
+# A task-incremental variant of a [`DataSplit`](@ref) containing multiple classes per task.
+# """
+# struct TaskIncrementalDataSplit
+#     """
+#     The vector of training class datasets.
+#     """
+#     train::Vector{SupervisedDataset}
+
+#     """
+#     The vector of testing class datasets.
+#     """
+#     test::Vector{SupervisedDataset}
+# end
+
+function group_datasets(
+    data::Vector{SupervisedDataset},
+    group::Vector{Int},
+    shuffle::Bool=true,
+)
+    # Cat the features
+    local_features = hcat([data[ix].x for ix in group]...)
+
+    # If we have one-hot encoded labels, we need to stack them differently
+    if ndims(data[1].y) == 2
+        local_labels = hcat([data[ix].y for ix in group]...)
+    else
+        local_labels = vcat([data[ix].y for ix in group]...)
+    end
+
+    if shuffle
+        local_features, local_labels = shuffle_pairs(local_features, local_labels)
+        local_features = copy(local_features)
+        local_labels = copy(local_labels)
+    end
+
+    return SupervisedDataset(local_features, local_labels)
+end
+
+function task_incrementalize(
+    data::Vector{SupervisedDataset},
+    groupings::Vector{Vector{Int}},
+    shuffle::Bool=true,
+)
+    new_data = Vector{SupervisedDataset}()
+
+    for group in groupings
+        # push!(new_data, SupervisedDataset(local_features, local_labels))
+        push!(new_data, group_datasets(data, group, shuffle))
+    end
+
+    return new_data
+end
+
+function TaskIncrementalDataSplit(
+    datasplit::ClassIncrementalDataSplit,
+    groupings::Vector{Vector{Int}};
+    shuffle::Bool=true,
+)
+    return ClassIncrementalDataSplit(
+        task_incrementalize(datasplit.train, groupings, shuffle),
+        task_incrementalize(datasplit.test, groupings, shuffle),
     )
 end
 
@@ -155,24 +254,6 @@ function DataSplit(
             y_test,
         ),
     )
-end
-
-"""
-Wrapper for shuffling features and their labels.
-
-# Arguments
-- `features::AbstractArray`: the set of data features.
-- `labels::AbstractArray`: the set of labels corresponding to the features.
-"""
-function shuffle_pairs(
-    features::AbstractArray,
-    labels::AbstractArray,
-)
-    # Use the MLUtils function for shuffling
-    ls, ll = shuffleobs((features, labels))
-
-    # Return the pairs
-    return ls, ll
 end
 
 """
@@ -240,15 +321,15 @@ function Base.show(
 end
 
 """
-Overload of the show function for [`TaskIncrementalDataSplit`](@ref).
+Overload of the show function for [`ClassIncrementalDataSplit`](@ref).
 
 # Arguments
 - `io::IO`: the current IO stream.
-- `field::TaskIncrementalDataSplit`: the [`TaskIncrementalDataSplit`](@ref) to print/display.
+- `field::ClassIncrementalDataSplit`: the [`ClassIncrementalDataSplit`](@ref) to print/display.
 """
 function Base.show(
     io::IO,
-    ds::TaskIncrementalDataSplit,
+    ds::ClassIncrementalDataSplit,
 )
     # Compute all of the dimensions of the dataset
     s_train = size(ds.train[1].x)
@@ -259,7 +340,7 @@ function Base.show(
     n_classes = length(ds.train)
 
     # print(io, "DataSplit(features: $(size(ds.train.x)), test: $(size(ds.test.x)))")
-    print(io, "TaskIncrementalDataSplit(features: $(n_features), n_classes: $(n_classes))")
+    print(io, "ClassIncrementalDataSplit(features: $(n_features), n_classes: $(n_classes))")
 end
 
 # -----------------------------------------------------------------------------
