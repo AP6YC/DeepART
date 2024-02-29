@@ -28,12 +28,12 @@ mutable struct IEWCState{T <: AbstractArray, U <: AbstractArray}
     """
     The Fisher Information Matrix (FIM) approximation.
     """
-    FIM::T
+    FIM::Vector{T}
 
     """
     The 'old parameters'.
     """
-    old_params::U
+    old_params::Vector{U}
 end
 
 # -----------------------------------------------------------------------------

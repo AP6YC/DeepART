@@ -136,9 +136,7 @@ for (key, datasplit) in all_data
 
         # Save the scenario
         DeepART.json_save(scenario_file, scenario_dict)
-
     end
-
 end
 
 # Experiment save directory name

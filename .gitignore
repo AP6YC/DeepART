@@ -18,6 +18,8 @@ work/**
 !work/*
 # Except for the gitkeeps in these subfolders
 !work/*/.gitkeep
+# Except for the existing data folder
+!work/data/
 
 # -----------------------------------------------------------------------------
 # JULIA GITHUB TEMPLATE IGNORES

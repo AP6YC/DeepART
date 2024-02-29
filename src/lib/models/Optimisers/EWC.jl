@@ -19,6 +19,7 @@ The parameters if an EWCIncremental optimiser.
     decay::Float = 0.9     # decay rate
     alpha::Float = 0.1
     new_task::Bool = true
+    # enabled::Bool = false
 end
 
 """
@@ -62,11 +63,14 @@ function Flux.Optimisers.apply!(o::EWC, state, x, dx)
         o.new_task = false
 
         return_dx = zero(x)
+        # return_dx = dx
         # return new_state, zero(x)
     # Otherwise, copy the state and return the EWC penalty
     else
         new_state = state
-        return_dx = (o.lambda / 2) * (x .- state.old_params) .* state.FIM
+        return_dx = ((o.lambda / 2) * (x .- state.old_params) .* state.FIM) .* o.eta
+        # return_dx = zero(x)
+        # return_dx = dx
         # return state, return_dx
     end
 
@@ -88,7 +92,12 @@ function Base.show(
     io::IO,
     state::EWCState,
 )
-    s1 = size(state.FIM)
+    s1 = if isnothing(state.FIM)
+        nothing
+    else
+        size(state.FIM)
+    end
     s2 = size(state.old_params)
+
     print(io, "EWC(FIM: $(s1), old_params: $(s2))")
 end
