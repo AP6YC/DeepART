@@ -26,6 +26,7 @@ N_BATCH = 128
 # N_BATCH = 4
 N_EPOCH = 2
 ACC_ITER = 10
+GPU = true
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -52,6 +53,8 @@ groupings = [collect(1:5), collect(6:10)]
 # groupings = [collect(1:10)]
 
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
+
+GPU && tidata |> gpu
 
 # Infer the input size
 n_input = size(fdata.train.x)[1]

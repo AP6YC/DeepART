@@ -25,7 +25,7 @@ include("docstrings.jl")
 include("drwatson.jl")
 
 # Datasets and their utilities
-include("data.jl")
+include("data/lib.jl")
 
 # Machine learning models and functions
 include("models/lib.jl")
