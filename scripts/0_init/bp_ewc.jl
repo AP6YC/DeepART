@@ -49,6 +49,7 @@ cidata = DeepART.ClassIncrementalDataSplit(fdata)
 # groupings = [[1,2], [3,4]]
 groupings = [[1,2],[3,4],[5,6],[7,8],[9,10]]
 # groupings = [collect(1:5), collect(6:10)]
+# groupings = [collect(1:10)]
 
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 
@@ -64,8 +65,8 @@ model = Chain(
     Dense(n_input, 128, relu),
     Dense(128, 64, relu),
     Dense(64, n_classes),
-    sigmoid,
-    # softmax,
+    # sigmoid,
+    softmax,
 )
 
 # model = Chain(
@@ -137,20 +138,21 @@ flat, re = Flux.destructure(model)
 
 EWC_opts = DeepART.EWCLossOpts()
 EWC_state = DeepART.EWCLossState()
+
 n_tasks = length(tidata.train)
 
 first_task = true
 
 # (Re)initialize the optimiser for this task
 # optim = Flux.setup(Flux.Adam(), flat)
-# optim = Flux.setup(Flux.Descent(), flat)
+optim = Flux.setup(Flux.Descent(), flat)
 
 for ep = 1:N_EPOCH
 
     # for (cx, cy) in
     for ix = 1:n_tasks
         # (Re)initialize the optimiser for this task
-        optim = Flux.setup(Flux.Adam(), flat)
+        # optim = Flux.setup(Flux.Adam(), flat)
 
         # Create a dataloader for this task
         # task_x = copy(tidata.train[ix].x)
@@ -171,6 +173,7 @@ for ep = 1:N_EPOCH
 
             # Compute gradients from the forward pass
             # val, grads = Flux.withgradient(model) do m
+            ewc_loss = 0.0
             val, grads = Flux.withgradient(flat) do m
                 # result = m(lx)
                 result = re(m)(lx)
@@ -178,7 +181,9 @@ for ep = 1:N_EPOCH
                 if first_task
                     Flux.logitcrossentropy(result, ly)
                 else
-                    Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+                    ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+                    Flux.logitcrossentropy(result, ly) + ewc_loss
+                    # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
                 end
             end
 
@@ -190,7 +195,7 @@ for ep = 1:N_EPOCH
                 acc = DeepART.flux_accuracy(re(flat)(task_xt), task_yt, n_classes)
                 push!(acc_log, acc)
                 # @info "Epoch: $(ep)\t acc: $(acc)\t loss: $(val)\t task: $(ix)\t classes: $(groupings[ix])"
-                @info @sprintf "Epoch: %i\t acc: %.4f\t loss: %.4f\t task: %i\t classes: %i %i" ep acc val ix groupings[ix][1] groupings[ix][2]
+                @info @sprintf "Epoch: %i\t acc: %.4f\t loss: %.4f\t (ewc): %.4f\t task: %i\t classes: %i %i" ep acc val ewc_loss ix groupings[ix][1] groupings[ix][2]
             end
             global ix_acc += 1
         end
@@ -198,6 +203,8 @@ for ep = 1:N_EPOCH
         # Compute the new FIM
         local_mem_data = DeepART.group_datasets(tidata.train, collect(1:ix), true)
         _, full_grads = Flux.withgradient(flat) do m
+            # result = re(m)(task_x)
+            # Flux.logitcrossentropy(result, task_y)
             result = re(m)(local_mem_data.x)
             Flux.logitcrossentropy(result, local_mem_data.y)
         end

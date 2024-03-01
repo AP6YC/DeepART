@@ -45,7 +45,7 @@ end
     # Flux.Optimisers.@def struct EWC <: Flux.Optimisers.AbstractRule
     eta::Float = 0.01      # learning rate
     # lambda::Float = 0.1    # regularization strength
-    lambda::Float = 0.9    # regularization strength
+    lambda::Float = 100000.0    # regularization strength
     decay::Float = 0.9     # decay rate
     alpha::Float = 0.1
     new_task::Bool = true
@@ -74,11 +74,11 @@ end
 function EWCLossState(state::EWCLossState, o::EWCLossOpts, x, dx)
     if isnothing(state.FIM)
         # @info "dx: $(size(dx)), $(typeof(dx))"
-        # new_FIM = dx .^ 2
-        new_FIM = dx.* dx
+        new_FIM = dx .^ 2
+        # new_FIM = dx.* dx
     else
-        # new_FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx.^2
-        new_FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
+        new_FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx.^2
+        # new_FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
     end
 
     return EWCLossState(new_FIM, copy(x))
