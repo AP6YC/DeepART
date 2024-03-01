@@ -15,8 +15,11 @@ function flux_accuracy(
     # n_classes = DeepART.n_classor(y_truth, n_class)
     classes = collect(1:n_class)
 
+    real_y_hat = vec([x[1] for x in argmax(y_hat, dims=1)])
+
     return Flux.mean(
-        Flux.onecold(y_hat, classes) .== Flux.onecold(y_truth, classes)
+        real_y_hat .== Flux.onecold(y_truth, classes)
+        # Flux.onecold(y_hat, classes) .== Flux.onecold(y_truth, classes)
     )
     # return Flux.mean(Flux.onecold(y_hat, classes) .== y_truth)
 end
