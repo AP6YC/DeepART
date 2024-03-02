@@ -2,7 +2,7 @@
     SupervisedDataset.jl
 
 # Description
-Type and function definitions for the `SupervisedDataset` struct.
+Type and function definitions for a supervised dataset of features and labels.
 """
 
 # -----------------------------------------------------------------------------

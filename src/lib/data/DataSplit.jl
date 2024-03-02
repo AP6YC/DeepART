@@ -1,3 +1,9 @@
+"""
+    DataSplit.jl
+
+# Description
+Definitions for a train/test split of supervised datasets.
+"""
 
 """
 A train/test split of supervised datasets.

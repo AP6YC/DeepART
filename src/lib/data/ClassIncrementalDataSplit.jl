@@ -5,6 +5,10 @@
 A class-incremental variant of a [`DataSplit`](@ref) containing vectors of [`SupervisedDataset`](@ref)s.
 """
 
+# -----------------------------------------------------------------------------
+# TYPE ALIASES
+# -----------------------------------------------------------------------------
+
 """
 Type alias for a a class-incremental dataset as a vector of [`SupervisedDataset`](@ref)s.
 """
@@ -58,12 +62,14 @@ function class_incrementalize(data::SupervisedDataset)
     # Initialize the new class incremental vector
     new_data = ClassIncrementalSupervisedDataset()
 
+    # If the labels are one-hot encoded, one-cold them back
     local_y = if ndims(data.y) == 2
         Flux.onecold(data.y)
     else
         data.y
     end
 
+    # Get the number of classes and dimensions
     n_classes = length(unique(local_y))
     n_dim = ndims(data.x)
 
@@ -113,8 +119,16 @@ function ClassIncrementalDataSplit(datasplit::DataSplit)
     )
 end
 
+"""
+Returns a [`SupervisedDataset`](@ref)s that combines the datasets in a [`ClassIncrementalSupervisedDataset`](@ref) at the indices given by `group`.
+
+# Arguments
+- `data::ClassIncrementalSupervisedDataset`: the vector of [`SupervisedDataset`](@ref)s to select and combine from.
+- `group::Vector{Int}`: the indices to select from for combining.
+- `shuffle::Bool`: flag for pairwise shuffling the dataset after it has been combined, default true.
+"""
 function group_datasets(
-    data::Vector{SupervisedDataset},
+    data::ClassIncrementalSupervisedDataset,
     group::Vector{Int},
     shuffle::Bool=true,
 )
@@ -128,21 +142,31 @@ function group_datasets(
         local_labels = vcat([data[ix].y for ix in group]...)
     end
 
+    # Shuffle if necessary
     if shuffle
         local_features, local_labels = shuffle_pairs(local_features, local_labels)
         local_features = copy(local_features)
         local_labels = copy(local_labels)
     end
 
+    # Construct and return the new supervised dataset
     return SupervisedDataset(local_features, local_labels)
 end
 
+"""
+Groups multiple datasets within a [`ClassIncrementalSupervisedDataset`](@ref) according to a vector of groupings.
+
+# Arguments
+- `data:ClassIncrementalSupervisedDataset`: the vector of datasets to group.
+- `groupings::Vector{Vector{Int}}`: the set of groupings to perform.
+- `shuffle::Bool`: flag for pairwise shuffling after grouping, default true.
+"""
 function task_incrementalize(
-    data::Vector{SupervisedDataset},
+    data::ClassIncrementalSupervisedDataset,
     groupings::Vector{Vector{Int}},
     shuffle::Bool=true,
 )
-    new_data = Vector{SupervisedDataset}()
+    new_data = ClassIncrementalSupervisedDataset()
 
     for group in groupings
         # push!(new_data, SupervisedDataset(local_features, local_labels))
@@ -152,6 +176,12 @@ function task_incrementalize(
     return new_data
 end
 
+"""
+Combines classes in the training and testing datasets of a [`ClassIncrementalDataSplit`](@ref) according to the provided `groupings`.
+
+# Arguments
+- `datasplit::ClassIncrementalDataSplit`: a [`ClassIncrementalDataSplit`](@ref) to combine elements of according to the groupings
+"""
 function TaskIncrementalDataSplit(
     datasplit::ClassIncrementalDataSplit,
     groupings::Vector{Vector{Int}};
