@@ -13,7 +13,7 @@ function flux_accuracy(
     n_class::Int,
     # n_class::Int=0,
 )
-# flux_accuracy(x, y) = mean(Flux.onecold(flux_model(x), classes) .== y);
+    # flux_accuracy(x, y) = mean(Flux.onecold(flux_model(x), classes) .== y);
     # If the number of classes is specified, use that, otherwise infer from the training labels
     # n_classes = DeepART.n_classor(y_truth, n_class)
     classes = collect(1:n_class)
@@ -26,7 +26,6 @@ function flux_accuracy(
     )
     # return Flux.mean(Flux.onecold(y_hat, classes) .== y_truth)
 end
-
 
 """
 Simple train/test split experiment.

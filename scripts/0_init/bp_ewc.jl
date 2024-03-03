@@ -26,7 +26,7 @@ N_BATCH = 128
 # N_BATCH = 4
 N_EPOCH = 2
 ACC_ITER = 10
-GPU = true
+GPU = false
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -44,8 +44,10 @@ n_classes = length(unique(data.train.y))
 
 # Get the flat features and one-hot labels
 fdata = DeepART.flatty_hotty(data)
+
 # Turn these into a class-incremental dataset
 cidata = DeepART.ClassIncrementalDataSplit(fdata)
+
 # Combine and shuffle to multiple classes per task
 # groupings = [[1,2], [3,4]]
 # groupings = [[1,2],[3,4],[5,6],[7,8],[9,10]]
@@ -79,6 +81,139 @@ model = Chain(
 #     Dense(15=>10,sigmoid),
 #     softmax
 # )
+
+ix_acc = 0
+acc_log = []
+
+flat, re = Flux.destructure(model)
+
+EWC_opts = DeepART.EWCLossOpts()
+EWC_state = DeepART.EWCLossState()
+
+n_tasks = length(tidata.train)
+
+# first_task = true
+
+# (Re)initialize the optimiser for this task
+# optim = Flux.setup(Flux.Adam(), flat)
+# optim = Flux.setup(Flux.Descent(), flat)
+stps = []
+
+for ix = 1:n_tasks
+
+    # @info first_task
+
+    # (Re)initialize the optimiser for this task
+    optim = Flux.setup(Flux.Adam(), flat)
+
+    for ep = 1:N_EPOCH
+        # Create a dataloader for this task
+        # task_x = copy(tidata.train[ix].x)
+        # task_y = copy(tidata.train[ix].y)
+        task_x = tidata.train[ix].x
+        task_y = tidata.train[ix].y
+
+        # task_xt = copy(tidata.test[ix].x)
+        # task_yt = copy(tidata.test[ix].y)
+        task_xt = tidata.test[ix].x
+        task_yt = tidata.test[ix].y
+
+        dataloader = Flux.DataLoader((task_x, task_y), batchsize=N_BATCH)
+
+        for (lx, ly) in dataloader
+            # Flux.Optimisers.adjust!(optim, new_task = true)
+
+            # Compute gradients from the forward pass
+            # val, grads = Flux.withgradient(model) do m
+            ewc_loss = 0.0
+            # val, grads = Flux.withgradient(flat) do m
+            #     # result = m(lx)
+            #     result = re(m)(lx)
+            #     # loss(result, ly)
+            #     if first_task
+            #         Flux.logitcrossentropy(result, ly)
+            #     else
+            #         ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+            #         Flux.logitcrossentropy(result, ly) + ewc_loss
+            #         # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+            #     end
+            # end
+
+            val, grads = if first_task
+                Flux.withgradient(flat) do m
+                    result = re(m)(lx)
+                    Flux.logitcrossentropy(result, ly)
+                end
+            else
+                Flux.withgradient(flat) do m
+                    result = re(m)(lx)
+                    ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+                    Flux.logitcrossentropy(result, ly) + ewc_loss
+                    # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+                end
+            end
+
+            Flux.update!(optim, flat, grads[1])
+
+            if ix_acc % ACC_ITER == 0
+                # acc = DeepART.flux_accuracy(model(fdata.test.x), fdata.test.y, n_classes)
+                # acc = DeepART.flux_accuracy(re(flat)(fdata.test.x), fdata.test.y, n_classes)
+                acc = DeepART.flux_accuracy(re(flat)(task_xt), task_yt, n_classes)
+                push!(acc_log, acc)
+                # @info "Epoch: $(ep)\t acc: $(acc)\t loss: $(val)\t task: $(ix)\t classes: $(groupings[ix])"
+                @info @sprintf "Epoch: %i\t acc: %.4f\t loss: %.4f\t ewc: %.8f\t task: %i\t classes: %i %i" ep acc val ewc_loss ix groupings[ix][1] groupings[ix][2]
+            end
+            global ix_acc += 1
+        end
+    end
+
+    # Compute single task performances
+    local_stp = []
+    for jx = 1:ix
+        local_perf = DeepART.flux_accuracy(re(flat)(tidata.test[jx].x), tidata.test[jx].y, n_classes)
+        push!(local_stp, local_perf)
+    end
+    push!(stps, local_stp)
+
+    # Compute the new FIM
+    local_mem_data = DeepART.group_datasets(tidata.train, collect(1:ix), true)
+    _, full_grads = Flux.withgradient(flat) do m
+        # result = re(m)(task_x)
+        # Flux.logitcrossentropy(result, task_y)
+        result = re(m)(local_mem_data.x)
+        Flux.logitcrossentropy(result, local_mem_data.y)
+    end
+
+    global EWC_state = DeepART.EWCLossState(EWC_state, EWC_opts, flat, full_grads[1])
+    # global first_task = false
+    global EWC_opts.first_task = false
+end
+
+# _, full_grads = Flux.withgradient(flat) do m
+#     result = re(m)(fdata.test.x)
+#     Flux.logitcrossentropy(result, fdata.test.y)
+# end
+
+@info stps
+@info "Accuracy: $(DeepART.flux_accuracy(re(flat)(fdata.test.x), fdata.test.y, n_classes))"
+
+lineplot(
+    acc_log,
+    title="Accuracy Trend",
+    xlabel="Iteration",
+    ylabel="Test Accuracy",
+)
+
+# plot(
+#     acc_log,
+#     title="Accuracy Trend",
+#     xlabel="Iteration",
+#     ylabel="Test Accuracy",
+# )
+
+
+
+
 
 # model = Chain(
 #     # Dense(n_input, 64),
@@ -130,135 +265,8 @@ model = Chain(
 #     Flux.mean(Flux.onecold(y_hat, classes) .== y_truth)
 # end
 
-ix_acc = 0
-acc_log = []
-
-flat, re = Flux.destructure(model)
-
-EWC_opts = DeepART.EWCLossOpts()
-EWC_state = DeepART.EWCLossState()
-
-n_tasks = length(tidata.train)
-
-first_task = true
-
-# (Re)initialize the optimiser for this task
-# optim = Flux.setup(Flux.Adam(), flat)
-# optim = Flux.setup(Flux.Descent(), flat)
-stps = []
-
-for ix = 1:n_tasks
-    for ep = 1:N_EPOCH
-
-    # for (cx, cy) in
-        # (Re)initialize the optimiser for this task
-        optim = Flux.setup(Flux.Adam(), flat)
-
-        # Create a dataloader for this task
-        # task_x = copy(tidata.train[ix].x)
-        # task_y = copy(tidata.train[ix].y)
-        task_x = tidata.train[ix].x
-        task_y = tidata.train[ix].y
-
-        # task_xt = copy(tidata.test[ix].x)
-        # task_yt = copy(tidata.test[ix].y)
-        task_xt = tidata.test[ix].x
-        task_yt = tidata.test[ix].y
-
-        dataloader = Flux.DataLoader((task_x, task_y), batchsize=N_BATCH)
-
-        # dataloader = Flux.DataLoader((fdata.train.x, fdata.train.y), batchsize=N_BATCH)
-        for (lx, ly) in dataloader
-            # Flux.Optimisers.adjust!(optim, new_task = true)
-
-            # Compute gradients from the forward pass
-            # val, grads = Flux.withgradient(model) do m
-            ewc_loss = 0.0
-            # val, grads = Flux.withgradient(flat) do m
-            #     # result = m(lx)
-            #     result = re(m)(lx)
-            #     # loss(result, ly)
-            #     if first_task
-            #         Flux.logitcrossentropy(result, ly)
-            #     else
-            #         ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-            #         Flux.logitcrossentropy(result, ly) + ewc_loss
-            #         # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-            #     end
-            # end
-
-            val, grads = if first_task
-                Flux.withgradient(flat) do m
-                    result = re(m)(lx)
-                    Flux.logitcrossentropy(result, ly)
-                end
-            else
-                Flux.withgradient(flat) do m
-                    result = re(m)(lx)
-                    ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-                    Flux.logitcrossentropy(result, ly) + ewc_loss
-                    # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-                end
-            end
-
-            Flux.update!(optim, flat, grads[1])
-
-            if ix_acc % ACC_ITER == 0
-                # acc = DeepART.flux_accuracy(model(fdata.test.x), fdata.test.y, n_classes)
-                # acc = DeepART.flux_accuracy(re(flat)(fdata.test.x), fdata.test.y, n_classes)
-                acc = DeepART.flux_accuracy(re(flat)(task_xt), task_yt, n_classes)
-                push!(acc_log, acc)
-                # @info "Epoch: $(ep)\t acc: $(acc)\t loss: $(val)\t task: $(ix)\t classes: $(groupings[ix])"
-                @info @sprintf "Epoch: %i\t acc: %.4f\t loss: %.4f\t ewc: %.8f\t task: %i\t classes: %i %i" ep acc val ewc_loss ix groupings[ix][1] groupings[ix][2]
-            end
-            global ix_acc += 1
-        end
-    end
-
-    # Compute the new FIM
-    local_mem_data = DeepART.group_datasets(tidata.train, collect(1:ix), true)
-    _, full_grads = Flux.withgradient(flat) do m
-        # result = re(m)(task_x)
-        # Flux.logitcrossentropy(result, task_y)
-        result = re(m)(local_mem_data.x)
-        Flux.logitcrossentropy(result, local_mem_data.y)
-    end
 
 
-    global EWC_state = DeepART.EWCLossState(EWC_state, EWC_opts, flat, full_grads[1])
-    global first_task = false
-
-    # Compute single task performances
-    local_stp = []
-    for jx = 1:ix
-        local_perf = DeepART.flux_accuracy(re(flat)(tidata.test[jx].x), tidata.test[jx].y, n_classes)
-        push!(local_stp, local_perf)
-    end
-    push!(stps, local_stp)
-end
-
-@info stps
-
-# _, full_grads = Flux.withgradient(flat) do m
-#     result = re(m)(fdata.test.x)
-#     Flux.logitcrossentropy(result, fdata.test.y)
-# end
-
-@info "Accuracy: $(DeepART.flux_accuracy(re(flat)(fdata.test.x), fdata.test.y, n_classes))"
-
-lineplot(
-    acc_log,
-    title="Accuracy Trend",
-    xlabel="Iteration",
-    ylabel="Test Accuracy",
-)
-
-plot(
-    acc_log,
-    title="Accuracy Trend",
-    xlabel="Iteration",
-    ylabel="Test Accuracy",
-)
 
 # Flux.Optimisers.adjust!(optim, enabled = false)
 

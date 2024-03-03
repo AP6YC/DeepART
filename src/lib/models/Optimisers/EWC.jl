@@ -45,10 +45,10 @@ end
     # Flux.Optimisers.@def struct EWC <: Flux.Optimisers.AbstractRule
     eta::Float = 0.01      # learning rate
     # lambda::Float = 0.1    # regularization strength
-    lambda::Float = 10000.0    # regularization strength
+    lambda::Float = 100000.0    # regularization strength
     decay::Float = 0.9     # decay rate
-    alpha::Float = 0.5
-    new_task::Bool = true
+    alpha::Float = 0.1
+    first_task::Bool = false
     # enabled::Bool = false
 end
 
