@@ -148,3 +148,10 @@ $COMMON_DOC argument for the number of classes.
 const ARG_N_CLASS = """
 - `n_class::Int=0`: the true number of classes (if known).
 """
+
+"""
+$COMMON_DOC argument for an index parameter.
+"""
+const ARG_INDEX = """
+- `index::Int`: the element index.
+"""

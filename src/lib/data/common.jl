@@ -47,7 +47,6 @@ function shuffle_pairs(
     return ls, ll
 end
 
-
 """
 Returns the number of classes given a vector of labels.
 

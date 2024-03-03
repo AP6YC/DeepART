@@ -29,6 +29,32 @@ end
 # -----------------------------------------------------------------------------
 
 """
+Returns a feature sample from a [`SupervisedDataset`](@ref) at the provided `index`.
+
+# Arguments
+$ARG_SUPERVISEDDATASET
+$ARG_INDEX
+"""
+function get_sample(data::SupervisedDataset, index::Int)
+    return data.x[:, index]
+end
+
+"""
+Returns a supervised label from the [`SupervisedDataset`](@ref) at the provided `index`, accounting for one-hot labels.
+
+# Arguments
+$ARG_SUPERVISEDDATASET
+$ARG_INDEX
+"""
+function get_label(data::SupervisedDataset, index::Int)
+    return if ndims(data.y) == 2
+        data.y[:, index]
+    else
+        data.y[index]
+    end
+end
+
+"""
 Turns the features of a dataset into a tensor.
 
 # Arguments

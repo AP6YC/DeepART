@@ -159,7 +159,7 @@ Groups multiple datasets within a [`ClassIncrementalSupervisedDataset`](@ref) ac
 # Arguments
 - `data:ClassIncrementalSupervisedDataset`: the vector of datasets to group.
 - `groupings::Vector{Vector{Int}}`: the set of groupings to perform.
-- `shuffle::Bool`: flag for pairwise shuffling after grouping, default true.
+$ARG_SHUFFLE
 """
 function task_incrementalize(
     data::ClassIncrementalSupervisedDataset,
@@ -181,6 +181,8 @@ Combines classes in the training and testing datasets of a [`ClassIncrementalDat
 
 # Arguments
 - `datasplit::ClassIncrementalDataSplit`: a [`ClassIncrementalDataSplit`](@ref) to combine elements of according to the groupings
+- `groupings::Vector{Vector{Int}}`: the set of groupings to perform.
+$ARG_SHUFFLE
 """
 function TaskIncrementalDataSplit(
     datasplit::ClassIncrementalDataSplit,
@@ -202,7 +204,7 @@ Overload of the show function for [`ClassIncrementalDataSplit`](@ref).
 
 # Arguments
 - `io::IO`: the current IO stream.
-- `field::ClassIncrementalDataSplit`: the [`ClassIncrementalDataSplit`](@ref) to print/display.
+- `ds::ClassIncrementalDataSplit`: the [`ClassIncrementalDataSplit`](@ref) to print/display.
 """
 function Base.show(
     io::IO,
