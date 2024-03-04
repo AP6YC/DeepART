@@ -25,8 +25,9 @@ using Printf
 N_BATCH = 128
 # N_BATCH = 4
 N_EPOCH = 2
-ACC_ITER = 10
-GPU = false
+ACC_ITER = 25
+# GPU = false
+GPU = true
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -51,10 +52,12 @@ cidata = DeepART.ClassIncrementalDataSplit(fdata)
 # Combine and shuffle to multiple classes per task
 # groupings = [[1,2], [3,4]]
 # groupings = [[1,2],[3,4],[5,6],[7,8],[9,10]]
-groupings = [collect(1:5), collect(6:10)]
 # groupings = [collect(1:10)]
+groupings = [collect(1:5), collect(6:10)]
 
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
+
+n_tasks = length(tidata.train)
 
 GPU && tidata |> gpu
 
@@ -66,13 +69,26 @@ n_input = size(fdata.train.x)[1]
 # -----------------------------------------------------------------------------
 
 # Make a simple multilayer perceptron
+# model = Chain(
+#     Dense(n_input, 128, relu),
+#     Dense(128, 64, relu),
+#     Dense(64, n_classes),
+#     # sigmoid,
+#     softmax,
+# )
+
 model = Chain(
-    Dense(n_input, 128, relu),
+    Dense(n_input, 512, relu),
+    Dense(512, 256, relu),
+    Dense(256, 128, relu),
     Dense(128, 64, relu),
     Dense(64, n_classes),
-    # sigmoid,
-    softmax,
+    sigmoid,
+    # softmax,
 )
+
+
+GPU && model |> gpu
 
 # model = Chain(
 #     Conv((5,5),1=>6,relu),
@@ -87,19 +103,20 @@ acc_log = []
 
 flat, re = Flux.destructure(model)
 
+old_flat = copy(flat)
+
 EWC_opts = DeepART.EWCLossOpts(
-    lambda = 100000000.0,
+    # lambda = 100000000.0,
+    lambda = 100.0,
 )
 EWC_state = DeepART.EWCLossState()
 
-function ewc_loss(flat)
-    return DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-end
-
-n_tasks = length(tidata.train)
+# function ewc_loss(flat)
+#     return DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+# end
 
 # (Re)initialize the optimiser for this task
-# optim = Flux.setup(Flux.Adam(), flat)
+optim = Flux.setup(Flux.Adam(), flat)
 # optim = Flux.setup(Flux.Descent(), flat)
 stps = []
 
@@ -111,7 +128,7 @@ stps = []
 
 for ix = 1:n_tasks
     # (Re)initialize the optimiser for this task
-    optim = Flux.setup(Flux.Adam(), flat)
+    # optim = Flux.setup(Flux.Adam(), flat)
 
     for ep = 1:N_EPOCH
         # Create a dataloader for this task
@@ -146,9 +163,10 @@ for ix = 1:n_tasks
 
             val, grads = Flux.withgradient(flat) do m
                 result = re(m)(lx)
-                # ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-                # return Flux.logitcrossentropy(result, ly) + ewc_loss
-                return Flux.logitcrossentropy(result, ly) + ewc_loss(flat)
+                ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+                Flux.logitcrossentropy(result, ly) + ewc_loss
+                # Flux.logitcrossentropy(result, ly)
+                # Flux.logitcrossentropy(result, ly) + ewc_loss(flat)
                 # loss(m(lx), ly)
                 # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
             end
@@ -161,7 +179,7 @@ for ix = 1:n_tasks
                 acc = DeepART.flux_accuracy(re(flat)(task_xt), task_yt, n_classes)
                 push!(acc_log, acc)
                 # @info "Epoch: $(ep)\t acc: $(acc)\t loss: $(val)\t task: $(ix)\t classes: $(groupings[ix])"
-                @info @sprintf "Epoch: %i\t acc: %.4f\t loss: %.4f\t ewc: %.8f\t task: %i\t classes: %i %i" ep acc val ewc_loss ix groupings[ix][1] groupings[ix][2]
+                @info @sprintf "Epoch: %i\t acc: %.4f\t loss: %.4f\t ewc: %e\t task: %i\t classes: %i %i" ep acc val ewc_loss ix groupings[ix][1] groupings[ix][2]
             end
             global ix_acc += 1
         end
@@ -183,8 +201,12 @@ for ix = 1:n_tasks
         result = re(m)(local_mem_data.x)
         Flux.logitcrossentropy(result, local_mem_data.y)
     end
+    FIM_n_samples = length(local_mem_data.y)
 
-    global EWC_state = DeepART.EWCLossState(EWC_state, EWC_opts, flat, full_grads[1])
+    global EWC_state = DeepART.EWCLossState(EWC_state, EWC_opts, flat, full_grads[1], FIM_n_samples)
+    if EWC_opts.first_task
+        global old_flat = copy(flat)
+    end
     global EWC_opts.first_task = false
 end
 
@@ -194,14 +216,26 @@ end
 # end
 
 @info stps
+@info "Old Accuracy: $(DeepART.flux_accuracy(re(old_flat)(fdata.test.x), fdata.test.y, n_classes))"
 @info "Accuracy: $(DeepART.flux_accuracy(re(flat)(fdata.test.x), fdata.test.y, n_classes))"
 
-lineplot(
-    acc_log,
-    title="Accuracy Trend",
-    xlabel="Iteration",
-    ylabel="Test Accuracy",
-)
+p0 = DeepART.term_accuracy(acc_log)
+println(p0)
+
+y_hats = DeepART.one_coldify(re(flat)(fdata.test.x))
+p1 = DeepART.term_preds(y_hats, title="Task 2")
+println(p1)
+
+pre_y_hats = DeepART.one_coldify(re(old_flat)(fdata.test.x))
+p2 = DeepART.term_preds(pre_y_hats, title="Task 1")
+println(p2)
+
+# lineplot(
+#     acc_log,
+#     title="Accuracy Trend",
+#     xlabel="Iteration",
+#     ylabel="Test Accuracy",
+# )
 
 # plot(
 #     acc_log,

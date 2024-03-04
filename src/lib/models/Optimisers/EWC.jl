@@ -53,10 +53,10 @@ Options for the [`EWCLossState`](@ref).
     """
     lambda::Float = 1.0
 
-    """
-    EWC decay rate.
-    """
-    decay::Float = 0.9
+    # """
+    # EWC decay rate.
+    # """
+    # decay::Float = 0.9
 
     """
     EWC FIM update ratio.
@@ -67,6 +67,11 @@ Options for the [`EWCLossState`](@ref).
     Flag for if the first task is being trained upon.
     """
     first_task::Bool = true
+
+    """
+    Flag for if the FIM should be normalized.
+    """
+    normalize::Bool = true
 end
 
 """
@@ -91,6 +96,11 @@ function EWCLossState()
     return EWCLossState(nothing, nothing)
 end
 
+function normalize_FIM(FIM)
+    local_eps = 1e-12
+    return (FIM .- minimum(FIM)) ./ (maximum(FIM) .- minimum(FIM) .+ local_eps)
+end
+
 """
 Constructor for a new [`EWCLossState`](@ref) given an old state, the options, parameters, and the gradient.
 
@@ -100,16 +110,19 @@ Constructor for a new [`EWCLossState`](@ref) given an old state, the options, pa
 - `x`: the flat network parameters.
 - `dx`: the gradient of the loss with respect to the parameters.
 """
-function EWCLossState(state::EWCLossState, o::EWCLossOpts, x, dx)
+function EWCLossState(state::EWCLossState, o::EWCLossOpts, x, dx, n_samples)
     if isnothing(state.FIM)
         # @info "dx: $(size(dx)), $(typeof(dx))"
-        new_FIM = dx .^ 2
-        # new_FIM = dx.* dx
+        @info "COMPUTING NEW FIM" n_samples
+        new_FIM = dx .^ 2 ./ n_samples
     else
-        new_FIM = (1 - o.alpha) .* state.FIM + o.alpha .* dx.^2
-        # new_FIM = dx .^ 2
+        new_FIM = (1 - o.alpha) .* state.FIM + o.alpha .* dx.^2 ./ n_samples
         # new_FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx.^2
         # new_FIM = (1 - o.alpha) .* state.old_params + o.alpha .* dx .* dx
+    end
+
+    if o.normalize
+        new_FIM = normalize_FIM(new_FIM)
     end
 
     return EWCLossState(new_FIM, copy(x))

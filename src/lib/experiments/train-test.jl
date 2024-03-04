@@ -5,6 +5,10 @@
 Implements the variety of training/testing start-to-finish experiments.
 """
 
+function one_coldify(y_hat::AbstractArray)
+    return vec([x[1] for x in argmax(y_hat, dims=1)])
+end
+
 """
 """
 function flux_accuracy(
@@ -18,7 +22,8 @@ function flux_accuracy(
     # n_classes = DeepART.n_classor(y_truth, n_class)
     classes = collect(1:n_class)
 
-    real_y_hat = vec([x[1] for x in argmax(y_hat, dims=1)])
+    # real_y_hat = vec([x[1] for x in argmax(y_hat, dims=1)])
+    real_y_hat = one_coldify(y_hat)
 
     return Flux.mean(
         real_y_hat .== Flux.onecold(y_truth, classes)
