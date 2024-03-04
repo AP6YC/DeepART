@@ -87,34 +87,37 @@ acc_log = []
 
 flat, re = Flux.destructure(model)
 
-EWC_opts = DeepART.EWCLossOpts()
+EWC_opts = DeepART.EWCLossOpts(
+    lambda = 100000000.0,
+)
 EWC_state = DeepART.EWCLossState()
 
-n_tasks = length(tidata.train)
+function ewc_loss(flat)
+    return DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+end
 
-# first_task = true
+n_tasks = length(tidata.train)
 
 # (Re)initialize the optimiser for this task
 # optim = Flux.setup(Flux.Adam(), flat)
 # optim = Flux.setup(Flux.Descent(), flat)
 stps = []
 
+# function loss(result, ly)
+#     # result = re(m)(lx)
+#     # ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+#     return Flux.logitcrossentropy(result, ly) + ewc_loss
+# end
+
 for ix = 1:n_tasks
-
-    # @info first_task
-
     # (Re)initialize the optimiser for this task
     optim = Flux.setup(Flux.Adam(), flat)
 
     for ep = 1:N_EPOCH
         # Create a dataloader for this task
-        # task_x = copy(tidata.train[ix].x)
-        # task_y = copy(tidata.train[ix].y)
         task_x = tidata.train[ix].x
         task_y = tidata.train[ix].y
 
-        # task_xt = copy(tidata.test[ix].x)
-        # task_yt = copy(tidata.test[ix].y)
         task_xt = tidata.test[ix].x
         task_yt = tidata.test[ix].y
 
@@ -125,7 +128,7 @@ for ix = 1:n_tasks
 
             # Compute gradients from the forward pass
             # val, grads = Flux.withgradient(model) do m
-            ewc_loss = 0.0
+
             # val, grads = Flux.withgradient(flat) do m
             #     # result = m(lx)
             #     result = re(m)(lx)
@@ -139,18 +142,15 @@ for ix = 1:n_tasks
             #     end
             # end
 
-            val, grads = if first_task
-                Flux.withgradient(flat) do m
-                    result = re(m)(lx)
-                    Flux.logitcrossentropy(result, ly)
-                end
-            else
-                Flux.withgradient(flat) do m
-                    result = re(m)(lx)
-                    ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-                    Flux.logitcrossentropy(result, ly) + ewc_loss
-                    # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
-                end
+            ewc_loss = 0.0
+
+            val, grads = Flux.withgradient(flat) do m
+                result = re(m)(lx)
+                # ewc_loss = DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
+                # return Flux.logitcrossentropy(result, ly) + ewc_loss
+                return Flux.logitcrossentropy(result, ly) + ewc_loss(flat)
+                # loss(m(lx), ly)
+                # Flux.logitcrossentropy(result, ly) + DeepART.get_EWC_loss(EWC_state, EWC_opts, flat)
             end
 
             Flux.update!(optim, flat, grads[1])
@@ -185,7 +185,6 @@ for ix = 1:n_tasks
     end
 
     global EWC_state = DeepART.EWCLossState(EWC_state, EWC_opts, flat, full_grads[1])
-    # global first_task = false
     global EWC_opts.first_task = false
 end
 
