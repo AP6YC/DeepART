@@ -24,7 +24,7 @@ using Printf
 
 N_BATCH = 128
 # N_BATCH = 4
-N_EPOCH = 2
+N_EPOCH = 1
 ACC_ITER = 25
 # GPU = false
 GPU = true
