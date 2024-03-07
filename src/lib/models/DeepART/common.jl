@@ -74,13 +74,14 @@ end
 Instar learning rule.
 
 # Arguments
-- `x::AbstractVector`: input vector.
-- `w::AbstractVector`: weight vector.
-- `η::Float`: learning rate.
-
-# Returns
-- `w::AbstractVector`: updated weight vector.
+$X_ARG_DOCSTRING
+$W_ARG_DOCSTING,
+- `eta::Float`: learning rate.
 """
-function instar(x, w, η)
-    return w .+ η .* (x .- w)
+function instar(
+    x::RealVector,
+    W::RealVector,
+    eta::Float,
+)
+    return W .+ eta .* (x .- W)
 end

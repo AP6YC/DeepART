@@ -19,6 +19,21 @@ Options container for a [`DeepHeadART`](@ref) module.
     rho::Float = 0.6; @assert rho > 0.0 && rho <= 1.0
 
     """
+    Instar learning rate.
+    """
+    eta::Float = 0.1
+
+    """
+    Choice parameter: alpha > 0.
+    """
+    alpha = 1e-3; @assert alpha > 0.0
+
+    """
+    Learning parameter: beta ∈ (0, 1].
+    """
+    beta = 1.0; @assert beta > 0.0 && beta <= 1.0
+
+    """
     Simple dense specifier for the F1 layer.
     """
     F1_spec::DenseSpecifier = [2, 5, 3]
@@ -32,17 +47,12 @@ Options container for a [`DeepHeadART`](@ref) module.
     Shared dense specifier for the F2 layer.
     """
     F2_heads::DenseSpecifier = [3, 5, 3]
-
-    """
-    Instar learning rate.
-    """
-    eta::Float = 0.1
 end
 
 """
 Stateful information of a DeepHeadART module.
 """
-struct DeepHeadART{T <: Flux.Chain, U <: Flux.Chain, V <: Flux.Chain}
+struct DeepHeadART{T <: Flux.Chain, U <: Flux.Chain, V <: Flux.Chain} <: ARTModule
     """
     Feature presentation layer.
     """
@@ -57,6 +67,11 @@ struct DeepHeadART{T <: Flux.Chain, U <: Flux.Chain, V <: Flux.Chain}
     An [`opts_DeepHeadART`](@ref) options container.
     """
     opts::opts_DeepHeadART
+
+    """
+    Data configuration struct.
+    """
+    config::DataConfig
 end
 
 # -----------------------------------------------------------------------------
@@ -101,11 +116,20 @@ function DeepHeadART(
         head_spec=opts.F2_heads,
     )
 
+    field_dim = opts.F1_spec[end]
+
+    config = DataConfig(
+        0.0,
+        1.0,
+        field_dim,
+    )
+
     # Construct and return the field
     return DeepHeadART(
         F1,
         F2,
         opts,
+        config,
     )
 end
 
@@ -176,6 +200,24 @@ function learn!(
 
 
     return
+end
+
+function train!(
+    art::DeepHeadART,
+    x::RealArray,
+)
+
+    f1, f2 = forward(art, x)
+
+    local_act = [
+        basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)
+    ]
+
+    local_match = [
+        basic_match(art, f1, f2[ix]) for ix in eachindex(f2)
+    ]
+
+    return local_act, local_match
 end
 
 # -----------------------------------------------------------------------------
