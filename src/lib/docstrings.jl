@@ -155,3 +155,46 @@ $COMMON_DOC argument for an index parameter.
 const ARG_INDEX = """
 - `index::Int`: the element index.
 """
+
+"""
+$COMMON_DOC argument for input data of arbitrary dimension.
+"""
+const ARG_X = """
+- `x::RealArray`: the input data.
+"""
+
+"""
+$COMMON_DOC argument for a [`MultiHeadField`](@ref).
+"""
+const ARG_MULTIHEADFIELD = """
+- `field::MultiHeadField`: the [`MultiHeadField`](@ref) object.
+"""
+
+"""
+$COMMON_DOC argument for a [`DeepHeadART`](@ref).
+"""
+const ARG_DEEPHEADART = """
+- `art::DeepHeadART`: the [`DeepHeadART`](@ref) module.
+"""
+
+const ART_ARG_DOCSTRING = """
+- `art::ARTModule`: the ARTModule module.
+"""
+
+const X_ARG_DOCSTRING = """
+- `x::RealVector`: the sample vector to use.
+"""
+
+const W_ARG_DOCSTING = """
+- `W::RealVector`: the weight vector to use.
+"""
+
+"""
+Shared arguments string for methods using an ART module, sample 'x', and weight vector 'W'.
+"""
+const ART_X_W_ARGS = """
+# Arguments
+$(ART_ARG_DOCSTRING)
+$(X_ARG_DOCSTRING)
+$(W_ARG_DOCSTING)
+"""

@@ -37,6 +37,11 @@ The options container for a [`MultiHeadField`](@ref) module.
     The head layers specifier as a list of a number of nodes per layer, including the inputs and outputs.
     """
     head_spec::DenseSpecifier = DEFAULT_HEAD_SPEC
+
+    """
+    Instar learning rate.
+    """
+    eta::Float = 0.1
 end
 
 # """
@@ -130,8 +135,8 @@ end
 Computes the forward pass for a [`MultiHeadField`](@ref).
 
 # Arguments
-- `field::MultiHeadField`: the [`MultiHeadField`](@ref) object to compute activations for.
-- `x::AbstractArray`: the input data.
+$ARG_MULTIHEADFIELD
+$ARG_X
 """
 function forward(
     field::MultiHeadField,
@@ -148,8 +153,8 @@ end
 Computes the forward pass for a [`MultiHeadField`](@ref) and returns the activations of the shared and head layers.
 
 # Arguments
-- `field::MultiHeadField`: the [`MultiHeadField`](@ref) object to compute activations for.
-- `x::AbstractArray`: the input data.
+$ARG_MULTIHEADFIELD
+$ARG_X
 """
 function multi_activations(
     field::MultiHeadField,
@@ -164,15 +169,45 @@ function multi_activations(
     return outs_shared, outs_heads
 end
 
+"""
+Adds a node to the head of a [`MultiHeadField`](@ref).
+
+# Arguments
+$ARG_MULTIHEADFIELD
+$ARG_X
+"""
 function add_node!(
     field::MultiHeadField,
-    x::AbstractArray,
+    x::RealArray,
 )
-    # Get the current head
-    # head = field.heads[head_ix]
+
     push!(field.heads, get_dense(field.opts.head_spec))
 
     return
+end
+
+function learn!(
+    field::MultiHeadField,
+    # x::RealArray,
+    activations::Tuple,
+    index::Int,
+)
+
+    # Get the activations
+    outs_shared, outs_heads = activations
+
+    # Learn the shared layer
+    # Flux.back!(outs_shared[end], index)
+    # eta*y*(x-w)
+
+    # Learn the heads
+    # for ix = 1:length(outs_heads)
+    for ix in eachindex(outs_heads)
+        Flux.back!(outs_heads[ix][end], index)
+    end
+
+    return
+
 end
 
 # -----------------------------------------------------------------------------

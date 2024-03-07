@@ -32,6 +32,11 @@ Options container for a [`DeepHeadART`](@ref) module.
     Shared dense specifier for the F2 layer.
     """
     F2_heads::DenseSpecifier = [3, 5, 3]
+
+    """
+    Instar learning rate.
+    """
+    eta::Float = 0.1
 end
 
 """
@@ -112,12 +117,12 @@ end
 Forward pass for a [`DeepHeadART`](@ref) module.
 
 # Arguments
-- `art::DeepHeadART`: the [`DeepHeadART`](@ref) module.
-- `x::AbstractArray`: the input data.
+$ARG_DEEPHEADART
+$ARG_X
 """
 function forward(
     art::DeepHeadART,
-    x::AbstractArray,
+    x::RealArray,
 )
     f1 = art.F1(x)
     f2 = forward(art.F2, f1)
@@ -129,26 +134,46 @@ end
 Forward pass for a [`DeepHeadART`](@ref) module with activations.
 
 # Arguments
-- `art::DeepHeadART`: the [`DeepHeadART`](@ref) module.
-- `x::AbstractArray`: the input data.
+$ARG_DEEPHEADART
+$ARG_X
 """
 function multi_activations(
     art::DeepHeadART,
-    x::AbstractArray,
+    x::RealArray,
 )
     f1 = Flux.activations(art.F1, x)
     f2 = multi_activations(art.F2, f1[end])
     # f1 = Flux.activations(field.F1, x)
     # f2 = Flux.activations(field.F2, f1[end])
+
     return f1, f2
 end
 
+"""
+Adds a node to the F2 layer of the [`DeepHeadART`](@ref) module.
+
+# Arguments
+$ARG_DEEPHEADART
+$ARG_X
+"""
 function add_node!(
     art::DeepHeadART,
-    x::AbstractArray,
+    x::RealArray,
 )
 
     add_node!(art.F2, x)
+
+    return
+end
+
+function learn!(
+    art::DeepHeadART,
+    # x::RealArray,
+    activations::Tuple,
+    index::Int,
+)
+
+
 
     return
 end

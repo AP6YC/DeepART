@@ -38,7 +38,8 @@ out = DeepART.forward(b, x)
 multi = DeepART.multi_activations(b, x)
 
 
-DeepART.add_node!(b, x)
+
+# DeepART.add_node!(b, x)
 
 # for ix = 1:length(data.train.y)
 #     outs = DeepART.forward(m, data.train.x[:, ix])
