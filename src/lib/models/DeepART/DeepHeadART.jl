@@ -184,7 +184,6 @@ function add_node!(
     art::DeepHeadART,
     x::RealArray,
 )
-
     add_node!(art.F2, x)
 
     return
@@ -202,12 +201,35 @@ function learn!(
     return
 end
 
+"""
+Returns the last activation of the F1 layer.
+
+# Arguments
+- `a::Tuple`: the activations tuple.
+"""
+function get_last_f1(a::Tuple)
+    return a[end]
+end
+
+"""
+Returns the last activations of the F2 layer.
+
+# Arguments
+- `a::Tuple`: the activations tuple.
+"""
+function get_last_f2(a::Tuple)
+    return [a[end][ix][end] for ix in eachindex(a[end])]
+end
+
 function train!(
     art::DeepHeadART,
     x::RealArray,
 )
 
-    f1, f2 = forward(art, x)
+    # f1, f2 = forward(art, x)
+    f1a, f2a = multi_activations(art, x)
+    f1 = get_last_f1(f1a)
+    f2 = get_last_f2(f2a)
 
     local_act = [
         basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)
