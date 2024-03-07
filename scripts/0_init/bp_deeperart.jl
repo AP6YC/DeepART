@@ -1,7 +1,11 @@
+"""
+Development space for DeeperART.
+"""
+
 using Revise
 using DeepART
+using Flux
 
-# using Flux
 # d = DeepART.DeeperART()
 
 all_data = DeepART.load_all_datasets()
@@ -24,6 +28,17 @@ for jx = 1:4
     @info f2
 end
 
+
+f1 = Flux.activations(a.F1, x)
+f2 = Flux.activations(a.F2, f1[end])
+
+b = DeepART.DeepHeadART()
+
+out = DeepART.forward(b, x)
+multi = DeepART.multi_activations(b, x)
+
+
+DeepART.add_node!(b, x)
 
 # for ix = 1:length(data.train.y)
 #     outs = DeepART.forward(m, data.train.x[:, ix])

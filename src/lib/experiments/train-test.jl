@@ -14,10 +14,15 @@ end
 
 """
 Definition of testing accuracy for Flux.jl training loop logs.
+
+# Arguments
+- `y_hat::AbstractMatrix`: the predicted labels as a matrix.
+- `y_truth::AbstractMatrix`: the true labels as a matrix.
+- `n_class::Int`: the number of classes in the dataset.
 """
 function flux_accuracy(
-    y_hat::AbstractArray,
-    y_truth::AbstractArray,
+    y_hat::AbstractMatrix,
+    y_truth::AbstractMatrix,
     n_class::Int,
     # n_class::Int=0,
 )

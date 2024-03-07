@@ -10,3 +10,6 @@ include("MultiHeadField.jl")
 
 # Definition of a DeeperART module
 include("DeeperART.jl")
+
+# Definition of a DeepHeadART module
+include("DeepHeadART.jl")

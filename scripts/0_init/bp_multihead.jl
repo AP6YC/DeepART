@@ -5,8 +5,8 @@ using Flux
 # d = DeepART.DeeperART()
 
 m = DeepART.MultiHeadField(
-    n_shared = [2, 10, 3],
-    n_heads = [3, 10, 2],
+    shared_spec = [2, 10, 3],
+    head_spec = [3, 10, 2],
 )
 
 # j = DeepART.get_dense([1,2,3])
@@ -18,8 +18,8 @@ m = DeepART.MultiHeadField(
 Flux.activations(m.shared, [1,2])
 
 # m = DeepART.MultiHeadField(
-#     n_shared = [],
-#     n_heads = [3, 10, 2],
+#     shared_spec = [],
+#     head_spec = [3, 10, 2],
 # )
 
 outs = DeepART.forward(m, [1,2])

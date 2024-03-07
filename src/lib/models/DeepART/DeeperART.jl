@@ -79,10 +79,10 @@ function DeeperART(
     opts::opts_DeeperART
 )
     # # Create the shared network base
-    # shared = get_dense(opts.n_shared)
+    # shared = get_dense(opts.shared_spec)
 
     # # Create the heads
-    # heads = [get_dense(opts.n_heads) for _ = 1:5]
+    # heads = [get_dense(opts.head_spec) for _ = 1:5]
 
     F1 = get_dense(opts.F1_spec)
     F2 = get_dense(opts.F2_spec)
