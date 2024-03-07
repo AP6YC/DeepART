@@ -5,11 +5,15 @@
 Implements the variety of training/testing start-to-finish experiments.
 """
 
+"""
+One-cold vector encoding of a one-hot encoded array.
+"""
 function one_coldify(y_hat::AbstractArray)
     return vec([x[1] for x in argmax(y_hat, dims=1)])
 end
 
 """
+Definition of testing accuracy for Flux.jl training loop logs.
 """
 function flux_accuracy(
     y_hat::AbstractArray,

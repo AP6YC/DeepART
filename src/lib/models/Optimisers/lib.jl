@@ -9,3 +9,6 @@ include("EWC.jl")
 
 # Incremental EWC
 include("IEWC.jl")
+
+# EWC as a loss
+include("EWCLoss.jl")
