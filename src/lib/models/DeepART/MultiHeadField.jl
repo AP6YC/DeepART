@@ -101,7 +101,8 @@ function MultiHeadField(
     shared = get_dense(opts.shared_spec)
 
     # Create the heads
-    heads = [get_dense(opts.head_spec) for _ = 1:5]
+    # heads = [get_dense(opts.head_spec) for _ = 1:5]
+    heads = [get_dense(opts.head_spec)]
 
     # Construct and return the field
     return MultiHeadField(

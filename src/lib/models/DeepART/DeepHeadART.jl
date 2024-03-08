@@ -116,7 +116,7 @@ function DeepHeadART(
         head_spec=opts.F2_heads,
     )
 
-    field_dim = opts.F1_spec[end]
+    field_dim = opts.F1_spec[1]
 
     config = DataConfig(
         0.0,
@@ -189,10 +189,20 @@ function add_node!(
     return
 end
 
+"""
+Updates the weights of both the F1 layer and F2 layer (at the index) of the [`DeepHeadART`](@ref) module.
+
+# Arguments
+$ARG_DEEPHEADART
+- `activations::Tuple`: the activations tuple.
+- `index::Int`: the index of the node to update.
+"""
 function learn!(
     art::DeepHeadART,
     # x::RealArray,
-    activations::Tuple,
+    # activations::Tuple,
+    f1a::Tuple,
+    f2a::Tuple,
     index::Int,
 )
 
@@ -221,25 +231,77 @@ function get_last_f2(a::Tuple)
     return [a[end][ix][end] for ix in eachindex(a[end])]
 end
 
+"""
+Trains the [`DeepHeadART`](@ref) module on the provided sample `x`.
+
+# Arguments
+$ARG_DEEPHEADART
+$ARG_X
+"""
 function train!(
     art::DeepHeadART,
-    x::RealArray,
+    x::RealArray;
+    # preprocessed::Bool=false,
 )
+    # sample = ART.init_train!(x, art, preprocessed)
 
     # f1, f2 = forward(art, x)
     f1a, f2a = multi_activations(art, x)
-    f1 = get_last_f1(f1a)
+    f1 = ART.init_train!(get_last_f1(f1a), art, false)
     f2 = get_last_f2(f2a)
+    f2 = [ART.init_train!(f2[ix], art, false) for ix in eachindex(f2)]
 
-    local_act = [
-        basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)
-    ]
+    M = [basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)]
+    T = [basic_match(art, f1, f2[ix]) for ix in eachindex(f2)]
 
-    local_match = [
-        basic_match(art, f1, f2[ix]) for ix in eachindex(f2)
-    ]
+    # Sort activation function values in descending order
+    index = sortperm(T, rev=true)
 
-    return local_act, local_match
+    # Initialize mismatch as true
+    mismatch_flag = true
+
+    # Loop over all categories
+    n_categories = length(art.F2.heads)
+    for j = 1:n_categories
+        # Best matching unit
+        bmu = index[j]
+        # Vigilance check - pass
+        if M[bmu] >= art.opts.rho
+            # # If supervised and the label differed, force mismatch
+            # if supervised && (art.labels[bmu] != y)
+            #     break
+            # end
+
+            # Learn the sample
+            # ART.learn!(art, sample, bmu)
+			learn!(art, f1a, f2a, bmu)
+            # @info size(w_diff)
+            # Increment the instance counting
+            # art.n_instance[bmu] += 1
+
+            # Save the output label for the sample
+            # y_hat = art.labels[bmu]
+            y_hat = bmu
+
+            # No mismatch
+            mismatch_flag = false
+            break
+        end
+    end
+
+    # If there was no resonant category, make a new one
+    if mismatch_flag
+        # Keep the bmu as the top activation despite creating a new category
+        bmu = index[1]
+
+        # Get the correct label for the new category
+        # y_hat = supervised ? y : n_categories + 1
+
+        # Create a new category
+        # ART.create_category!(art, sample, y_hat)
+    end
+
+    return T, M
 end
 
 # -----------------------------------------------------------------------------

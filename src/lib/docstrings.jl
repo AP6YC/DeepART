@@ -177,20 +177,29 @@ const ARG_DEEPHEADART = """
 - `art::DeepHeadART`: the [`DeepHeadART`](@ref) module.
 """
 
+"""
+$COMMON_DOC argument for an `ARTModule`.
+"""
 const ART_ARG_DOCSTRING = """
 - `art::ARTModule`: the ARTModule module.
 """
 
+"""
+$COMMON_DOC argument for a sample 'x'.
+"""
 const X_ARG_DOCSTRING = """
-- `x::RealVector`: the sample vector to use.
+- `x::RealVector`: the input sample vector to use.
 """
 
+"""
+$COMMON_DOC argument for a weight vector 'W'.
+"""
 const W_ARG_DOCSTING = """
 - `W::RealVector`: the weight vector to use.
 """
 
 """
-Shared arguments string for methods using an ART module, sample 'x', and weight vector 'W'.
+$COMMON_DOC shared arguments string for methods using an ART module, sample 'x', and weight vector 'W'.
 """
 const ART_X_W_ARGS = """
 # Arguments
