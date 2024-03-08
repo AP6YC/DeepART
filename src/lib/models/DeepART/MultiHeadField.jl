@@ -102,7 +102,9 @@ function MultiHeadField(
 
     # Create the heads
     # heads = [get_dense(opts.head_spec) for _ = 1:5]
-    heads = [get_dense(opts.head_spec)]
+    # heads = [get_dense(opts.head_spec)]
+    dummy_head = get_dense(opts.head_spec)
+    heads = Vector{typeof(dummy_head)}()
 
     # Construct and return the field
     return MultiHeadField(

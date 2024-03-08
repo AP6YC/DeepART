@@ -72,6 +72,31 @@ struct DeepHeadART{T <: Flux.Chain, U <: Flux.Chain, V <: Flux.Chain} <: ARTModu
     Data configuration struct.
     """
     config::DataConfig
+
+    """
+    Incremental list of labels corresponding to each F2 node, self-prescribed or supervised.
+    """
+    labels::Vector{Int}
+
+    """
+    Activation values for every weight for a given sample.
+    """
+    T::Vector{Float}
+
+    """
+    Match values for every weight for a given sample.
+    """
+    M::Vector{Float}
+
+    """
+    Number of weights associated with each category.
+    """
+    n_instance::Vector{Int}
+
+    """
+    Number of category weights (F2 nodes).
+    """
+    n_categories::Int
 end
 
 # -----------------------------------------------------------------------------
@@ -130,6 +155,12 @@ function DeepHeadART(
         F2,
         opts,
         config,
+        Vector{Int}(undef, 0),
+        Vector{Float}(undef, 0),        # T
+        Vector{Float}(undef, 0),        # M
+        # Matrix{Float}(undef, 0, 0),     # W
+        Vector{Int}(undef, 0),          # n_instance
+        0,                              # n_categories
     )
 end
 
@@ -189,13 +220,55 @@ function add_node!(
     return
 end
 
+function initialize!(
+    art::DeepHeadART,
+    x::RealArray,
+    y::Integer=0,
+)
+    # Set the threshold
+    # set_threshold!(art)
+    # Initialize the feature dimension of the weights
+    # art.W = ARTMatrix{Float}(undef, art.config.dim_comp, 0)
+    # Set the label to either the supervised label or 1 if unsupervised
+    label = !iszero(y) ? y : 1
+    # Create a category with the given label
+    create_category!(art, x, label)
+end
+
+# COMMON DOC: create_category! function
+function create_category!(
+    art::DeepHeadART,
+    x::RealVector,
+    y::Integer,
+)
+    # Increment the number of categories
+    art.n_categories += 1
+
+    # Increment number of samples associated with new category
+    push!(art.n_instance, 1)
+
+    # # If we use an uncommitted node
+    # if art.opts.uncommitted
+    #     # Add a new weight of ones
+    #     append!(art.W, ones(art.config.dim_comp, 1))
+    #     # Learn the uncommitted node on the sample
+    #     learn!(art, x, art.n_categories)
+    # else
+    #     # Fast commit the sample
+    #     append!(art.W, x)
+    # end
+
+    # Add the label for the category
+    push!(art.labels, y)
+end
+
 """
 Updates the weights of both the F1 layer and F2 layer (at the index) of the [`DeepHeadART`](@ref) module.
 
 # Arguments
 $ARG_DEEPHEADART
 - `activations::Tuple`: the activations tuple.
-- `index::Int`: the index of the node to update.
+- `index::Integer`: the index of the node to update.
 """
 function learn!(
     art::DeepHeadART,
@@ -203,7 +276,7 @@ function learn!(
     # activations::Tuple,
     f1a::Tuple,
     f2a::Tuple,
-    index::Int,
+    index::Integer,
 )
 
 
@@ -251,6 +324,12 @@ function train!(
     f2 = get_last_f2(f2a)
     f2 = [ART.init_train!(f2[ix], art, false) for ix in eachindex(f2)]
 
+    #
+    if isempty(art.F2.heads)
+        # add_node!(art, x)
+        initialize!(art, x)
+    end
+
     M = [basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)]
     T = [basic_match(art, f1, f2[ix]) for ix in eachindex(f2)]
 
@@ -277,7 +356,7 @@ function train!(
 			learn!(art, f1a, f2a, bmu)
             # @info size(w_diff)
             # Increment the instance counting
-            # art.n_instance[bmu] += 1
+            art.n_instance[bmu] += 1
 
             # Save the output label for the sample
             # y_hat = art.labels[bmu]
