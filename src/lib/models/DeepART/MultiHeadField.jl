@@ -181,7 +181,7 @@ $ARG_X
 """
 function add_node!(
     field::MultiHeadField,
-    x::RealArray,
+    # x::RealArray,
 )
 
     push!(field.heads, get_dense(field.opts.head_spec))

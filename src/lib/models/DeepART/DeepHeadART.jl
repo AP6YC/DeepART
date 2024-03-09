@@ -52,7 +52,7 @@ end
 """
 Stateful information of a DeepHeadART module.
 """
-struct DeepHeadART{T <: Flux.Chain, U <: Flux.Chain, V <: Flux.Chain} <: ARTModule
+mutable struct DeepHeadART{T <: Flux.Chain, U <: Flux.Chain, V <: Flux.Chain} <: ARTModule
     """
     Feature presentation layer.
     """
@@ -236,6 +236,8 @@ function initialize!(
 end
 
 # COMMON DOC: create_category! function
+# """
+# """
 function create_category!(
     art::DeepHeadART,
     x::RealVector,
@@ -257,6 +259,7 @@ function create_category!(
     #     # Fast commit the sample
     #     append!(art.W, x)
     # end
+    add_node!(art.F2)
 
     # Add the label for the category
     push!(art.labels, y)
@@ -279,6 +282,7 @@ function learn!(
     index::Integer,
 )
 
+    # Instar learning
 
 
     return
@@ -315,6 +319,7 @@ function train!(
     art::DeepHeadART,
     x::RealArray;
     # preprocessed::Bool=false,
+    y::Integer=0,
 )
     # sample = ART.init_train!(x, art, preprocessed)
 
@@ -324,10 +329,11 @@ function train!(
     f2 = get_last_f2(f2a)
     f2 = [ART.init_train!(f2[ix], art, false) for ix in eachindex(f2)]
 
-    #
+    # If no prototypes exist, initialize the module
     if isempty(art.F2.heads)
-        # add_node!(art, x)
-        initialize!(art, x)
+        y_hat = supervised ? y : 1
+        initialize!(art, x, y=y_hat)
+        return y_hat
     end
 
     M = [basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)]

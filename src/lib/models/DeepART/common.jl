@@ -79,8 +79,10 @@ $W_ARG_DOCSTING,
 - `eta::Float`: learning rate.
 """
 function instar(
-    x::RealVector,
-    W::RealVector,
+    x::AbstractArray,
+    W::AbstractArray,
+    # x::RealVector,
+    # W::RealVector,
     eta::Float,
 )
     return W .+ eta .* (x .- W)
