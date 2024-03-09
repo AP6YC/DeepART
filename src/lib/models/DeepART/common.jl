@@ -79,11 +79,26 @@ $W_ARG_DOCSTING,
 - `eta::Float`: learning rate.
 """
 function instar(
-    x::AbstractArray,
-    W::AbstractArray,
-    # x::RealVector,
-    # W::RealVector,
+    # x::AbstractArray,
+    # W::AbstractArray,
+    x::RealVector,
+    W::RealVector,
     eta::Float,
 )
     return W .+ eta .* (x .- W)
+end
+
+"""
+"""
+function instar(
+    x::Tuple,
+    W::Flux.Chain,
+)
+    # # Iterate over the layers
+    # for layer, actiativation in W, x
+    #     # Update the weights
+    #     layer.weights = instar(x, layer.weights, 0.1)
+    #     layer.bias = instar(x, layer.bias, 0.1)
+    # end
+    return
 end

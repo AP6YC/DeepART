@@ -179,9 +179,13 @@ function forward(
     art::DeepHeadART,
     x::RealArray,
 )
+    # Forward pass on the F1 layer
     f1 = art.F1(x)
+
+    # Use the MultiHeadField forward pass for F2
     f2 = forward(art.F2, f1)
 
+    # Return both forward pass values
     return f1, f2
 end
 
@@ -196,11 +200,15 @@ function multi_activations(
     art::DeepHeadART,
     x::RealArray,
 )
+    # Get the activations for F1
     f1 = Flux.activations(art.F1, x)
+
+    # Get the activations for the MultiHeadField
     f2 = multi_activations(art.F2, f1[end])
     # f1 = Flux.activations(field.F1, x)
     # f2 = Flux.activations(field.F2, f1[end])
 
+    # Return both activation tuples
     return f1, f2
 end
 
@@ -222,7 +230,7 @@ end
 
 function initialize!(
     art::DeepHeadART,
-    x::RealArray,
+    x::RealArray;
     y::Integer=0,
 )
     # Set the threshold
@@ -231,6 +239,7 @@ function initialize!(
     # art.W = ARTMatrix{Float}(undef, art.config.dim_comp, 0)
     # Set the label to either the supervised label or 1 if unsupervised
     label = !iszero(y) ? y : 1
+
     # Create a category with the given label
     create_category!(art, x, label)
 end
@@ -281,7 +290,6 @@ function learn!(
     f2a::Tuple,
     index::Integer,
 )
-
     # Instar learning
 
 
@@ -321,6 +329,9 @@ function train!(
     # preprocessed::Bool=false,
     y::Integer=0,
 )
+    # Flag for if training in supervised mode
+    supervised = !iszero(y)
+
     # sample = ART.init_train!(x, art, preprocessed)
 
     # f1, f2 = forward(art, x)
