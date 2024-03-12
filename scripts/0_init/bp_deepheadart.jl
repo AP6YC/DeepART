@@ -29,8 +29,8 @@ b = DeepART.DeepHeadART()
 out = DeepART.forward(b, x)
 multi = DeepART.multi_activations(b, x)
 
-DeepART.forward(b, x)
-DeepART.train!(b, x)
+forward = DeepART.forward(b, x)
+trained = DeepART.train!(b, x)
 
 # DeepART.add_node!(b, x)
 

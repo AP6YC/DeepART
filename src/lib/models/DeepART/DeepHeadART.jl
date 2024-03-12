@@ -291,7 +291,7 @@ function learn!(
     index::Integer,
 )
     # Instar learning
-
+    instar(f1a, art.F1)
 
     return
 end

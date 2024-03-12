@@ -94,11 +94,14 @@ function instar(
     x::Tuple,
     W::Flux.Chain,
 )
-    # # Iterate over the layers
+    # Iterate over the layers
     # for layer, actiativation in W, x
-    #     # Update the weights
-    #     layer.weights = instar(x, layer.weights, 0.1)
-    #     layer.bias = instar(x, layer.bias, 0.1)
-    # end
+    for ix in eachindex(W)
+        layer = W[ix]
+        activation = x[ix]
+        # Update the weights
+        layer.weights = instar(activation[1], layer.weight, 0.1)
+        layer.bias = instar(activation[2], layer.bias, 0.1)
+    end
     return
 end
