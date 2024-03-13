@@ -55,8 +55,10 @@ b = DeepART.DeepHeadART(
         10,
     ],
     rho=0.1,
-    eta=0.000001,
+    eta=0.0001,
 )
+@info minimum(b.F1[3].weight)
+@info maximum(b.F1[3].weight)
 
 # out = DeepART.forward(b, x)
 # multi = DeepART.multi_activations(b, x)

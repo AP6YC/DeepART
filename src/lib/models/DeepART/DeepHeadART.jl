@@ -150,7 +150,7 @@ function DeepHeadART(
     field_dim = opts.F1_spec[end]
 
     config = DataConfig(
-        0.0,
+        -1.0,
         1.0,
         field_dim,
     )
@@ -251,13 +251,13 @@ function learn!(
     index::Integer,
 )
     # Instar learning for F1
-    instar(x, f1a, art.F1)
+    instar(x, f1a, art.F1, art.opts.eta)
 
     # F2 shared
-    instar(f1a[end], f2a[1], art.F2.shared)
+    instar(f1a[end], f2a[1], art.F2.shared, art.opts.eta)
 
     # F2 index
-    instar(f2a[1][end], f2a[2][index], art.F2.heads[index])
+    instar(f2a[1][end], f2a[2][index], art.F2.heads[index], art.opts.eta)
 
     return
 end

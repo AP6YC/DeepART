@@ -106,6 +106,7 @@ function instar(
     x::RealArray,
     y::Tuple,
     W::Flux.Chain,
+    eta::Float,
 )
     # Iterate over the layers
     # for layer, actiativation in W, x
@@ -124,7 +125,7 @@ function instar(
         # @info "weights: $(size(weights)), act: $(size(activation)), input: $(size(input))"
 
         # weights .= instar(activation, weights, 0.1)
-        weights .+= instar(input, activation, weights, 0.1)
+        weights .+= instar(input, activation, weights, eta)
         # Update the weights
         # layer.weight = instar(activation, layer.weight, 0.1)
         # layer.bias = instar(activation, layer.bias, 0.1)

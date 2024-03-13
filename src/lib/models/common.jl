@@ -62,7 +62,8 @@ function get_dense(
         Dense(
             n_neurons[ix] => n_neurons[ix + 1],
 			# activation
-            sigmoid,
+            # sigmoid,
+			tanh,
 			# relu,
         ) for ix in range(1, length(n_neurons) - 1)
     ]
