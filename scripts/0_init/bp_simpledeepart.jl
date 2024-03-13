@@ -11,29 +11,41 @@ This script is a development zone for common workflow elements of the `CART` pro
 
 using Revise
 using DeepART
+using ProgressMeter
 
 # -----------------------------------------------------------------------------
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-n_train = 10
+n_train = 100
 
 # -----------------------------------------------------------------------------
 # CONVOLUTIONAL
 # -----------------------------------------------------------------------------
 
 # Create a convolutional module
-a = DeepART.SimpleDeepART(
+model = DeepART.SimpleDeepART(
     size_tuple=(28, 28, 1, 1),
     conv=true,
 )
-a.art.opts.rho = 0.4
+model.art.opts.rho = 0.4
 
-mnist = DeepART.get_mnist()
+data = DeepART.get_mnist()
 
-DeepART.supervised_train!(a, mnist.train, n_train)
+begin
+    DeepART.supervised_train!(model, data.train, n_train)
+    @info "n categories: " model.art.n_categories
+end
 
-@info "n categories: " a.art.n_categories
+y_hats = Vector{Int}()
+@showprogress for ix = 1:length(data.test.y)
+    y_hat = DeepART.classify(model, data.test, ix)
+    push!(y_hats, y_hat)
+end
+
+DeepART.ART.performance(y_hats, data.test.y)
+
+
 
 # -----------------------------------------------------------------------------
 # DENSE

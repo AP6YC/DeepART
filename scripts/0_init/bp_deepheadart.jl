@@ -51,11 +51,11 @@ b = DeepART.DeepHeadART(
     ],
     F2_heads = [
         12,
-        20,
+        # 20,
         10,
     ],
     rho=0.1,
-    eta=0.0001,
+    eta=0.001,
 )
 @info minimum(b.F1[3].weight)
 @info maximum(b.F1[3].weight)

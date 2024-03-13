@@ -44,6 +44,11 @@ struct SimpleDeepART{T <: Flux.Chain}
 	The [`opts_SimpleDeepART`](@ref) options and flags for the module.
 	"""
 	opts::opts_SimpleDeepART
+
+	"""
+	The model output dimension for reference.
+	"""
+	model_dim::Int
 end
 
 # -----------------------------------------------------------------------------
@@ -85,12 +90,15 @@ function SimpleDeepART(
 	# opts_fuzzyart = opts_FuzzyART()
 	art = FuzzyART(opts.opts_fuzzyart)
 	model_dim = Flux.outputsize(model, opts.size_tuple)
+	@info model_dim
 	art.config = DataConfig(0, 1, model_dim[1])
+	# art.config = DataConfig(0, 1, model_dim[end])
 
 	return SimpleDeepART(
 		model,
 		art,
 		opts,
+		model_dim[1],
 	)
 end
 
@@ -170,6 +178,8 @@ function supervised_train!(
 		n_samples
 	end
 
+	optim = Flux.setup(Flux.Adam(), model.model)
+
 	for ix = 1:local_n_train
 		# local_y = data.train.y[ix]
 		local_y = data.y[ix]
@@ -181,13 +191,47 @@ function supervised_train!(
 		# @info typeof(features)
 
 		# bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
-		bmu = DeepART.train_SimpleDeepART!(model.art, features, y=local_y)
+		bmu, w_diff = DeepART.train_SimpleDeepART!(model.art, features, y=local_y)
 		# bmu = AdaptiveResonance.train!(a.art, features)
 		# @info bmu
+		# @info size(w_diff)
+		@info sum(w_diff)
+		# Compute gradients from the forward pass
+		dim = 28
+        val, grads = Flux.withgradient(model.model) do m
+		# val, grads = Flux.withjacobian(model.model) do m
+			# features = DeepART.get_features(model, data, ix)
+			local_data = reshape(data.x[:, :, ix], dim, dim, 1, :)
+			result = m(local_data)
+            # loss(result, ly)
+            # Flux.logitcrossentropy(result, ly)
+			sum(w_diff)
+        end
+
+		# @info grads
+
+        Flux.update!(optim, model, grads[1])
+
+		# @info w_diff
 	end
 
 	return
 end
+
+function classify(
+	model::SimpleDeepART,
+	data::SupervisedDataset,
+	# data::RealArray,
+	index::Integer
+)
+	# features = DeepART.get_features(model, data.train, index)
+	# dim = 28
+	# local_data = reshape(data.x[:, :, ix], dim, dim, 1, :)
+	# features = DeepART.get_features(model, local_data, index)
+	features = DeepART.get_features(model, data, index)
+	return ART.classify(model.art, features, get_bmu=true)
+end
+
 
 """
 In place learning function.
@@ -233,7 +277,8 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
     # If we have a new supervised category, create a new category
     if supervised && !(y in art.labels)
         ART.create_category!(art, sample, y)
-        return y
+		w_diff = zero(art.W[:, 1])
+        return y, w_diff
     end
 
     # Compute activation/match functions
@@ -260,7 +305,10 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
 
             # Learn the sample
             # ART.learn!(art, sample, bmu)
+			@info "LEARNING"
 			w_diff = learn_SimpleDeepART!(art, sample, bmu)
+			# @info sum(w_diff[1:784])
+			@info size(w_diff)
             # @info size(w_diff)
             # Increment the instance counting
             art.n_instance[bmu] += 1
@@ -292,3 +340,47 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
     # Return the training label
     return y_hat, w_diff
 end
+
+# # COMMON DOC: FuzzyART incremental classification method
+# function classify_SimpleDeepART(art::FuzzyART, x::RealVector ; preprocessed::Bool=false, get_bmu::Bool=false)
+#     # Preprocess the data
+#     x = init_classify!(x, art, preprocessed)
+
+#     # Compute activation and match functions
+#     activation_match!(art, x)
+
+#     # Sort activation function values in descending order
+#     index = sortperm(art.T, rev=true)
+
+#     # Default is mismatch
+#     mismatch_flag = true
+#     y_hat = -1
+
+#     # Iterate over all categories
+#     for jx in 1:art.n_categories
+#         # Set the best matching unit
+#         bmu = index[jx]
+
+#         # Vigilance check - pass
+#         if art.M[bmu] >= art.threshold
+#             # Current winner
+#             y_hat = art.labels[bmu]
+#             mismatch_flag = false
+#             break
+#         end
+#     end
+#     # If we did not find a match
+#     if mismatch_flag
+#         # Report either the best matching unit or the mismatch label -1
+#         bmu = index[1]
+
+#         # Report either the best matching unit or the mismatch label -1
+#         y_hat = get_bmu ? art.labels[bmu] : -1
+#     end
+
+#     # Update the stored match and activation values
+#     log_art_stats!(art, bmu, mismatch_flag)
+
+#     # Return the inferred label
+#     return y_hat
+# end
