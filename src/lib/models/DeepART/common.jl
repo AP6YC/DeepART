@@ -80,18 +80,31 @@ $W_ARG_DOCSTING,
 """
 function instar(
     x::AbstractArray,
+    y::AbstractArray,
     W::AbstractArray,
     # x::RealVector,
     # W::RealVector,
     eta::Float,
 )
-    return W .+ eta .* (x .- W)
+    # return W .+ eta .* (x .- W)
+
+    Wy, Wx = size(W)
+    local_x = repeat(x', Wy, 1)
+    local_y = repeat(y, 1, Wx)
+    # @info "W: $(size(W)), local_x: $(size(local_x)), local_y: $(size(local_y)), W: $(size(W))"
+    return eta .* local_y .* (local_x .- W)
+    # return eta .* local_x .* W
+
+    # return eta .* y .* (x .- W)
+    # return eta .* x .* W
 end
 
 """
 """
 function instar(
-    x::Tuple,
+    # x::Tuple,
+    x::RealArray,
+    y::Tuple,
     W::Flux.Chain,
 )
     # Iterate over the layers
@@ -99,12 +112,19 @@ function instar(
 
     # for ix in eachindex(W)
     # for ix in eachindex(Flux.params(W))
-    for ix in eachindex(x)
-        weights = Flux.params(W)[ix * 2]
-        # bias = Flux.params
-        activation = x[ix]
+    for ix in eachindex(y)
+        weights = Flux.params(W)[ix * 2 - 1]
+        activation = y[ix]
+        if ix == 1
+            input = x
+        else
+            input = y[ix - 1]
+        end
 
-        weights .= instar(activation, weights, 0.1)
+        # @info "weights: $(size(weights)), act: $(size(activation)), input: $(size(input))"
+
+        # weights .= instar(activation, weights, 0.1)
+        weights .+= instar(input, activation, weights, 0.1)
         # Update the weights
         # layer.weight = instar(activation, layer.weight, 0.1)
         # layer.bias = instar(activation, layer.bias, 0.1)

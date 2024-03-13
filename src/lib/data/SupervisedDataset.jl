@@ -70,6 +70,25 @@ function tensorize_dataset(data::SupervisedDataset)
 end
 
 """
+Flattens the feature dimensions of a [`SupervisedDataset`](@ref).
+
+# Arguments
+$ARG_SUPERVISEDDATASET
+$ARG_N_CLASS
+"""
+function flatty(data::SupervisedDataset)
+    # Flatten the features
+    x_flat = flatten(data.x)
+    # x |> gpu
+
+    # return x_flat, y_hot
+    return SupervisedDataset(
+        x_flat,
+        data.y,
+    )
+end
+
+"""
 Flattens the feature dimensions of a [`SupervisedDataset`](@ref) and one-hot encodes the labels.
 
 # Arguments

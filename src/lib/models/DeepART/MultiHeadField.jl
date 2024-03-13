@@ -189,29 +189,29 @@ function add_node!(
     return
 end
 
-function learn!(
-    field::MultiHeadField,
-    # x::RealArray,
-    activations::Tuple,
-    index::Int,
-)
+# function learn!(
+#     field::MultiHeadField,
+#     # x::RealArray,
+#     activations::Tuple,
+#     index::Int,
+# )
 
-    # Get the activations
-    outs_shared, outs_heads = activations
+#     # Get the activations
+#     outs_shared, outs_heads = activations
 
-    # Learn the shared layer
-    # Flux.back!(outs_shared[end], index)
-    # eta*y*(x-w)
+#     # Learn the shared layer
+#     # Flux.back!(outs_shared[end], index)
+#     # eta*y*(x-w)
 
-    # Learn the heads
-    # for ix = 1:length(outs_heads)
-    for ix in eachindex(outs_heads)
-        Flux.back!(outs_heads[ix][end], index)
-    end
+#     # Learn the heads
+#     # for ix = 1:length(outs_heads)
+#     for ix in eachindex(outs_heads)
+#         Flux.back!(outs_heads[ix][end], index)
+#     end
 
-    return
+#     return
 
-end
+# end
 
 # -----------------------------------------------------------------------------
 # OVERLOADS

@@ -104,6 +104,23 @@ function tensorize_datasplit(data::DataSplit)
     return new_dataset
 end
 
+"""
+Flattens a [`DataSplit`](@ref).
+
+# Arguments
+$ARG_DATASPLIT
+$ARG_N_CLASS
+"""
+function flatty(data::DataSplit)
+    new_train = flatty(data.train)
+    new_test = flatty(data.test)
+
+    # Construct and return the new DataSplit
+    return DataSplit(
+        new_train,
+        new_test,
+    )
+end
 
 """
 Flattens and one-hot encodes a [`DataSplit`](@ref).

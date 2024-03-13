@@ -55,13 +55,15 @@ Creates a Flux.Chain of Flux.Dense layers according to the hidden layers [`Dense
 - `n_neurons::DenseSpecifier`: the [`DenseSpecifier`](@ref) that specifies the number of neurons per layer, including the input and output layers.
 """
 function get_dense(
-    n_neurons::DenseSpecifier
+    n_neurons::DenseSpecifier,
+	# activation=relu,
 )
     chain_list = [
         Dense(
             n_neurons[ix] => n_neurons[ix + 1],
-            # sigmoid,
-			relu,
+			# activation
+            sigmoid,
+			# relu,
         ) for ix in range(1, length(n_neurons) - 1)
     ]
 
