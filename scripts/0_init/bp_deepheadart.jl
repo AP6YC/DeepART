@@ -31,6 +31,11 @@ multi = DeepART.multi_activations(b, x)
 
 forward = DeepART.forward(b, x)
 trained = DeepART.train!(b, x)
+# b.F1[1].weight
+b.F1(x)
+
+f1a, f2a = DeepART.multi_activations(b, x)
+# f1 = ART.init_train!(get_last_f1(f1a), art, false)
 
 # DeepART.add_node!(b, x)
 
