@@ -90,7 +90,7 @@ function SimpleDeepART(
 	# opts_fuzzyart = opts_FuzzyART()
 	art = FuzzyART(opts.opts_fuzzyart)
 	model_dim = Flux.outputsize(model, opts.size_tuple)
-	@info model_dim
+	# @info model_dim
 	art.config = DataConfig(0, 1, model_dim[1])
 	# art.config = DataConfig(0, 1, model_dim[end])
 
@@ -178,7 +178,8 @@ function supervised_train!(
 		n_samples
 	end
 
-	optim = Flux.setup(Flux.Adam(), model.model)
+	# optim = Flux.setup(Flux.Adam(), model.model)
+	optim = Flux.setup(Flux.Descent(), model.model)
 
 	for ix = 1:local_n_train
 		# local_y = data.train.y[ix]
@@ -195,7 +196,8 @@ function supervised_train!(
 		# bmu = AdaptiveResonance.train!(a.art, features)
 		# @info bmu
 		# @info size(w_diff)
-		@info sum(w_diff)
+		# @info sum(w_diff)
+
 		# Compute gradients from the forward pass
 		dim = 28
         val, grads = Flux.withgradient(model.model) do m
@@ -305,10 +307,9 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
 
             # Learn the sample
             # ART.learn!(art, sample, bmu)
-			@info "LEARNING"
+			# @info "LEARNING"
 			w_diff = learn_SimpleDeepART!(art, sample, bmu)
 			# @info sum(w_diff[1:784])
-			@info size(w_diff)
             # @info size(w_diff)
             # Increment the instance counting
             art.n_instance[bmu] += 1

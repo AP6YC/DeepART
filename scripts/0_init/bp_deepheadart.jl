@@ -46,7 +46,7 @@ b = DeepART.DeepHeadART(
     ],
     F2_shared = [
         10,
-        20,
+        # 20,
         12,
     ],
     F2_heads = [

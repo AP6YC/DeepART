@@ -95,20 +95,29 @@ function get_conv_model(
 	pool_width = 2
 
     # total_n_kernels = config.n_kernels * config.n_scales
+	# model = @autosize (size_tuple,) Chain(
+	#     Conv(
+	# 		# (config.conv_width, config.conv_width),
+	# 		(conv_width, conv_width),
+	# 		1 => n_kernels,
+	# 		sigmoid;
+	# 		# init=Flux.glorot_normal,
+	# 		# init = ones_function,
+	# 		init = Flux.orthogonal,
+	# 		pad=(pad_width, pad_width),
+	# 	),
+	# 	MaxPool((pool_width, pool_width)),
+	# 	Flux.flatten,
+	#     # softmax
+	# )
+
 	model = @autosize (size_tuple,) Chain(
-	    Conv(
-			# (config.conv_width, config.conv_width),
-			(conv_width, conv_width),
-			1 => n_kernels,
-			sigmoid;
-			# init=Flux.glorot_normal,
-			# init = ones_function,
-			init = Flux.orthogonal,
-			pad=(pad_width, pad_width),
-		),
-		MaxPool((pool_width, pool_width)),
+		Conv((5,5),1=>6,relu),
 		Flux.flatten,
-	    # softmax
+		# Dense(4704=>15,relu),
+		Dense(_=>15,relu),
+		Dense(15=>10,sigmoid),
+		# softmax
 	)
 
 	return model

@@ -17,7 +17,8 @@ using ProgressMeter
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-n_train = 100
+n_train = 3000
+n_test = 1000
 
 # -----------------------------------------------------------------------------
 # CONVOLUTIONAL
@@ -28,7 +29,7 @@ model = DeepART.SimpleDeepART(
     size_tuple=(28, 28, 1, 1),
     conv=true,
 )
-model.art.opts.rho = 0.4
+model.art.opts.rho = 0.2
 
 data = DeepART.get_mnist()
 
@@ -38,14 +39,15 @@ begin
 end
 
 y_hats = Vector{Int}()
-@showprogress for ix = 1:length(data.test.y)
+# @showprogress for ix = 1:length(data.test.y)
+@showprogress for ix = 1:n_test
     y_hat = DeepART.classify(model, data.test, ix)
     push!(y_hats, y_hat)
 end
 
-DeepART.ART.performance(y_hats, data.test.y)
+perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
 
-
+@info perf unique(y_hats) model.art.n_categories
 
 # -----------------------------------------------------------------------------
 # DENSE
