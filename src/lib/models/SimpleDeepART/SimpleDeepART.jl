@@ -192,7 +192,8 @@ function supervised_train!(
 		# @info typeof(features)
 
 		# bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
-		bmu, w_diff = DeepART.train_SimpleDeepART!(model.art, features, y=local_y)
+		y_hat, _, bmu = DeepART.train_SimpleDeepART!(model.art, features, y=local_y)
+
 		# bmu = AdaptiveResonance.train!(a.art, features)
 		# @info bmu
 		# @info size(w_diff)
@@ -204,17 +205,20 @@ function supervised_train!(
 		# val, grads = Flux.withjacobian(model.model) do m
 			# features = DeepART.get_features(model, data, ix)
 			local_data = reshape(data.x[:, :, ix], dim, dim, 1, :)
-			result = m(local_data)
+			result = ART.init_train(vec(m(local_data)), model.art, preprocessed=false)
+			# _, w_diff = DeepART.train_SimpleDeepART!(model.art, vec(result), y=local_y)
+
+			w_diff = model.art.opts.beta * ART.element_min(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
+
+
             # loss(result, ly)
             # Flux.logitcrossentropy(result, ly)
 			sum(w_diff)
         end
 
-		# @info grads
+		@info sum(grads)
 
         Flux.update!(optim, model, grads[1])
-
-		# @info w_diff
 	end
 
 	return
@@ -339,7 +343,7 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
     ART.log_art_stats!(art, bmu, mismatch_flag)
 
     # Return the training label
-    return y_hat, w_diff
+    return y_hat, w_diff, bmu
 end
 
 # # COMMON DOC: FuzzyART incremental classification method
