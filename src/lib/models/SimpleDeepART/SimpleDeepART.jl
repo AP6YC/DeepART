@@ -156,6 +156,24 @@ function get_weights(model::SimpleDeepART, index::Integer)
 end
 # Flux.params(model)[1][:, :, 1, m_ix] = new_filt
 
+function get_w_diff(art::SimpleDeepART, result::RealArray, bmu::Integer)
+
+	# n_el = length(x)
+    # # Create a destination in memory of zeros of type and size like the sample
+    # min_vec = zero(x)
+    # # Iterate over every element of the sample
+    # for ix = 1:n_el
+    #     # Get and assign the minimum of the sample and weight at index ix
+    #     @inbounds min_vec[ix] = min(x[ix], W[ix])
+    # end
+
+	dim, n_samples, mins, maxs = get_data_characteristics(data, config=config)
+
+	result = complement_code(vec(m(local_data)), config=model.art.config)
+
+	w_diff = model.art.opts.beta * min.(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
+end
+
 """
 Runs the supervised training of a [`SimpleDeepART`](@ref) module.
 
@@ -205,11 +223,13 @@ function supervised_train!(
 		# val, grads = Flux.withjacobian(model.model) do m
 			# features = DeepART.get_features(model, data, ix)
 			local_data = reshape(data.x[:, :, ix], dim, dim, 1, :)
-			result = ART.init_train(vec(m(local_data)), model.art, preprocessed=false)
+			# result = ART.init_train!(vec(m(local_data)), model.art, false)
+
+			# result = complement_code(vec(m(local_data)), config=model.art.config)
 			# _, w_diff = DeepART.train_SimpleDeepART!(model.art, vec(result), y=local_y)
 
-			w_diff = model.art.opts.beta * ART.element_min(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
-
+			# w_diff = model.art.opts.beta * ART.element_min(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
+			# w_diff = model.art.opts.beta * min.(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
 
             # loss(result, ly)
             # Flux.logitcrossentropy(result, ly)
@@ -277,7 +297,10 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
         ART.initialize!(art, sample, y=y_hat)
         # Return the selected label
         w_diff = zero(art.W[:, 1])
-        return y_hat, w_diff
+		# Get the BMU as the number of categories, which should be 1
+		bmu = art.n_categories
+
+        return y_hat, w_diff, bmu
     end
 
     # If we have a new supervised category, create a new category
@@ -311,7 +334,6 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
 
             # Learn the sample
             # ART.learn!(art, sample, bmu)
-			# @info "LEARNING"
 			w_diff = learn_SimpleDeepART!(art, sample, bmu)
 			# @info sum(w_diff[1:784])
             # @info size(w_diff)

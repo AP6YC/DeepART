@@ -17,8 +17,8 @@ using ProgressMeter
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-n_train = 1000
-n_test = 1000
+N_TRAIN = 1000
+N_TEST = 1000
 
 # -----------------------------------------------------------------------------
 # CONVOLUTIONAL
@@ -34,18 +34,18 @@ model.art.opts.rho = 0.2
 data = DeepART.get_mnist()
 
 begin
-    DeepART.supervised_train!(model, data.train, n_train)
+    DeepART.supervised_train!(model, data.train, N_TRAIN)
     @info "n categories: " model.art.n_categories
 end
 
 y_hats = Vector{Int}()
 # @showprogress for ix = 1:length(data.test.y)
-@showprogress for ix = 1:n_test
+@showprogress for ix = 1:N_TEST
     y_hat = DeepART.classify(model, data.test, ix)
     push!(y_hats, y_hat)
 end
 
-perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
+perf = DeepART.ART.performance(y_hats, data.test.y[1:N_TEST])
 
 @info perf unique(y_hats) model.art.n_categories
 
@@ -62,6 +62,6 @@ b.art.opts.rho = 0.4
 all_data = DeepART.load_all_datasets()
 data = all_data["moon"]
 
-DeepART.supervised_train!(b, data.train, n_train)
+DeepART.supervised_train!(b, data.train, N_TRAIN)
 
 @info "n categories: " b.art.n_categories
