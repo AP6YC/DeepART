@@ -46,7 +46,7 @@ n_input = size(fdata.train.x)[1]
 
 shared = Chain(
     Dense(n_input, 128, tanh),
-    Dense(128, 64, tanh),
+    Dense(128, 64, sigmoid),
     # Dense(64, n_classes),
     # sigmoid,
     # softmax,
@@ -54,13 +54,13 @@ shared = Chain(
 
 
 function get_head()
-    Chain(
+    # Chain(
         # Dense(64, n_classes),
         # Dense(64, 32, tanh),
-        Dense(64, 32, sigmoid),
-        # DeepART.Fuzzy(64, 1),
+        # Dense(64, 32, sigmoid),
+        DeepART.Fuzzy(64, 1)
         # sigmoid,
-    )
+    # )
 end
 # heads = Vector{Chain}()
 # push!(heads, get_head())
@@ -82,15 +82,6 @@ y = data.train.y[ix]
 # result = model(x)
 # argmax(result)
 
-# val, grads = Flux.withgradient(model) do m
-#     result = model(x)
-#     winner = argmax(result)
-#     println(winner)
-#     loss = sum(1.0 .- result[winner])
-#     println(loss)
-#     loss
-# end
-
 function forward(shared, heads, x)
     r_shared = shared(x)
     r_heads = [head(r_shared) for head in heads]
@@ -99,8 +90,19 @@ function forward(shared, heads, x)
 end
 
 function art_loss(r_heads, x)
+
     # r_heads[x]
 end
+
+val, grads = Flux.withgradient(shared, heads) do s, h
+    r_heads = forward(s, h, x)
+    # loss = wta_loss(r_heads)
+    # r_shared = s(x)
+    # r_heads = [h[i](r_shared) for i in 1:n_classes]
+    # winner = argmax(r_heads)
+    # loss = sum(1.0 .- r_heads[winner])
+end
+
 
 # batch_y = 0
 for (lx, ly) in dataloader

@@ -105,6 +105,7 @@ function wta_loss(r_heads, y)
     # winner = argmax(r_heads, dims=1)
     # loss = sum(1.0 .- r_heads[winner])
     # loss
+    # winner = r_heads[y]
     sum(1.0 .- r_heads[y])
 end
 
