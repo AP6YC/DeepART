@@ -20,3 +20,5 @@ include("SimpleDeepART/lib.jl")
 
 # Fully deep
 include("DeepART/lib.jl")
+
+include("FuzzyLayer.jl")

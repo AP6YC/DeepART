@@ -39,10 +39,6 @@ n_test = min(N_TEST, length(data.test.y))
 # MODEL
 # -----------------------------------------------------------------------------
 
-# m = DeepART.WTANet(
-#     model_spec=[2, 10, n_classes],
-# )
-
 ix = 1
 x = fdata.train.x[:, ix]
 
@@ -61,7 +57,7 @@ function get_head()
     Chain(
         # Dense(64, n_classes),
         # Dense(64, 32, tanh),
-        Dense(64, 1, sigmoid),
+        Dense(64, 32, sigmoid),
         # DeepART.Fuzzy(64, 1),
         # sigmoid,
     )
@@ -70,7 +66,7 @@ end
 # push!(heads, get_head())
 
 heads = [get_head() for _ in 1:n_classes]
-forward(shared, heads, x)
+# forward(shared, heads, x)
 # model = Chain(shared, Parallel(vcat, heads...))
 
 # -----------------------------------------------------------------------------
@@ -98,27 +94,23 @@ y = data.train.y[ix]
 function forward(shared, heads, x)
     r_shared = shared(x)
     r_heads = [head(r_shared) for head in heads]
-    vcat(r_heads...)
-end
-
-function wta_loss(r_heads, y)
-    # winner = argmax(r_heads, dims=1)
-    # loss = sum(1.0 .- r_heads[winner])
-    # loss
-    sum(1.0 .- r_heads[y])
+    r_heads
+    # vcat(r_heads...)
 end
 
 function art_loss(r_heads, x)
-
+    # r_heads[x]
 end
+
 # batch_y = 0
-# for (lx, ly) in dataloader
-#     # @info lx |> size
-#     result = forward(shared, heads, lx)
-#     global batch_y = ly
-#     @info ly
-#     break
-# end
+for (lx, ly) in dataloader
+    # @info lx |> size
+    result = forward(shared, heads, lx)
+    # global batch_y = ly
+    # @info ly
+    new_w = DeepART.art_learn()
+    break
+end
 
 function update(shared, heads, optim_shared, optim_heads, grads)
     # Winner index
@@ -145,7 +137,6 @@ function flux_accuracy_cold(y_hat, y_truth)
     Flux.mean(y_hat .== y_truth)
 end
 
-
 optim_shared = Flux.setup(
     # Flux.Descent(0.01),
     Flux.Adam(),
@@ -159,48 +150,13 @@ optim_heads = [
     ) for head in heads
 ]
 
-val, grads = Flux.withgradient(shared, heads) do s, h
-    r_heads = forward(s, h, x)
-    loss = wta_loss(r_heads)
-    # r_shared = s(x)
-    # r_heads = [h[i](r_shared) for i in 1:n_classes]
-    # winner = argmax(r_heads)
-    # loss = sum(1.0 .- r_heads[winner])
-end
-
-# update(shared, heads, optim_shared, optim_heads, grads)
-
-# # Winner index
-# winner = findall(x -> !isnothing(x), grads[2])
-# # Update the shared
-# Flux.update!(optim_shared, shared, grads[1])
-# # Update the correct head
-# Flux.update!(optim_heads[winner], heads[winner], grads[2][winner])
-
-# r_shared = shared(x)
-# r_heads = [heads[i](r_shared) for i in 1:n_classes]
-
-# result = model(x)
-# winner = result[y]
-# sum(1.0 .- winner)
-
-# val, grads = Flux.withgradient(model) do m
-#     result = m(x)
-#     winner = result[y]
-#     sum(1.0 .- winner)
-# end
-
-
-# for ix = 1:n_train
-#     x = fdata.train.x[:, ix]
-#     y = fdata.train.y[ix]
-#     DeepART.train!(m, x, y)
+# val, grads = Flux.withgradient(shared, heads) do s, h
+#     r_heads = forward(s, h, x)
+#     loss = wta_loss(r_heads)
 # end
 
 # dataloader = Flux.DataLoader((fdata.train.x, fdata.train.y), batchsize=N_BATCH)
 dataloader = Flux.DataLoader((fdata.train.x, data.train.y), batchsize=N_BATCH)
-# optim = Flux.setup(Flux.Adam(), model)
-# optim = Flux.setup(Flux.Descent(), model)
 
 ix_acc = 0
 acc_log = []
@@ -209,25 +165,12 @@ acc_log = []
 for ep = 1:N_EPOCH
 
     for (lx, ly) in dataloader
-        # Compute gradients from the forward pass
-        # val, grads = Flux.withgradient(model) do m
-        #     result = m(lx)
-            # loss(result, ly)
-            # Flux.logitcrossentropy(result, ly)
-            # winner = result[argmax(result)]
-            # winner = result[ly]
-            # sum(1.0 .- winner)
-        # end
-
-        # Flux.update!(optim, model, grads[1])
-
         val, grads = Flux.withgradient(shared, heads) do s, h
             r_heads = forward(s, h, x)
             loss = wta_loss(r_heads, ly)
         end
 
         update(shared, heads, optim_shared, optim_heads, grads)
-
 
         if ix_acc % ACC_ITER == 0
             # local_y_hat = vcat(forward(shared, heads, fdata.test.x)...)
@@ -242,7 +185,6 @@ for ep = 1:N_EPOCH
         global ix_acc += 1
     end
 end
-
 
 # -----------------------------------------------------------------------------
 # TEST

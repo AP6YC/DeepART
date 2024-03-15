@@ -17,7 +17,7 @@ using ProgressMeter
 # OPTIONS
 # -----------------------------------------------------------------------------
 
-N_TRAIN = 1000
+N_TRAIN = 2000
 N_TEST = 1000
 
 # -----------------------------------------------------------------------------
@@ -29,7 +29,7 @@ model = DeepART.SimpleDeepART(
     size_tuple=(28, 28, 1, 1),
     conv=true,
 )
-model.art.opts.rho = 0.2
+model.art.opts.rho = 0.1
 
 data = DeepART.get_mnist()
 

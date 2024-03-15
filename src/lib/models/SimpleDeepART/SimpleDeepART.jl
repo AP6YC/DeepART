@@ -199,19 +199,27 @@ function supervised_train!(
 		n_samples
 	end
 
-	# optim = Flux.setup(Flux.Adam(), model.model)
-	optim = Flux.setup(Flux.Descent(), model.model)
+	optim = Flux.setup(
+		Flux.Adam(
+			0.01,
+		),
+		# Flux.Descent(),
+		model.model,
+	)
 
-	for ix = 1:local_n_train
+	@showprogress for ix = 1:local_n_train
 		# local_y = data.train.y[ix]
 		local_y = data.y[ix]
 		# features = vec(DeepART.get_features(a, local_data))
 		# features = DeepART.get_features(model, data.train, ix)
-		features = DeepART.get_features(model, data, ix)
+		# features = DeepART.get_features(model, data, ix)
 
 		# @info size(features)
 		# @info typeof(features)
 
+		dim = 28
+		local_data = reshape(data.x[:, :, ix], dim, dim, 1, :)
+		features = complement_code(vec(model.model(local_data)))
 		# bmu = AdaptiveResonance.train!(a.art, features, y=local_y)
 		y_hat, _, bmu = DeepART.train_SimpleDeepART!(model.art, features, y=local_y)
 
@@ -221,25 +229,25 @@ function supervised_train!(
 		# @info sum(w_diff)
 
 		# Compute gradients from the forward pass
-		dim = 28
         val, grads = Flux.withgradient(model.model) do m
 		# val, grads = Flux.withjacobian(model.model) do m
 			# features = DeepART.get_features(model, data, ix)
 			local_data = reshape(data.x[:, :, ix], dim, dim, 1, :)
 			# result = ART.init_train!(vec(m(local_data)), model.art, false)
+			result = complement_code(vec(m(local_data)))
 
 			# result = complement_code(vec(m(local_data)), config=model.art.config)
 			# _, w_diff = DeepART.train_SimpleDeepART!(model.art, vec(result), y=local_y)
 
 			# w_diff = model.art.opts.beta * ART.element_min(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
-			# w_diff = model.art.opts.beta * min.(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta)
+			w_diff = model.art.W[:, bmu] .- (model.art.opts.beta * min.(result, model.art.W[:, bmu]) + model.art.W[:, bmu] * (1.0 - model.art.opts.beta))
 
             # loss(result, ly)
             # Flux.logitcrossentropy(result, ly)
 			sum(w_diff)
         end
 
-		@info sum(grads)
+		# @info sum(grads[1])
 
         Flux.update!(optim, model, grads[1])
 	end
@@ -310,7 +318,8 @@ function train_SimpleDeepART!(art::FuzzyART, x::RealVector ; y::Integer=0, prepr
     if supervised && !(y in art.labels)
         ART.create_category!(art, sample, y)
 		w_diff = zero(art.W[:, 1])
-        return y, w_diff
+		bmu = art.n_categories
+        return y, w_diff, bmu
     end
 
     # Compute activation/match functions
