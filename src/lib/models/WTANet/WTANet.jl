@@ -19,6 +19,11 @@ Options for the construction and usage of a [`WTANet`](@ref) module.
     rho::Float = 0.6; @assert rho > 0.0 && rho <= 1.0
 
     """
+    Name of the optimiser to use.
+    """
+    optimiser::Symbol = :Descent
+
+    """
     Simple dense specifier for the model.
     """
     model_spec::DenseSpecifier = [2, 10, 10]
@@ -27,11 +32,20 @@ end
 """
 Container for the stateful information of a WTANet module.
 """
-struct WTANet{T <: Flux.Chain}
+struct WTANet{
+    T <: Flux.Chain,
+    U <: NamedTuple,
+    # U <: Flux.Optimise.AbstractOptimiser,
+}
     """
     The feedforward network.
     """
     model::T
+
+    """
+    Container for the optimiser.
+    """
+    optim::U
 
     """
     The options for construction and usage.
@@ -71,9 +85,14 @@ function WTANet(
     # Create the model as a simple dense network
     model = get_dense(opts.model_spec)
 
+    local_optim = eval(opts.optimiser)()
+
+    optim = Flux.setup(local_optim, model)
+
     # Construct and return the field
     return WTANet(
         model,
+        optim,
         opts,
     )
 end
@@ -82,8 +101,8 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
-# function train!(model::WTANet)
+# function train!(model::WTANet, )
 # end
 
-function wta_loss()
-end
+# function wta_loss()
+# end

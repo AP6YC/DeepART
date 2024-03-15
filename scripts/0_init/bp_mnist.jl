@@ -41,9 +41,7 @@ data = DeepART.get_mnist()
 n_classes = length(unique(data.train.y))
 
 # Get the flat features and one-hot labels
-# x, y, xt, yt = DeepART.flatty_hotty(data)
 fdata = DeepART.flatty_hotty(data)
-
 n_input = size(fdata.train.x)[1]
 
 # -----------------------------------------------------------------------------
@@ -73,10 +71,9 @@ model = Chain(
 # )
 
 # model = DeepART.get_dense([n_input, 200, 100, 10, n_classes])
+# model = DeepART.get_dense([n_input, 128, n_classes])
 
 # model |> gpu
-
-# model = DeepART.get_dense([n_input, 128, n_classes])
 
 # optim = Flux.setup(DeepART.EWC(), model)  # will store optimiser momentum, etc.
 optim = Flux.setup(Flux.Adam(), model)

@@ -1,4 +1,7 @@
 """
+	SimpleDeepART.jl
+
+# Description
 Implements the SimpleDeepART module.
 """
 
