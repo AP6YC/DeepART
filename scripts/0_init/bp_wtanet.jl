@@ -48,21 +48,32 @@ x = fdata.train.x[:, ix]
 
 n_input = size(fdata.train.x)[1]
 
-# Make a simple multilayer perceptron
-model = Chain(
+shared = Chain(
     Dense(n_input, 128, relu),
     Dense(128, 64, relu),
-    Dense(64, n_classes),
-    sigmoid,
+    # Dense(64, n_classes),
+    # sigmoid,
     # softmax,
 )
 
-model(x)
+function get_head()
+    Chain(
+        # Dense(64, n_classes),
+        Dense(64, 1, sigmoid)
+        # sigmoid,
+    )
+end
+
+heads = Vector{Chain}()
+
+push!(heads, get_head())
+
+shared(x)
+heads[1](shared(x))
 
 # -----------------------------------------------------------------------------
 # TRAIN
 # -----------------------------------------------------------------------------
-
 
 # Compute gradients from the forward pass
 ix = 1
