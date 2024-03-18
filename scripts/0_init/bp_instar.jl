@@ -9,6 +9,7 @@ Development script for deep instar learning.
 using Revise
 using DeepART
 using Flux
+using ProgressMeter
 # using StatsBase: norm
 
 # -----------------------------------------------------------------------------
@@ -36,7 +37,6 @@ n_train = min(N_TRAIN, length(data.train.y))
 n_test = min(N_TEST, length(data.test.y))
 
 # model = Chain(
-
 # )
 
 # model = @autosize (28, 28, 1, 1) Chain(
@@ -62,9 +62,121 @@ model = @Flux.autosize (size_tuple,) Chain(
     softmax
 )
 
+# for ix = 1:1000
+#     x = reshape(data.train.x[:, :, ix], size_tuple)
+#     acts = Flux.activations(model, x)
+#     inputs = (xf, acts[1:end-1]...)
+#     DeepART.instar(xf, acts, model, 0.0001)
+# end
+
 ix = 1
 # x = fdata.train.x[:, ix]
 x = reshape(data.train.x[:, :, ix], size_tuple)
 y = data.train.y[ix]
 
 acts = Flux.activations(model, x)
+
+n_input = size(fdata.train.x)[1]
+
+model = Chain(
+    Dense(n_input, 128, tanh),
+    Dense(128, 64, tanh),
+    Dense(64, n_classes, sigmoid),
+    # sigmoid,
+    # softmax,
+)
+
+
+# model = Flux.@autosize (784,) Chain(
+#     Parallel(vcat,
+#         Dense(n_input, 128, tanh),
+#         Dense(n_input, 128, tanh),
+#     ),
+#     # Dense(n_input, 128, tanh),
+#     Parallel(vcat,
+#         Dense(_, 64, tanh),
+#         Dense(_, 64, tanh),
+#     ),
+#     # Dense(128, 64, tanh),
+#     Parallel(vcat,
+#         Dense(_, n_classes, sigmoid),
+#         Dense(_, n_classes, sigmoid),
+#     ),
+#     # Dense(64, n_classes, sigmoid),
+#     # sigmoid,
+#     # softmax,
+# )
+
+# model = Chain(
+#     Dense(n_input*2, 128, tanh),
+#     Dense(128, 64, tanh),
+#     Dense(64, n_classes, sigmoid),
+#     # sigmoid,
+#     # softmax,
+# )
+
+model = Flux.@autosize (784,) Chain(
+    Parallel(vcat,
+        identity,
+        DeepART.complement_code,
+    ),
+    Dense(_, 128, sigmoid),
+    Parallel(vcat,
+        identity,
+        DeepART.complement_code,
+    ),
+    Dense(_, 64, sigmoid),
+    Parallel(vcat,
+        identity,
+        DeepART.complement_code,
+    ),
+    Dense(_, n_classes, sigmoid),
+    # sigmoid,
+    # softmax,
+)
+
+a = Flux.params(model)
+
+eta = 0.00001
+@showprogress for ix = 1:1000
+    xf = fdata.train.x[:, ix]
+    # xf = DeepART.complement_code(xf)
+    acts = Flux.activations(model, xf)
+    weights = Flux.params(model)
+
+    trainables = [weights[jx] for jx in [1, 3, 5]]
+    ins = [acts[jx] for jx in [1, 3, 5]]
+    outs = [acts[jx] for jx in [2, 4, 6]]
+    for ix in eachindex(ins)
+        # trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
+        trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix])
+    end
+
+    # for ix in eachindex(trainables)
+        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
+    # end
+    # DeepART.instar(xf, acts, model, 0.0001)
+end
+
+xf = fdata.train.x[:, ix]
+# xf = DeepART.complement_code(xf)
+acts = Flux.activations(model, xf)
+
+y_hats = Vector{Int}()
+@showprogress for ix in eachindex(data.test.y[1:N_TEST])
+    y_hat = argmax(model(fdata.test.x[:, ix]))
+    push!(y_hats, y_hat)
+end
+
+argmax(model(xf))
+data.train.y[ix]
+
+# weights = Flux.params(model)
+
+# trainables = [weights[jx] for jx in [1, 3, 5]]
+# ins = [acts[jx] for jx in [1, 3, 5]]
+# outs = [acts[jx] for jx in [2, 4, 6]]
+# for ix in eachindex(ins)
+#     # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
+#     trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
+# end

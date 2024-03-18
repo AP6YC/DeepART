@@ -89,6 +89,7 @@ function instar(
     # return W .+ eta .* (x .- W)
 
     Wy, Wx = size(W)
+    # @info size(W)
     local_x = repeat(x', Wy, 1)
     local_y = repeat(y, 1, Wx)
     # @info "W: $(size(W)), local_x: $(size(local_x)), local_y: $(size(local_y)), W: $(size(W))"
