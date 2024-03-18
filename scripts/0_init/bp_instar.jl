@@ -115,6 +115,8 @@ model = Chain(
 #     # softmax,
 # )
 
+head_dim = 128
+
 model = Flux.@autosize (784,) Chain(
     Parallel(vcat,
         identity,
@@ -130,16 +132,31 @@ model = Flux.@autosize (784,) Chain(
         identity,
         DeepART.complement_code,
     ),
-    Dense(_, n_classes, sigmoid),
+    Dense(_, head_dim, sigmoid),
+    # Dense(_, n_classes, sigmoid),
     # sigmoid,
     # softmax,
 )
 
+function get_head()
+    return Flux.@autosize (head_dim,) Chain(
+        Parallel(vcat,
+            identity,
+            DeepART.complement_code,
+        ),
+        # Dense(_, 128, sigmoid),
+        DeepART.Fuzzy(_, 64),
+    )
+end
+
+heads = [get_head() for ix = 1:n_classes]
+
 a = Flux.params(model)
 
-eta = 0.00001
+eta = 0.1
 @showprogress for ix = 1:1000
     xf = fdata.train.x[:, ix]
+    # @info data.train.y[:, ix]
     # xf = DeepART.complement_code(xf)
     acts = Flux.activations(model, xf)
     weights = Flux.params(model)
@@ -149,7 +166,7 @@ eta = 0.00001
     outs = [acts[jx] for jx in [2, 4, 6]]
     for ix in eachindex(ins)
         # trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
-        trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix])
+        trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], eta)
     end
 
     # for ix in eachindex(trainables)
@@ -168,9 +185,11 @@ y_hats = Vector{Int}()
     push!(y_hats, y_hat)
 end
 
+@info unique(y_hats)
+
+model(xf)
 argmax(model(xf))
 data.train.y[ix]
-
 # weights = Flux.params(model)
 
 # trainables = [weights[jx] for jx in [1, 3, 5]]

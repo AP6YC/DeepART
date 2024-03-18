@@ -58,15 +58,15 @@ function Base.show(io::IO, l::Fuzzy)
     print(io, ")")
 end
 
-const BETA = 1.0
+# const BETA = 1.0
 
-function art_learn(x, W)
-    # return eval(art.opts.update)(art, x, get_sample(art.W, index))
-    return BETA * min.(x, W) + W * (1.0 - art.opts.beta)
-end
+# function art_learn(x, W)
+#     # return eval(art.opts.update)(art, x, get_sample(art.W, index))
+#     return BETA * min.(x, W) + W * (1.0 - art.opts.beta)
+# end
 
-function art_learn_cast(x, W)
+function art_learn_cast(x, W, beta)
     Wy, _ = size(W)
     _x = repeat(x', Wy, 1)
-    return BETA * min.(_x, W) + W * (1.0 - BETA)
+    return beta * min.(_x, W) + W * (1.0 - beta)
 end
