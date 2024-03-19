@@ -117,21 +117,19 @@ model = Chain(
 
 head_dim = 128
 
+function CC()
+    Parallel(vcat,
+        identity,
+        DeepART.complement_code,
+    )
+end
+
 model = Flux.@autosize (784,) Chain(
-    Parallel(vcat,
-        identity,
-        DeepART.complement_code,
-    ),
+    CC(),
     Dense(_, 128, sigmoid),
-    Parallel(vcat,
-        identity,
-        DeepART.complement_code,
-    ),
+    CC(),
     Dense(_, 64, sigmoid),
-    Parallel(vcat,
-        identity,
-        DeepART.complement_code,
-    ),
+    CC(),
     Dense(_, head_dim, sigmoid),
     # Dense(_, n_classes, sigmoid),
     # sigmoid,
@@ -140,10 +138,7 @@ model = Flux.@autosize (784,) Chain(
 
 function get_head()
     return Flux.@autosize (head_dim,) Chain(
-        Parallel(vcat,
-            identity,
-            DeepART.complement_code,
-        ),
+        CC(),
         # Dense(_, 128, sigmoid),
         DeepART.Fuzzy(_, 64),
     )
