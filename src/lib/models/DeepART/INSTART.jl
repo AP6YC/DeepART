@@ -34,6 +34,14 @@ Options container for a [`INSTART`](@ref) module.
     beta = 1.0; @assert beta > 0.0 && beta <= 1.0
 
     """
+    Flag to use an uncommitted node when learning.
+
+    If true, new weights are created with ones(dim) and learn on the complement-coded sample.
+    If false, fast-committing is used where the new weight is simply the complement-coded sample.
+    """
+    uncommitted::Bool = false
+
+    """
     The dimension of the interaction field.
     """
     head_dim::Int = 128
@@ -42,6 +50,16 @@ Options container for a [`INSTART`](@ref) module.
     Flag for pushing the models to the GPU.
     """
     gpu::Bool = false
+
+    """
+    List of the layer entries with trainable weights.
+    """
+    trainables::Vector{Int} = [1, 3, 5]
+
+    """
+    The activations indices to use.
+    """
+    activations::Vector{Int} = [1, 3, 5]
     # """
     # Flux activation function.
     # """
@@ -176,18 +194,21 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
-function learn_model(model, xf)
+# function learn_model(model, xf)
+function learn_model(art::INSTART, xf)
     eta = 0.1
-    weights = Flux.params(model)
-    acts = Flux.activations(model, xf)
+    weights = Flux.params(art.model)
+    acts = Flux.activations(art.model, xf)
 
-    # trainables = [weights[jx] for jx in [1, 3, 5]]
-    # ins = [acts[jx] for jx in [1, 3, 5]]
-    # outs = [acts[jx] for jx in [2, 4, 6]]
-    n_layers = length(weights)
-    trainables = [weights[jx] for jx = 1:2:n_layers]
-    ins = [acts[jx] for jx = 1:2:n_layers]
-    outs = [acts[jx] for jx = 2:2:n_layers]
+    # n_layers = length(weights)
+    # trainables = [weights[jx] for jx = 1:2:n_layers]
+    # ins = [acts[jx] for jx = 1:2:n_layers]
+    # outs = [acts[jx] for jx = 2:2:n_layers]
+
+    trainables = [weights[jx] for jx in art.opts.trainables]
+    # ins = [acts[jx] for jx = art.opts.trainables]
+    ins = [acts[jx] for jx = art.opts.activations]
+    # outs = [acts[jx] for jx = art.opts.trainables .+ 1]
 
     for ix in eachindex(ins)
         # trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
@@ -202,19 +223,22 @@ function learn_model(model, xf)
     return acts
 end
 
-# function art_learn_basic(x, W, beta)
-# end
+function art_learn_basic(x, W, beta)
+    return beta * min.(x, W) + W * (1.0 - beta)
+end
 
 function art_learn_cast(x, W, beta)
     Wy, _ = size(W)
     _x = repeat(x', Wy, 1)
-    return beta * min.(_x, W) + W * (1.0 - beta)
+    # return beta * min.(_x, W) + W * (1.0 - beta)
+    return art_learn_basic(_x, W, beta)
 end
 
 function art_learn_head(xf, head, beta)
     W = Flux.params(head[2])[1]
     _x = head[1](xf)
-    W .= beta * min.(_x, W) + W * (1.0 - beta)
+    # W .= beta * min.(_x, W) + W * (1.0 - beta)
+    W .= art_learn_basic(_x, W, beta)
     return
 end
 
@@ -237,29 +261,33 @@ function create_category!(
     # Increment number of samples associated with new category
     push!(art.n_instance, 1)
 
-    # # If we use an uncommitted node
-    # if art.opts.uncommitted
-    #     # Add a new weight of ones
-    #     append!(art.W, ones(art.config.dim_comp, 1))
-    #     # Learn the uncommitted node on the sample
-    #     learn!(art, x, art.n_categories)
-    # else
-    #     # Fast commit the sample
-    #     append!(art.W, x)
-    # end
+    # Update the model
+    # acts = learn_model(art.model, x)
+    acts = Flux.activations(art.model, x)
+
+    # Then add a new head
+    # add_node!(art, acts[end])
+
+    # If we use an uncommitted node
+    if art.opts.uncommitted
+        # Add a new weight of ones
+        # append!(art.W, ones(art.config.dim_comp, 1))
+        add_node!(art, ones(Float32, art.opts.head_dim))
+        # Learn the uncommitted node on the sample
+        # learn!(art, x, art.n_categories)
+        art_learn_head(acts[end], art.heads[art.n_categories], art.opts.beta)
+    else
+        # Fast commit the sample
+        # append!(art.W, x)
+        add_node!(art, acts[end])
+    end
 
     # Add the label for the category
     push!(art.labels, y)
 
-    # Update the model
-    acts = learn_model(art.model, x)
-
-    add_node!(art, acts[end])
-
     # Update the head
     # art_learn_head(x, heads[bmu], art.opts.beta)
     # art_learn_head(acts[end], art.heads[art.n_categories], art.opts.beta)
-
     return
 end
 
@@ -319,7 +347,8 @@ function train!(
             end
 
             # Update the model
-            acts = learn_model(art.model, x)
+            # acts = learn_model(art.model, x)
+            acts = learn_model(art, x)
 
             # Update the head
             art_learn_head(acts[end], art.heads[bmu], art.opts.beta)

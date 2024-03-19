@@ -5,12 +5,22 @@
 Definition of a complement coding layer for a Flux.jl model.
 """
 
+# Flux.@layer complement_code :ignore
+
 function CC()
     complement_code
     # Parallel(vcat,
     #     identity,
     #     complement_code,
     # )
+end
+
+function complement_code_conv(x)
+    cat(x, 1.0 .- x, dims=3)
+end
+
+function CCConv()
+    complement_code_conv
 end
 
 # # struct Dense{F, M<:AbstractMatrix, B}

@@ -12,14 +12,19 @@ using Flux
 using CUDA
 using ProgressMeter
 using AdaptiveResonance
+using Plots
+
+# theme(:dark)
+# theme(:juno)
+theme(:dracula)
 # using StatsBase: norm
 
 # -----------------------------------------------------------------------------
 # CONFIG
 # -----------------------------------------------------------------------------
 
-N_TRAIN = 10000
 # N_TRAIN = 10000
+N_TRAIN = 1000
 N_TEST = 1000
 N_BATCH = 128
 # N_BATCH = 1
@@ -107,49 +112,74 @@ GPU && fdata |> gpu
 n_input = size(fdata.train.x)[1]
 head_dim = 32
 
+# model = Flux.@autosize (n_input,) Chain(
+#     # DeepART.CC(),
+#     # Dense(_, 512, sigmoid),
+#     DeepART.CC(),
+#     Dense(_, 256, sigmoid),
+#     DeepART.CC(),
+#     Dense(_, 128, sigmoid),
+#     DeepART.CC(),
+#     Dense(_, 64, sigmoid),
+#     DeepART.CC(),
+#     Dense(_, head_dim, sigmoid),
+#     # Dense(_, n_classes, sigmoid),
+#     # sigmoid,
+#     # softmax,
+# )
+
 model = Flux.@autosize (n_input,) Chain(
     DeepART.CC(),
-    Dense(_, 512, sigmoid),
+    Dense(_, 512, sigmoid, bias=false),
+    # DeepART.CC(),
+    # Dense(_, 256, sigmoid, bias=false),
+    # LayerNorm(_),
     DeepART.CC(),
-    Dense(_, 256, sigmoid),
+    Dense(_, 128, sigmoid, bias=false),
+    # LayerNorm(_),
     DeepART.CC(),
-    Dense(_, 128, sigmoid),
+    Dense(_, 64, sigmoid, bias=false),
+    # LayerNorm(_),
     DeepART.CC(),
-    Dense(_, 64, sigmoid),
-    DeepART.CC(),
-    Dense(_, head_dim, sigmoid),
+    Dense(_, head_dim, sigmoid, bias=false),
     # Dense(_, n_classes, sigmoid),
     # sigmoid,
     # softmax,
 )
 
-# size_tuple = (28, 28, 1, 1)
+size_tuple = (28, 28, 1, 1)
+conv_model = Flux.@autosize (size_tuple,) Chain(
+    DeepART.CCConv(),
+    Conv((5,5), _=>6, relu),
+    MaxPool((2,2)),
+    BatchNorm(_),
+    Flux.flatten,
+    Dense(_=>15,relu),
+    Dense(15=>10,sigmoid),
+    # softmax
+)
 
-# conv_model = Flux.@autosize (size_tuple,) Chain(
-#     Conv((5,5),1=>6, relu),
-#     MaxPool((2,2)),
-#     BatchNorm(_),
-#     Flux.flatten,
-#     Dense(_=>15,relu),
-#     Dense(15=>10,sigmoid),
-#     # softmax
-# )
-
+dev_x = reshape(data.train.x[:,:,1], size_tuple)
+conv_model(dev_x)
+conv_model[1](dev_x)
 # GPU && model |> gpu
 
 art = DeepART.INSTART(
     model,
+    trainables = [1,2,3,4],
+    activations = [1,3,5,7],
     head_dim=head_dim,
-    beta=0.1,
+    beta=0.001,
     # beta=1.0,
     # rho=0.1,
     rho = 0.05,
+    # uncommitted=true,
     gpu=GPU,
 )
 
 
-
 dev_xf = fdata.train.x[:, 1]
+prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
 # -----------------------------------------------------------------------------
@@ -179,6 +209,56 @@ p = DeepART.create_confusion_heatmap(
     y_hats,
 )
 
+
+
+# -----------------------------------------------------------------------------
+# L2M
+# -----------------------------------------------------------------------------
+
+cidata = DeepART.ClassIncrementalDataSplit(fdata)
+# cidata = DeepART.ClassIncrementalDataSplit(data)
+groupings = [collect(1:5), collect(6:10)]
+tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
+n_tasks = length(tidata.train)
+GPU && tidata |> gpu
+
+
+model = Flux.@autosize (n_input,) Chain(
+    DeepART.CC(),
+    Dense(_, 512, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, 256, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, 128, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, 64, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, head_dim, sigmoid, bias=false),
+)
+
+art = DeepART.INSTART(
+    model,
+    trainables = [1,2,3,4,5],
+    activations = [1,3,5,7,9],
+    head_dim=head_dim,
+    beta=0.001,
+    # beta=1.0,
+    # rho=0.1,
+    rho = 0.05,
+    # uncommitted=true,
+    gpu=GPU,
+)
+
+for ix = 1:n_tasks
+    task_x = tidata.train[ix].x
+    task_y = Flux.onecold(tidata.train[ix].y)
+
+    @showprogress for jx = 1:n_train
+        xf = task_x[:, jx]
+        label = task_y[jx]
+        DeepART.train!(art, xf, y=label)
+    end
+end
 
 # DeepART.saveplot(
 #     p,
@@ -234,4 +314,4 @@ y_hats2 = Vector{Int}()
     push!(y_hats2, y_hat)
 end
 perf2 = DeepART.ART.performance(y_hats2, data.test.y[1:n_test])
-@info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats2))"
+@info "Perf: $(perf2), n_cats: $(art2.n_categories), uniques: $(unique(y_hats2))"
