@@ -175,6 +175,9 @@ function create_confusion_heatmap(
     return h
 end
 
+"""
+Wrapper for saving results plots.
+"""
 function saveplot(
     p,
     filename,
@@ -182,9 +185,6 @@ function saveplot(
 )
     # paper_out_dir(args...) = DeepART.paper_results_dir("instart", args...)
     paper_out_dir(args...) = DeepART.paper_results_dir(parts..., args...)
-
-    # paper_out_dir(args...) = DeepART.paper_results_dir("instart", args...)
     mkpath(paper_out_dir())
     Plots.savefig(p, paper_out_dir(filename))
-    # savefig(p)
 end

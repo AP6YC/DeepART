@@ -10,6 +10,7 @@ using Revise
 using DeepART
 using Flux
 using ProgressMeter
+using AdaptiveResonance
 # using StatsBase: norm
 
 # -----------------------------------------------------------------------------
@@ -103,11 +104,13 @@ GPU && fdata |> gpu
 # -----------------------------------------------------------------------------
 
 n_input = size(fdata.train.x)[1]
-head_dim = 64
+head_dim = 32
 
 model = Flux.@autosize (n_input,) Chain(
     # DeepART.CC(),
     # Dense(_, 256, sigmoid),
+    DeepART.CC(),
+    Dense(_, 256, sigmoid),
     DeepART.CC(),
     Dense(_, 128, sigmoid),
     DeepART.CC(),
@@ -126,7 +129,8 @@ art = DeepART.INSTART(
     head_dim=head_dim,
     beta=0.01,
     # beta=1.0,
-    rho=0.1,
+    # rho=0.1,
+    rho = 0.05,
     gpu=GPU,
 )
 
@@ -151,9 +155,8 @@ y_hats = Vector{Int}()
     push!(y_hats, y_hat)
 end
 
-@info unique(y_hats)
 perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
-@info "Perf: $perf, n_cats: $(art.n_categories)"
+@info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
 p = DeepART.create_confusion_heatmap(
     string.(collect(1:10)),
@@ -179,11 +182,13 @@ DeepART.saveplot(
 #     trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
 # end
 
-using AdaptiveResonance
+# -----------------------------------------------------------------------------
+# MERGEART
+# -----------------------------------------------------------------------------
 
 weights = [head[2].weight for head in art.heads]
 la = AdaptiveResonance.FuzzyART(
-    rho=0.6,
+    rho=0.01,
 )
 la.config = AdaptiveResonance.DataConfig(0, 1, art.opts.head_dim)
 
@@ -192,6 +197,23 @@ la.config = AdaptiveResonance.DataConfig(0, 1, art.opts.head_dim)
     weight = weights[ix]
     label = art.labels[ix]
     AdaptiveResonance.train!(la, weight, y=label)
-    # @info weight
 end
-la.n_categories
+@info "Before: $(art.n_categories), After: $(la.n_categories)"
+
+
+# -----------------------------------------------------------------------------
+# TRIM SINGLETONS
+# -----------------------------------------------------------------------------
+
+art2 = deepcopy(art)
+
+DeepART.trimart(art2)
+
+y_hats2 = Vector{Int}()
+@showprogress for ix = 1:n_test
+    xf = fdata.test.x[:, ix]
+    y_hat = DeepART.classify(art2, xf, get_bmu=true)
+    push!(y_hats2, y_hat)
+end
+perf2 = DeepART.ART.performance(y_hats2, data.test.y[1:n_test])
+@info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats2))"
