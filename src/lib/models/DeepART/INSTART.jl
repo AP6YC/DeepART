@@ -33,6 +33,10 @@ Options container for a [`INSTART`](@ref) module.
     """
     beta = 1.0; @assert beta > 0.0 && beta <= 1.0
 
+    """
+    The dimension of the interaction field.
+    """
+    head_dim::Int = 128
     # """
     # Flux activation function.
     # """
@@ -108,7 +112,7 @@ end
 """
 Constructs an INSTART head node.
 """
-function get_head(weights=nothing)
+function get_head(head_dim, weights=nothing)
     # Dense(_, 128, sigmoid),
     # DeepART.Fuzzy(_, 1),
     # DeepART.SingleFuzzy(_),
@@ -191,7 +195,7 @@ function add_node!(
     art::INSTART,
     x::RealArray,
 )
-    push!(art.heads, get_head(x))
+    push!(art.heads, get_head(art.opts.head_dim, x))
     return
 end
 
@@ -216,21 +220,23 @@ function create_category!(
     #     # Fast commit the sample
     #     append!(art.W, x)
     # end
-    add_node!(art.F2)
 
     # Add the label for the category
     push!(art.labels, y)
 
     # Update the model
-    acts = learn_model(model, x)
+    acts = learn_model(art.model, x)
+
+    add_node!(art, acts[end])
 
     # Update the head
-    art_learn_head(x, heads[bmu], art.opts.beta)
+    # art_learn_head(x, heads[bmu], art.opts.beta)
+    art_learn_head(acts[end], art.heads[art.n_categories], art.opts.beta)
 
     return
 end
 
-function initialize(
+function initialize!(
     art::INSTART,
     x::RealArray;
     y::Integer=0,
@@ -260,11 +266,13 @@ function train!(
     if isempty(art.heads)
         y_hat = supervised ? y : 1
         # initialize!(art, x, y=y_hat)
+        # f2 = art.model(x)
         initialize!(art, x, y=y_hat)
         return y_hat
     end
-    # M = [head[acts[end]] for head in heads]
-    MT = [head[acts[end]] for head in heads]
+
+    acts = Flux.activations(art.model, x)
+    MT = [head(acts[end]) for head in art.heads]
     M = [m[1] for m in MT]
     T = [m[2] for m in MT]
 
@@ -280,17 +288,17 @@ function train!(
         # Best matching unit
         bmu = index[j]
         # Vigilance check - pass
-        if M[bmu] >= rho
+        if M[bmu] >= art.opts.rho
             # If supervised and the label differed, force mismatch
-            if supervised && (labels[bmu] != y)
+            if supervised && (art.labels[bmu] != y)
                 break
             end
 
             # Update the model
-            acts = learn_model(model, x)
+            acts = learn_model(art.model, x)
 
             # Update the head
-            art_learn_head(x, heads[bmu], art.opts.beta)
+            art_learn_head(acts[end], art.heads[bmu], art.opts.beta)
 
             # Increment the instance counting
             art.n_instance[bmu] += 1
@@ -311,9 +319,63 @@ function train!(
         # Get the correct label for the new category
         y_hat = supervised ? y : n_categories + 1
         # Create a new category
+        # f2 = art.model(x)
         create_category!(art, x, y_hat)
     end
 
     # return T, M
+    return y_hat
+end
+
+# COMMON DOC: FuzzyART incremental classification method
+function classify(
+    art::INSTART,
+    x::RealVector;
+    preprocessed::Bool=false,
+    get_bmu::Bool=false,
+)
+    # Compute activation and match functions
+    # activation_match!(art, x)
+    # M = [basic_activation(art, f1, f2[ix]) for ix in eachindex(f2)]
+    # T = [basic_match(art, f1, f2[ix]) for ix in eachindex(f2)]
+    acts = Flux.activations(art.model, x)
+    MT = [head(acts[end]) for head in art.heads]
+    M = [m[1] for m in MT]
+    T = [m[2] for m in MT]
+
+    # Sort activation function values in descending order
+    index = sortperm(T, rev=true)
+
+    # Default is mismatch
+    mismatch_flag = true
+    y_hat = -1
+
+    # Iterate over all categories
+    for jx in 1:art.n_categories
+        # Set the best matching unit
+        bmu = index[jx]
+
+        # Vigilance check - pass
+        if M[bmu] >= art.opts.rho
+            # Current winner
+            y_hat = art.labels[bmu]
+            mismatch_flag = false
+            break
+        end
+    end
+
+    # If we did not find a match
+    if mismatch_flag
+        # Report either the best matching unit or the mismatch label -1
+        bmu = index[1]
+
+        # Report either the best matching unit or the mismatch label -1
+        y_hat = get_bmu ? art.labels[bmu] : -1
+    end
+
+    # Update the stored match and activation values
+    # log_art_stats!(art, bmu, mismatch_flag)
+
+    # Return the inferred label
     return y_hat
 end

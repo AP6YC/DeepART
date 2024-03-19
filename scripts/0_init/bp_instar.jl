@@ -112,11 +112,11 @@ model = Flux.@autosize (784,) Chain(
 
 a = Flux.params(model)
 
-art = DeepART.INSTART(model)
+art = DeepART.INSTART(model, head_dim=head_dim)
 
 # create_category!(art, xf, y_hat)
 
-@showprogress for ix = 1:1000
+@showprogress for ix = 1:n_train
     xf = fdata.train.x[:, ix]
     label = data.train.y[ix]
     DeepART.train!(art, xf, y=label)
@@ -127,12 +127,18 @@ xf = fdata.train.x[:, ix]
 acts = Flux.activations(model, xf)
 
 y_hats = Vector{Int}()
-@showprogress for ix in eachindex(data.test.y[1:N_TEST])
-    y_hat = argmax(model(fdata.test.x[:, ix]))
+@showprogress for ix = 1:n_test
+    xf = fdata.test.x[:, ix]
+    y_hat = DeepART.classify(art, xf, get_bmu=true)
     push!(y_hats, y_hat)
 end
 
 @info unique(y_hats)
+@info art.n_categories
+perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
+@info perf
+
+
 
 model(xf)
 argmax(model(xf))
