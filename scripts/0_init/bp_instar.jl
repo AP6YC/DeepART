@@ -18,7 +18,7 @@ using AdaptiveResonance
 # CONFIG
 # -----------------------------------------------------------------------------
 
-N_TRAIN = 1000
+N_TRAIN = 10000
 # N_TRAIN = 10000
 N_TEST = 1000
 N_BATCH = 128
@@ -108,8 +108,8 @@ n_input = size(fdata.train.x)[1]
 head_dim = 32
 
 model = Flux.@autosize (n_input,) Chain(
-    # DeepART.CC(),
-    # Dense(_, 256, sigmoid),
+    DeepART.CC(),
+    Dense(_, 512, sigmoid),
     DeepART.CC(),
     Dense(_, 256, sigmoid),
     DeepART.CC(),
@@ -122,6 +122,18 @@ model = Flux.@autosize (n_input,) Chain(
     # sigmoid,
     # softmax,
 )
+
+# size_tuple = (28, 28, 1, 1)
+
+# conv_model = Flux.@autosize (size_tuple,) Chain(
+#     Conv((5,5),1=>6, relu),
+#     MaxPool((2,2)),
+#     BatchNorm(_),
+#     Flux.flatten,
+#     Dense(_=>15,relu),
+#     Dense(15=>10,sigmoid),
+#     # softmax
+# )
 
 # GPU && model |> gpu
 

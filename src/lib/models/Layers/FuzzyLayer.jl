@@ -118,9 +118,3 @@ end
 #     # return eval(art.opts.update)(art, x, get_sample(art.W, index))
 #     return BETA * min.(x, W) + W * (1.0 - art.opts.beta)
 # end
-
-function art_learn_cast(x, W, beta)
-    Wy, _ = size(W)
-    _x = repeat(x', Wy, 1)
-    return beta * min.(_x, W) + W * (1.0 - beta)
-end

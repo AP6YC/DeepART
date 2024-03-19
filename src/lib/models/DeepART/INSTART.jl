@@ -202,6 +202,15 @@ function learn_model(model, xf)
     return acts
 end
 
+# function art_learn_basic(x, W, beta)
+# end
+
+function art_learn_cast(x, W, beta)
+    Wy, _ = size(W)
+    _x = repeat(x', Wy, 1)
+    return beta * min.(_x, W) + W * (1.0 - beta)
+end
+
 function art_learn_head(xf, head, beta)
     W = Flux.params(head[2])[1]
     _x = head[1](xf)
@@ -393,6 +402,10 @@ function classify(
     # Return the inferred label
     return y_hat
 end
+
+# -----------------------------------------------------------------------------
+# EXPERIMENTAL
+# -----------------------------------------------------------------------------
 
 function mergeart(art)
     weights = [head[2].weight for head in art.heads]
