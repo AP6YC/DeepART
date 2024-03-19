@@ -17,12 +17,13 @@ using ProgressMeter
 # -----------------------------------------------------------------------------
 
 # N_TRAIN = 2000
-N_TRAIN = 4000
+N_TRAIN = 10000
 N_TEST = 1000
 N_BATCH = 128
 # N_BATCH = 1
 N_EPOCH = 1
 ACC_ITER = 10
+GPU = true
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -36,6 +37,9 @@ fdata = DeepART.flatty_hotty(data)
 n_classes = length(unique(data.train.y))
 n_train = min(N_TRAIN, length(data.train.y))
 n_test = min(N_TEST, length(data.test.y))
+
+GPU && data |> gpu
+GPU && fdata |> gpu
 
 # -----------------------------------------------------------------------------
 # OLD MODELS
@@ -115,16 +119,19 @@ model = Flux.@autosize (n_input,) Chain(
     # softmax,
 )
 
+# GPU && model |> gpu
+
 art = DeepART.INSTART(
     model,
     head_dim=head_dim,
     beta=0.01,
     # beta=1.0,
-    rho=0.2,
+    rho=0.1,
+    gpu=GPU,
 )
 
-xf = fdata.train.x[:, ix]
-acts = Flux.activations(model, xf)
+dev_xf = fdata.train.x[:, 1]
+acts = Flux.activations(model, dev_xf)
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST
@@ -148,10 +155,20 @@ end
 perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
 @info "Perf: $perf, n_cats: $(art.n_categories)"
 
-DeepART.create_confusion_heatmap(
+p = DeepART.create_confusion_heatmap(
     string.(collect(1:10)),
     data.test.y[1:n_test],
     y_hats,
+)
+
+# paper_out_dir(args...) = DeepART.paper_results_dir("instart", args...)
+# mkpath(paper_out_dir())
+# savefig(p, paper_out_dir("confusion.png"))
+
+DeepART.saveplot(
+    p,
+    "confusion.png",
+    "instart",
 )
 
 # trainables = [weights[jx] for jx in [1, 3, 5]]
@@ -161,3 +178,20 @@ DeepART.create_confusion_heatmap(
 #     # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
 #     trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
 # end
+
+using AdaptiveResonance
+
+weights = [head[2].weight for head in art.heads]
+la = AdaptiveResonance.FuzzyART(
+    rho=0.6,
+)
+la.config = AdaptiveResonance.DataConfig(0, 1, art.opts.head_dim)
+
+# for weight in weights
+@showprogress for ix in eachindex(weights)
+    weight = weights[ix]
+    label = art.labels[ix]
+    AdaptiveResonance.train!(la, weight, y=label)
+    # @info weight
+end
+la.n_categories

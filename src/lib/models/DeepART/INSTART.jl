@@ -37,6 +37,11 @@ Options container for a [`INSTART`](@ref) module.
     The dimension of the interaction field.
     """
     head_dim::Int = 128
+
+    """
+    Flag for pushing the models to the GPU.
+    """
+    gpu::Bool = false
     # """
     # Flux activation function.
     # """
@@ -145,6 +150,9 @@ function INSTART(
 )
     # Create the heads
     heads = Vector{Flux.Chain}()
+
+    opts.gpu && model |> gpu
+    opts.gpu && heads |> gpu
 
     # Construct and return the field
     return INSTART(
@@ -260,6 +268,8 @@ function train!(
     x;
     y::Integer=0,
 )
+    # art.opts.gpu && x |> gpu
+
     # Flag for if training in supervised mode
     supervised = !iszero(y)
 
@@ -378,4 +388,17 @@ function classify(
 
     # Return the inferred label
     return y_hat
+end
+
+function mergeart(art)
+    weights = [head[2].weight for head in art.heads]
+    la = ART.FuzzyART(
+        rho=0.99
+    )
+    la.config = ART.DataConfig(0, 1, art.opts.head_dim)
+
+    for weight in weights
+        ART.train!(la, weight)
+    end
+    return la
 end

@@ -60,25 +60,25 @@ function config_dir(args...)
     # return newdir(args...)
 end
 
-# """
-# `DrWatson`-style paper results directory.
+"""
+`DrWatson`-style paper results directory.
 
-# $DRWATSON_ARGS_DOC
-# """
-# function paper_results_dir(args...)
-#     return joinpath(
-#         "C:\\",
-#         "Users",
-#         "Sasha",
-#         "Dropbox",
-#         "Apps",
-#         "Overleaf",
-#         "Paper-HTVM-IJCNN",
-#         "images",
-#         "results",
-#         args...
-#     )
-# end
+$DRWATSON_ARGS_DOC
+"""
+function paper_results_dir(args...)
+    return joinpath(
+        "C:\\",
+        "Users",
+        "Sasha",
+        "Dropbox",
+        "Apps",
+        "Overleaf",
+        "Paper-DeepART",
+        "images",
+        "results",
+        args...
+    )
+end
 
 """
 `DrWatson`-style configs results directory.
