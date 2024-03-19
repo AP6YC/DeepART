@@ -52,3 +52,13 @@ const COLORSCHEME = :okabe_ito
 Plotting fontfamily for all text.
 """
 const FONTFAMILY = "Computer Modern"
+
+"""
+Heatmap color gradient.
+"""
+const GRADIENTSCHEME = pubu_9[5:end]
+
+"""
+Aspect ratio correction for heatmap
+"""
+const SQUARE_SIZE = 500.0 .* (1.0, 0.87)  # -8Plots.mm

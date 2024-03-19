@@ -16,7 +16,8 @@ using ProgressMeter
 # CONFIG
 # -----------------------------------------------------------------------------
 
-N_TRAIN = 1000
+# N_TRAIN = 2000
+N_TRAIN = 4000
 N_TEST = 1000
 N_BATCH = 128
 # N_BATCH = 1
@@ -36,8 +37,9 @@ n_classes = length(unique(data.train.y))
 n_train = min(N_TRAIN, length(data.train.y))
 n_test = min(N_TEST, length(data.test.y))
 
-# model = Chain(
-# )
+# -----------------------------------------------------------------------------
+# OLD MODELS
+# -----------------------------------------------------------------------------
 
 # model = @autosize (28, 28, 1, 1) Chain(
 #     Conv((5,5),1=>6,relu),
@@ -47,20 +49,20 @@ n_test = min(N_TEST, length(data.test.y))
 #     softmax
 # )
 
-size_tuple = (28, 28, 1, 1)
+# size_tuple = (28, 28, 1, 1)
 
 # Create a LeNet model
-model = @Flux.autosize (size_tuple,) Chain(
-    Conv((5,5),1 => 6, relu),
-    MaxPool((2,2)),
-    Conv((5,5),6 => 16, relu),
-    MaxPool((2,2)),
-    Flux.flatten,
-    Dense(256=>120,relu),
-    Dense(120=>84, relu),
-    Dense(84=>10, sigmoid),
-    softmax
-)
+# model = @Flux.autosize (size_tuple,) Chain(
+#     Conv((5,5),1 => 6, relu),
+#     MaxPool((2,2)),
+#     Conv((5,5),6 => 16, relu),
+#     MaxPool((2,2)),
+#     Flux.flatten,
+#     Dense(256=>120,relu),
+#     Dense(120=>84, relu),
+#     Dense(84=>10, sigmoid),
+#     softmax
+# )
 
 # for ix = 1:1000
 #     x = reshape(data.train.x[:, :, ix], size_tuple)
@@ -69,22 +71,20 @@ model = @Flux.autosize (size_tuple,) Chain(
 #     DeepART.instar(xf, acts, model, 0.0001)
 # end
 
-ix = 1
-# x = fdata.train.x[:, ix]
-x = reshape(data.train.x[:, :, ix], size_tuple)
-y = data.train.y[ix]
+# ix = 1
+# # x = fdata.train.x[:, ix]
+# x = reshape(data.train.x[:, :, ix], size_tuple)
+# y = data.train.y[ix]
 
-acts = Flux.activations(model, x)
+# acts = Flux.activations(model, x)
 
-n_input = size(fdata.train.x)[1]
-
-model = Chain(
-    Dense(n_input, 128, tanh),
-    Dense(128, 64, tanh),
-    Dense(64, n_classes, sigmoid),
-    # sigmoid,
-    # softmax,
-)
+# model = Chain(
+#     Dense(n_input, 128, tanh),
+#     Dense(128, 64, tanh),
+#     Dense(64, n_classes, sigmoid),
+#     # sigmoid,
+#     # softmax,
+# )
 
 # model = Chain(
 #     Dense(n_input*2, 128, tanh),
@@ -94,9 +94,16 @@ model = Chain(
 #     # softmax,
 # )
 
-head_dim = 128
+# -----------------------------------------------------------------------------
+# MODEL
+# -----------------------------------------------------------------------------
 
-model = Flux.@autosize (784,) Chain(
+n_input = size(fdata.train.x)[1]
+head_dim = 64
+
+model = Flux.@autosize (n_input,) Chain(
+    # DeepART.CC(),
+    # Dense(_, 256, sigmoid),
     DeepART.CC(),
     Dense(_, 128, sigmoid),
     DeepART.CC(),
@@ -108,23 +115,27 @@ model = Flux.@autosize (784,) Chain(
     # softmax,
 )
 
-# heads = [get_head() for ix = 1:n_classes]
+art = DeepART.INSTART(
+    model,
+    head_dim=head_dim,
+    beta=0.01,
+    # beta=1.0,
+    rho=0.2,
+)
 
-a = Flux.params(model)
+xf = fdata.train.x[:, ix]
+acts = Flux.activations(model, xf)
 
-art = DeepART.INSTART(model, head_dim=head_dim)
+# -----------------------------------------------------------------------------
+# TRAIN/TEST
+# -----------------------------------------------------------------------------
 
 # create_category!(art, xf, y_hat)
-
 @showprogress for ix = 1:n_train
     xf = fdata.train.x[:, ix]
     label = data.train.y[ix]
     DeepART.train!(art, xf, y=label)
 end
-
-xf = fdata.train.x[:, ix]
-# xf = DeepART.complement_code(xf)
-acts = Flux.activations(model, xf)
 
 y_hats = Vector{Int}()
 @showprogress for ix = 1:n_test
@@ -134,16 +145,14 @@ y_hats = Vector{Int}()
 end
 
 @info unique(y_hats)
-@info art.n_categories
 perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
-@info perf
+@info "Perf: $perf, n_cats: $(art.n_categories)"
 
-
-
-model(xf)
-argmax(model(xf))
-data.train.y[ix]
-# weights = Flux.params(model)
+DeepART.create_confusion_heatmap(
+    string.(collect(1:10)),
+    data.test.y[1:n_test],
+    y_hats,
+)
 
 # trainables = [weights[jx] for jx in [1, 3, 5]]
 # ins = [acts[jx] for jx in [1, 3, 5]]

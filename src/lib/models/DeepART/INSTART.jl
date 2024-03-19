@@ -231,7 +231,7 @@ function create_category!(
 
     # Update the head
     # art_learn_head(x, heads[bmu], art.opts.beta)
-    art_learn_head(acts[end], art.heads[art.n_categories], art.opts.beta)
+    # art_learn_head(acts[end], art.heads[art.n_categories], art.opts.beta)
 
     return
 end
