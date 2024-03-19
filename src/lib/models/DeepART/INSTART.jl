@@ -46,6 +46,11 @@ Options container for a [`INSTART`](@ref) module.
     # Flux activation function.
     # """
     # activation_function::Function = relu
+
+    # """
+    # Flag for if the model is convolutional.
+    # """
+    # conv::Bool = false
 end
 
 """
@@ -176,9 +181,14 @@ function learn_model(model, xf)
     weights = Flux.params(model)
     acts = Flux.activations(model, xf)
 
-    trainables = [weights[jx] for jx in [1, 3, 5]]
-    ins = [acts[jx] for jx in [1, 3, 5]]
-    outs = [acts[jx] for jx in [2, 4, 6]]
+    # trainables = [weights[jx] for jx in [1, 3, 5]]
+    # ins = [acts[jx] for jx in [1, 3, 5]]
+    # outs = [acts[jx] for jx in [2, 4, 6]]
+    n_layers = length(weights)
+    trainables = [weights[jx] for jx = 1:2:n_layers]
+    ins = [acts[jx] for jx = 1:2:n_layers]
+    outs = [acts[jx] for jx = 2:2:n_layers]
+
     for ix in eachindex(ins)
         # trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
         trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], eta)
@@ -268,15 +278,11 @@ function train!(
     x;
     y::Integer=0,
 )
-    # art.opts.gpu && x |> gpu
-
     # Flag for if training in supervised mode
     supervised = !iszero(y)
 
     if isempty(art.heads)
         y_hat = supervised ? y : 1
-        # initialize!(art, x, y=y_hat)
-        # f2 = art.model(x)
         initialize!(art, x, y=y_hat)
         return y_hat
     end
@@ -293,7 +299,6 @@ function train!(
     mismatch_flag = true
 
     # Loop over all categories
-    # n_categories = length(heads)
     for j = 1:art.n_categories
         # Best matching unit
         bmu = index[j]
@@ -315,7 +320,7 @@ function train!(
 
             # Save the output label for the sample
             y_hat = art.labels[bmu]
-            # y_hat = bmu
+
             # No mismatch
             mismatch_flag = false
             break
@@ -329,7 +334,6 @@ function train!(
         # Get the correct label for the new category
         y_hat = supervised ? y : n_categories + 1
         # Create a new category
-        # f2 = art.model(x)
         create_category!(art, x, y_hat)
     end
 

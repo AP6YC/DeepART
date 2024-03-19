@@ -9,6 +9,7 @@ Development script for deep instar learning.
 using Revise
 using DeepART
 using Flux
+using CUDA
 using ProgressMeter
 using AdaptiveResonance
 # using StatsBase: norm
@@ -17,8 +18,8 @@ using AdaptiveResonance
 # CONFIG
 # -----------------------------------------------------------------------------
 
-# N_TRAIN = 2000
-N_TRAIN = 10000
+N_TRAIN = 1000
+# N_TRAIN = 10000
 N_TEST = 1000
 N_BATCH = 128
 # N_BATCH = 1
@@ -127,12 +128,14 @@ model = Flux.@autosize (n_input,) Chain(
 art = DeepART.INSTART(
     model,
     head_dim=head_dim,
-    beta=0.01,
+    beta=0.1,
     # beta=1.0,
     # rho=0.1,
     rho = 0.05,
     gpu=GPU,
 )
+
+
 
 dev_xf = fdata.train.x[:, 1]
 acts = Flux.activations(model, dev_xf)
@@ -164,15 +167,18 @@ p = DeepART.create_confusion_heatmap(
     y_hats,
 )
 
-# paper_out_dir(args...) = DeepART.paper_results_dir("instart", args...)
-# mkpath(paper_out_dir())
-# savefig(p, paper_out_dir("confusion.png"))
 
-DeepART.saveplot(
-    p,
-    "confusion.png",
-    "instart",
-)
+# DeepART.saveplot(
+#     p,
+#     "confusion.png",
+#     "instart",
+# )
+
+
+
+
+
+
 
 # trainables = [weights[jx] for jx in [1, 3, 5]]
 # ins = [acts[jx] for jx in [1, 3, 5]]
