@@ -86,27 +86,6 @@ model = Chain(
     # softmax,
 )
 
-
-# model = Flux.@autosize (784,) Chain(
-#     Parallel(vcat,
-#         Dense(n_input, 128, tanh),
-#         Dense(n_input, 128, tanh),
-#     ),
-#     # Dense(n_input, 128, tanh),
-#     Parallel(vcat,
-#         Dense(_, 64, tanh),
-#         Dense(_, 64, tanh),
-#     ),
-#     # Dense(128, 64, tanh),
-#     Parallel(vcat,
-#         Dense(_, n_classes, sigmoid),
-#         Dense(_, n_classes, sigmoid),
-#     ),
-#     # Dense(64, n_classes, sigmoid),
-#     # sigmoid,
-#     # softmax,
-# )
-
 # model = Chain(
 #     Dense(n_input*2, 128, tanh),
 #     Dense(128, 64, tanh),
@@ -117,57 +96,30 @@ model = Chain(
 
 head_dim = 128
 
-function CC()
-    Parallel(vcat,
-        identity,
-        DeepART.complement_code,
-    )
-end
-
 model = Flux.@autosize (784,) Chain(
-    CC(),
+    DeepART.CC(),
     Dense(_, 128, sigmoid),
-    CC(),
+    DeepART.CC(),
     Dense(_, 64, sigmoid),
-    CC(),
+    DeepART.CC(),
     Dense(_, head_dim, sigmoid),
     # Dense(_, n_classes, sigmoid),
     # sigmoid,
     # softmax,
 )
 
-function get_head()
-    return Flux.@autosize (head_dim,) Chain(
-        CC(),
-        # Dense(_, 128, sigmoid),
-        DeepART.Fuzzy(_, 64),
-    )
-end
-
-heads = [get_head() for ix = 1:n_classes]
+# heads = [get_head() for ix = 1:n_classes]
 
 a = Flux.params(model)
 
-eta = 0.1
+art = DeepART.INSTART(model)
+
+# create_category!(art, xf, y_hat)
+
 @showprogress for ix = 1:1000
     xf = fdata.train.x[:, ix]
-    # @info data.train.y[:, ix]
-    # xf = DeepART.complement_code(xf)
-    acts = Flux.activations(model, xf)
-    weights = Flux.params(model)
-
-    trainables = [weights[jx] for jx in [1, 3, 5]]
-    ins = [acts[jx] for jx in [1, 3, 5]]
-    outs = [acts[jx] for jx in [2, 4, 6]]
-    for ix in eachindex(ins)
-        # trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
-        trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], eta)
-    end
-
-    # for ix in eachindex(trainables)
-        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
-    # end
-    # DeepART.instar(xf, acts, model, 0.0001)
+    label = data.train.y[ix]
+    DeepART.train!(art, xf, y=label)
 end
 
 xf = fdata.train.x[:, ix]

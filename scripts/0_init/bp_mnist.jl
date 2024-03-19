@@ -57,6 +57,26 @@ model = Chain(
     # softmax,
 )
 
+function CC()
+    Parallel(vcat,
+        identity,
+        DeepART.complement_code,
+    )
+end
+
+model = Flux.@autosize (n_input,) Chain(
+    CC(),
+    Dense(_, 128, sigmoid),
+    CC(),
+    Dense(_, 64, sigmoid),
+    CC(),
+    Dense(_, n_classes, sigmoid),
+    # Dense(_, n_classes, sigmoid),
+    # sigmoid,
+    # softmax,
+)
+
+
 # model = Chain(
 #     # Dense(n_input, 64),
 #     Dense(n_input, 128),

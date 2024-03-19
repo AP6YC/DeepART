@@ -13,3 +13,6 @@ include("DeeperART.jl")
 
 # Definition of a DeepHeadART module
 include("DeepHeadART.jl")
+
+# Deep instar learning
+include("INSTART.jl")
