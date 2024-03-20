@@ -121,13 +121,10 @@ model = Flux.@autosize (n_input,) Chain(
     # Dense(_, 512, sigmoid, bias=false),
     DeepART.CC(),
     Dense(_, 256, sigmoid, bias=false),
-    # LayerNorm(_),
     DeepART.CC(),
     Dense(_, 128, sigmoid, bias=false),
-    # LayerNorm(_),
     DeepART.CC(),
     Dense(_, 64, sigmoid, bias=false),
-    # LayerNorm(_),
     DeepART.CC(),
     Dense(_, head_dim, sigmoid, bias=false),
     # Dense(_, n_classes, sigmoid),
@@ -161,12 +158,13 @@ art = DeepART.INSTART(
     head_dim=head_dim,
     # beta=0.0,
     # beta=0.0001,
-    beta=0.01,
+    beta=0.1,
     # beta=1.0,
     rho=0.6,
     # rho = 0.05,
     # update="instar",
     update="art",
+    softwta=true,
     # uncommitted=true,
     gpu=GPU,
 )
@@ -247,7 +245,8 @@ view_weight(art, 2, 100, false)
 
 cidata = DeepART.ClassIncrementalDataSplit(fdata)
 # cidata = DeepART.ClassIncrementalDataSplit(data)
-groupings = [collect(1:5), collect(6:10)]
+# groupings = [collect(1:5), collect(6:10)]
+groupings = [collect(1:4), collect(5:7), collect(8:10)]
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
 GPU && tidata |> gpu
@@ -271,9 +270,12 @@ art = DeepART.INSTART(
     trainables = [1,2,3,4,5],
     activations = [1,3,5,7,9],
     head_dim = head_dim,
-    # beta = 0.0,
-    beta=0.001,
+    # beta = 0.0001, # good, 0.545
+    # beta = 0.001,
     # beta=1.0,
+    beta = 0.1,
+    update="art",
+    softwta=true,
     # rho=0.1,
     rho = 0.05,
     # uncommitted=true,

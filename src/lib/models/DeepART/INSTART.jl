@@ -66,6 +66,11 @@ Options container for a [`INSTART`](@ref) module.
     Update method ∈ ["art", "instar"].
     """
     update::String="art"
+
+    """
+    Soft WTA update rule flag.
+    """
+    softwta::Bool=false
     # """
     # Flux activation function.
     # """
@@ -218,7 +223,13 @@ function learn_model(art::INSTART, xf)
 
     for ix in eachindex(ins)
         if art.opts.update == "art"
-            trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+            local_beta = if art.opts.softwta == true
+            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+                art.opts.beta .* outs[ix]
+            else
+                art.opts.beta
+            end
+            trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], local_beta)
         elseif art.opts.update == "instar"
             trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], art.opts.beta)
         else
@@ -235,14 +246,22 @@ function learn_model(art::INSTART, xf)
 end
 
 function art_learn_basic(x, W, beta)
-    return beta * min.(x, W) + W * (1.0 - beta)
+    return beta .* min.(x, W) + W .* (1.0 .- beta)
 end
 
 function art_learn_cast(x, W, beta)
-    Wy, _ = size(W)
+    Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
+    _beta = if !isempty(size(beta))
+        repeat(beta, 1, Wx)
+    else
+        beta
+    end
+    # @info size(_beta)
+    # @info size(_x)
+    # @info size(W)
     # return beta * min.(_x, W) + W * (1.0 - beta)
-    return art_learn_basic(_x, W, beta)
+    return art_learn_basic(_x, W, _beta)
 end
 
 function art_learn_head(xf, head, beta)
