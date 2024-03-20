@@ -223,9 +223,11 @@ function learn_model(art::INSTART, xf)
 
     for ix in eachindex(ins)
         if art.opts.update == "art"
-            local_beta = if art.opts.softwta == true
             # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
-                art.opts.beta .* outs[ix]
+            local_beta = if art.opts.softwta == true
+                # art.opts.beta .* (1 .- outs[ix])
+                art.opts.beta .* Flux.softmax(outs[ix])
+                # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
             else
                 art.opts.beta
             end

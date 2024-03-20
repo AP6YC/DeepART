@@ -39,83 +39,62 @@ GPU = true
 # all_data = DeepART.load_all_datasets()
 # data = all_data["moon"]
 data = DeepART.get_mnist()
-fdata = DeepART.flatty_hotty(data)
+# fdata = DeepART.flatty_hotty(data)
+fdata = DeepART.flatty(data)
 
 n_classes = length(unique(data.train.y))
 n_train = min(N_TRAIN, length(data.train.y))
 n_test = min(N_TEST, length(data.test.y))
 
+n_input = size(fdata.train.x)[1]
+
 GPU && data |> gpu
 GPU && fdata |> gpu
 
-# -----------------------------------------------------------------------------
-# OLD MODELS
-# -----------------------------------------------------------------------------
-
-# model = @autosize (28, 28, 1, 1) Chain(
-#     Conv((5,5),1=>6,relu),
-#     Flux.flatten,
-#     Dense(_=>15,relu),
-#     Dense(15=>10,sigmoid),
-#     softmax
-# )
-
-# size_tuple = (28, 28, 1, 1)
-
-# Create a LeNet model
-# model = @Flux.autosize (size_tuple,) Chain(
-#     Conv((5,5),1 => 6, relu),
-#     MaxPool((2,2)),
-#     Conv((5,5),6 => 16, relu),
-#     MaxPool((2,2)),
-#     Flux.flatten,
-#     Dense(256=>120,relu),
-#     Dense(120=>84, relu),
-#     Dense(84=>10, sigmoid),
-#     softmax
-# )
-
-# for ix = 1:1000
-#     x = reshape(data.train.x[:, :, ix], size_tuple)
-#     acts = Flux.activations(model, x)
-#     inputs = (xf, acts[1:end-1]...)
-#     DeepART.instar(xf, acts, model, 0.0001)
-# end
-
-# ix = 1
-# # x = fdata.train.x[:, ix]
-# x = reshape(data.train.x[:, :, ix], size_tuple)
-# y = data.train.y[ix]
-
-# acts = Flux.activations(model, x)
-
-# model = Chain(
-#     Dense(n_input, 128, tanh),
-#     Dense(128, 64, tanh),
-#     Dense(64, n_classes, sigmoid),
-#     # sigmoid,
-#     # softmax,
-# )
-
-# model = Chain(
-#     Dense(n_input*2, 128, tanh),
-#     Dense(128, 64, tanh),
-#     Dense(64, n_classes, sigmoid),
-#     # sigmoid,
-#     # softmax,
-# )
 
 # -----------------------------------------------------------------------------
-# MODEL
+# BASELINE WITHOUT TRAINING THE EXTRACTOR
 # -----------------------------------------------------------------------------
 
-n_input = size(fdata.train.x)[1]
+# F2 layer size
 head_dim = 256
-# head_dim = 1000
-# head_dim = 2
-# head_dim = 512
-# head_dim = 10
 
+# Model definition
+model = Flux.@autosize (n_input,) Chain(
+    DeepART.CC(),
+    Dense(_, 256, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, 128, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, 64, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, head_dim, sigmoid, bias=false),
+)
+
+art = DeepART.INSTART(
+    model,
+    trainables = [1,2,3,4],
+    activations = [1,3,5,7],
+    head_dim=head_dim,
+    beta=0.0,
+    rho=0.6,
+    update="art",
+    softwta=true,
+    gpu=GPU,
+)
+
+# Train/test
+p = DeepART.tt_basic!(art, fdata, n_train, n_test)
+
+
+# -----------------------------------------------------------------------------
+# BASIC TRAIN/TEST
+# -----------------------------------------------------------------------------
+
+# F2 layer size
+head_dim = 256
+
+# Model definition
 model = Flux.@autosize (n_input,) Chain(
     # DeepART.CC(),
     # Dense(_, 512, sigmoid, bias=false),
@@ -131,6 +110,41 @@ model = Flux.@autosize (n_input,) Chain(
     # sigmoid,
     # softmax,
 )
+
+
+art = DeepART.INSTART(
+    model,
+    trainables = [1,2,3,4],
+    activations = [1,3,5,7],
+    head_dim=head_dim,
+    # beta=0.0001,
+    # beta=0.01,
+    beta=0.2,
+    rho=0.3,
+    # update="instar",
+    update="art",
+    softwta=true,
+    # uncommitted=true,
+    gpu=GPU,
+)
+
+
+# dev_xf = fdata.train.x[:, 1]
+# prs = Flux.params(art.model)
+# acts = Flux.activations(model, dev_xf)
+
+# Train/test
+p = DeepART.tt_basic!(art, fdata, n_train, n_test)
+
+# DeepART.saveplot(
+#     p,
+#     "confusion.png",
+#     "instart",
+# )
+
+# -----------------------------------------------------------------------------
+# CONVOLUTIONAL
+# -----------------------------------------------------------------------------
 
 # size_tuple = (28, 28, 1, 1)
 # conv_model = Flux.@autosize (size_tuple,) Chain(
@@ -149,66 +163,10 @@ model = Flux.@autosize (n_input,) Chain(
 # conv_model[1](dev_x)
 # GPU && model |> gpu
 
-art = DeepART.INSTART(
-    model,
-    # trainables = [1,2],
-    # activations = [1,3],
-    trainables = [1,2,3,4],
-    activations = [1,3,5,7],
-    head_dim=head_dim,
-    # beta=0.0,
-    # beta=0.0001,
-    beta=0.1,
-    # beta=1.0,
-    rho=0.6,
-    # rho = 0.05,
-    # update="instar",
-    update="art",
-    softwta=true,
-    # uncommitted=true,
-    gpu=GPU,
-)
-
-
-dev_xf = fdata.train.x[:, 1]
-prs = Flux.params(art.model)
-acts = Flux.activations(model, dev_xf)
 
 # -----------------------------------------------------------------------------
-# TRAIN/TEST
+# INSPECT WEIGHTS
 # -----------------------------------------------------------------------------
-
-# old_art = deepcopy(art)
-
-# create_category!(art, xf, y_hat)
-@showprogress for ix = 1:n_train
-    xf = fdata.train.x[:, ix]
-    label = data.train.y[ix]
-    DeepART.train!(art, xf, y=label)
-    # DeepART.train!(art, xf)
-end
-
-y_hats = Vector{Int}()
-@showprogress for ix = 1:n_test
-    xf = fdata.test.x[:, ix]
-    y_hat = DeepART.classify(art, xf, get_bmu=true)
-    push!(y_hats, y_hat)
-end
-
-perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
-@info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
-
-p = DeepART.create_confusion_heatmap(
-    string.(collect(0:9)),
-    data.test.y[1:n_test],
-    y_hats,
-)
-
-# DeepART.saveplot(
-#     p,
-#     "confusion.png",
-#     "instart",
-# )
 
 function normalize_mat(m)
     local_eps = 1e-12
@@ -273,7 +231,7 @@ art = DeepART.INSTART(
     # beta = 0.0001, # good, 0.545
     # beta = 0.001,
     # beta=1.0,
-    beta = 0.1,
+    beta = 0.01,
     update="art",
     softwta=true,
     # rho=0.1,
@@ -282,15 +240,20 @@ art = DeepART.INSTART(
     gpu=GPU,
 )
 
-for ix = 1:n_tasks
-    task_x = tidata.train[ix].x
-    task_y = Flux.onecold(tidata.train[ix].y)
+p = DeepART.tt_inc!(art, tidata, fdata, n_train, n_test)
 
-    @showprogress for jx = 1:n_train
-        xf = task_x[:, jx]
-        label = task_y[jx]
-        DeepART.train!(art, xf, y=label)
-    end
+# -----------------------------------------------------------------------------
+# OLD TRAIN/TEST
+# -----------------------------------------------------------------------------
+
+# old_art = deepcopy(art)
+
+# create_category!(art, xf, y_hat)
+@showprogress for ix = 1:n_train
+    xf = fdata.train.x[:, ix]
+    label = data.train.y[ix]
+    DeepART.train!(art, xf, y=label)
+    # DeepART.train!(art, xf)
 end
 
 y_hats = Vector{Int}()
@@ -308,13 +271,6 @@ p = DeepART.create_confusion_heatmap(
     data.test.y[1:n_test],
     y_hats,
 )
-
-
-
-
-
-
-
 
 # trainables = [weights[jx] for jx in [1, 3, 5]]
 # ins = [acts[jx] for jx in [1, 3, 5]]
@@ -364,3 +320,61 @@ end
 perf2 = DeepART.ART.performance(y_hats2, data.test.y[1:n_test])
 @info "ORIGINAL: Perf: $(perf), n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 @info "TRIMMED: Perf: $(perf2), n_cats: $(art2.n_categories), uniques: $(unique(y_hats2))"
+
+
+# -----------------------------------------------------------------------------
+# OLD MODELS
+# -----------------------------------------------------------------------------
+
+# model = @autosize (28, 28, 1, 1) Chain(
+#     Conv((5,5),1=>6,relu),
+#     Flux.flatten,
+#     Dense(_=>15,relu),
+#     Dense(15=>10,sigmoid),
+#     softmax
+# )
+
+# size_tuple = (28, 28, 1, 1)
+
+# Create a LeNet model
+# model = @Flux.autosize (size_tuple,) Chain(
+#     Conv((5,5),1 => 6, relu),
+#     MaxPool((2,2)),
+#     Conv((5,5),6 => 16, relu),
+#     MaxPool((2,2)),
+#     Flux.flatten,
+#     Dense(256=>120,relu),
+#     Dense(120=>84, relu),
+#     Dense(84=>10, sigmoid),
+#     softmax
+# )
+
+# for ix = 1:1000
+#     x = reshape(data.train.x[:, :, ix], size_tuple)
+#     acts = Flux.activations(model, x)
+#     inputs = (xf, acts[1:end-1]...)
+#     DeepART.instar(xf, acts, model, 0.0001)
+# end
+
+# ix = 1
+# # x = fdata.train.x[:, ix]
+# x = reshape(data.train.x[:, :, ix], size_tuple)
+# y = data.train.y[ix]
+
+# acts = Flux.activations(model, x)
+
+# model = Chain(
+#     Dense(n_input, 128, tanh),
+#     Dense(128, 64, tanh),
+#     Dense(64, n_classes, sigmoid),
+#     # sigmoid,
+#     # softmax,
+# )
+
+# model = Chain(
+#     Dense(n_input*2, 128, tanh),
+#     Dense(128, 64, tanh),
+#     Dense(64, n_classes, sigmoid),
+#     # sigmoid,
+#     # softmax,
+# )
