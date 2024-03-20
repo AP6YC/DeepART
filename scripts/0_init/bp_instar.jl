@@ -110,7 +110,8 @@ GPU && fdata |> gpu
 # -----------------------------------------------------------------------------
 
 n_input = size(fdata.train.x)[1]
-head_dim = 32
+head_dim = 256
+# head_dim = 512
 
 # model = Flux.@autosize (n_input,) Chain(
 #     # DeepART.CC(),
@@ -129,10 +130,10 @@ head_dim = 32
 # )
 
 model = Flux.@autosize (n_input,) Chain(
-    DeepART.CC(),
-    Dense(_, 512, sigmoid, bias=false),
     # DeepART.CC(),
-    # Dense(_, 256, sigmoid, bias=false),
+    # Dense(_, 512, sigmoid, bias=false),
+    DeepART.CC(),
+    Dense(_, 256, sigmoid, bias=false),
     # LayerNorm(_),
     DeepART.CC(),
     Dense(_, 128, sigmoid, bias=false),
@@ -147,32 +148,38 @@ model = Flux.@autosize (n_input,) Chain(
     # softmax,
 )
 
-size_tuple = (28, 28, 1, 1)
-conv_model = Flux.@autosize (size_tuple,) Chain(
-    DeepART.CCConv(),
-    Conv((5,5), _=>6, relu),
-    MaxPool((2,2)),
-    BatchNorm(_),
-    Flux.flatten,
-    Dense(_=>15,relu),
-    Dense(15=>10,sigmoid),
-    # softmax
-)
+# size_tuple = (28, 28, 1, 1)
+# conv_model = Flux.@autosize (size_tuple,) Chain(
+#     DeepART.CCConv(),
+#     Conv((5,5), _=>6, relu),
+#     MaxPool((2,2)),
+#     BatchNorm(_),
+#     Flux.flatten,
+#     Dense(_=>15,relu),
+#     Dense(15=>10,sigmoid),
+#     # softmax
+# )
 
-dev_x = reshape(data.train.x[:,:,1], size_tuple)
-conv_model(dev_x)
-conv_model[1](dev_x)
+# dev_x = reshape(data.train.x[:,:,1], size_tuple)
+# conv_model(dev_x)
+# conv_model[1](dev_x)
 # GPU && model |> gpu
 
 art = DeepART.INSTART(
     model,
+    # trainables = [1,2],
+    # activations = [1,3],
     trainables = [1,2,3,4],
     activations = [1,3,5,7],
     head_dim=head_dim,
-    beta=0.001,
+    # beta=0.0,
+    # beta=0.0001,
+    beta=0.01,
     # beta=1.0,
-    # rho=0.1,
-    rho = 0.05,
+    rho=0.6,
+    # rho = 0.05,
+    # update="instar",
+    update="art",
     # uncommitted=true,
     gpu=GPU,
 )
@@ -186,6 +193,7 @@ acts = Flux.activations(model, dev_xf)
 # TRAIN/TEST
 # -----------------------------------------------------------------------------
 
+old_art = deepcopy(art)
 # create_category!(art, xf, y_hat)
 @showprogress for ix = 1:n_train
     xf = fdata.train.x[:, ix]
@@ -204,12 +212,44 @@ perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
 @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
 p = DeepART.create_confusion_heatmap(
-    string.(collect(1:10)),
+    string.(collect(0:9)),
     data.test.y[1:n_test],
     y_hats,
 )
 
+# DeepART.saveplot(
+#     p,
+#     "confusion.png",
+#     "instart",
+# )
 
+function normalize_mat(m)
+    local_eps = 1e-12
+    return (m .- minimum(m)) ./ (maximum(m) .- minimum(m) .+ local_eps)
+end
+
+function view_layer(art, i_layer)
+    im = art.model.layers[i_layer].weight
+    Gray.(normalize_mat(im))
+end
+
+view_layer(art, 2)
+view_layer(old_art, 2)
+
+function view_weight(art, i_layer, i_weight, cc=false)
+    local_weight = art.model.layers[i_layer].weight[i_weight, :]
+    l_weight = Int(length(local_weight) / 2)
+    im = if cc
+        local_weight[l_weight + 1:end]
+    else
+        local_weight[1:l_weight]
+    end
+    Gray.(normalize_mat(reshape(im, (28, 28)))')
+    # Gray.(reshape(im, (28, 28)))
+end
+
+view_weight(art, 2, 9, true)
+view_weight(art, 2, 100, false)
 
 # -----------------------------------------------------------------------------
 # L2M
@@ -241,7 +281,8 @@ art = DeepART.INSTART(
     trainables = [1,2,3,4,5],
     activations = [1,3,5,7,9],
     head_dim=head_dim,
-    beta=0.001,
+    # beta=0.00001,
+    beta = 0.0,
     # beta=1.0,
     # rho=0.1,
     rho = 0.05,
@@ -260,11 +301,7 @@ for ix = 1:n_tasks
     end
 end
 
-# DeepART.saveplot(
-#     p,
-#     "confusion.png",
-#     "instart",
-# )
+
 
 
 

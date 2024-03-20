@@ -31,7 +31,8 @@ Options container for a [`INSTART`](@ref) module.
     """
     Learning parameter: beta ∈ (0, 1].
     """
-    beta = 1.0; @assert beta > 0.0 && beta <= 1.0
+    beta = 1.0
+    # beta = 1.0; @assert beta > 0.0 && beta <= 1.0
 
     """
     Flag to use an uncommitted node when learning.
@@ -60,6 +61,11 @@ Options container for a [`INSTART`](@ref) module.
     The activations indices to use.
     """
     activations::Vector{Int} = [1, 3, 5]
+
+    """
+    Update method ∈ ["art", "instar"].
+    """
+    update::String="art"
     # """
     # Flux activation function.
     # """
@@ -196,7 +202,7 @@ end
 
 # function learn_model(model, xf)
 function learn_model(art::INSTART, xf)
-    eta = 0.1
+    # eta = 0.1
     weights = Flux.params(art.model)
     acts = Flux.activations(art.model, xf)
 
@@ -208,11 +214,16 @@ function learn_model(art::INSTART, xf)
     trainables = [weights[jx] for jx in art.opts.trainables]
     # ins = [acts[jx] for jx = art.opts.trainables]
     ins = [acts[jx] for jx = art.opts.activations]
-    # outs = [acts[jx] for jx = art.opts.trainables .+ 1]
+    outs = [acts[jx] for jx = art.opts.activations .+ 1]
 
     for ix in eachindex(ins)
-        # trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], eta)
-        trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], eta)
+        if art.opts.update == "art"
+            trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+        elseif art.opts.update == "instar"
+            trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], art.opts.beta)
+        else
+            error("Invalid update method: $(art.opts.update)")
+        end
     end
 
     # for ix in eachindex(trainables)
