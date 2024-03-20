@@ -86,7 +86,7 @@ function tt_inc!(art, tidata, fdata, n_train, n_test)
 
     p = DeepART.create_confusion_heatmap(
         string.(collect(0:9)),
-        data.test.y[1:n_test],
+        fdata.test.y[1:n_test],
         y_hats,
     )
 end

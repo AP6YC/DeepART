@@ -1,12 +1,21 @@
 # DeepART
 
-TODO:
+A repository containing implementations and experiments for the upcoming paper _Deep Adaptive Resonance Theory_.
 
-1. WTANet
-   1. SGD
-   2. EWC
-   3. Hebbian
-   4. Instar
-2. Deep features and deep weights
-3. L2metrics subpackage?
-4. Create package logo
+## Table of Contents
+
+- [DeepART](#deepart)
+  - [Table of Contents](#table-of-contents)
+  - [Usage](#usage)
+  - [Attribution](#attribution)
+    - [Author](#author)
+
+## Usage
+
+TODO
+
+## Attribution
+
+### Author
+
+- Sasha Petrenko - <sap625@mst.edu> - [@AP6YC](https://github.com/AP6YC)

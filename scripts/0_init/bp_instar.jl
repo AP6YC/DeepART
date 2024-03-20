@@ -232,6 +232,7 @@ art = DeepART.INSTART(
     # beta = 0.001,
     # beta=1.0,
     beta = 0.01,
+    # beta = 0.1,
     update="art",
     softwta=true,
     # rho=0.1,
