@@ -460,9 +460,10 @@ function mergeart(art)
     return la
 end
 
-function trimart(art)
-    # inds = findall(x -> x > 1, art.n_instance)
-    # filter!(x -> art.n_instance[x] > 1, art.heads)
-    deleteat!(art.heads, findall(x -> x > 1, art.n_instance))
+function trimart!(art)
+    inds = findall(x -> x == 1, art.n_instance)
+    deleteat!(art.heads, inds)
+    deleteat!(art.labels, inds)
+    art.n_categories = length(art.heads)
     return
 end

@@ -112,22 +112,7 @@ GPU && fdata |> gpu
 n_input = size(fdata.train.x)[1]
 head_dim = 256
 # head_dim = 512
-
-# model = Flux.@autosize (n_input,) Chain(
-#     # DeepART.CC(),
-#     # Dense(_, 512, sigmoid),
-#     DeepART.CC(),
-#     Dense(_, 256, sigmoid),
-#     DeepART.CC(),
-#     Dense(_, 128, sigmoid),
-#     DeepART.CC(),
-#     Dense(_, 64, sigmoid),
-#     DeepART.CC(),
-#     Dense(_, head_dim, sigmoid),
-#     # Dense(_, n_classes, sigmoid),
-#     # sigmoid,
-#     # softmax,
-# )
+# head_dim = 10
 
 model = Flux.@autosize (n_input,) Chain(
     # DeepART.CC(),
@@ -174,10 +159,10 @@ art = DeepART.INSTART(
     head_dim=head_dim,
     # beta=0.0,
     # beta=0.0001,
-    beta=0.01,
+    beta=0.001,
     # beta=1.0,
-    rho=0.6,
-    # rho = 0.05,
+    # rho=0.6,
+    rho = 0.05,
     # update="instar",
     update="art",
     # uncommitted=true,
@@ -193,7 +178,8 @@ acts = Flux.activations(model, dev_xf)
 # TRAIN/TEST
 # -----------------------------------------------------------------------------
 
-old_art = deepcopy(art)
+# old_art = deepcopy(art)
+
 # create_category!(art, xf, y_hat)
 @showprogress for ix = 1:n_train
     xf = fdata.train.x[:, ix]
@@ -234,7 +220,8 @@ function view_layer(art, i_layer)
 end
 
 view_layer(art, 2)
-view_layer(old_art, 2)
+view_layer(art, 4)
+# view_layer(old_art, 2)
 
 function view_weight(art, i_layer, i_weight, cc=false)
     local_weight = art.model.layers[i_layer].weight[i_weight, :]
@@ -248,7 +235,7 @@ function view_weight(art, i_layer, i_weight, cc=false)
     # Gray.(reshape(im, (28, 28)))
 end
 
-view_weight(art, 2, 9, true)
+view_weight(art, 2, 100, true)
 view_weight(art, 2, 100, false)
 
 # -----------------------------------------------------------------------------
@@ -322,8 +309,12 @@ end
 # -----------------------------------------------------------------------------
 
 weights = [head[2].weight for head in art.heads]
-la = AdaptiveResonance.FuzzyART(
-    rho=0.01,
+# la = AdaptiveResonance.FuzzyART(
+#     rho=0.1,
+# )
+la = AdaptiveResonance.DDVFA(
+    rho_lb=0.1,
+    rho_ub=0.3,
 )
 la.config = AdaptiveResonance.DataConfig(0, 1, art.opts.head_dim)
 
@@ -342,7 +333,7 @@ end
 
 art2 = deepcopy(art)
 
-DeepART.trimart(art2)
+DeepART.trimart!(art2)
 
 y_hats2 = Vector{Int}()
 @showprogress for ix = 1:n_test
