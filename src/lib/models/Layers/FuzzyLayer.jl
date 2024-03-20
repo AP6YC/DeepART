@@ -9,7 +9,7 @@ Definition of a FuzzyART-like layer for a Flux.jl model.
 # Single Fuzzy
 # -----------------------------------------------------------------------------
 
-struct SingleFuzzy{M<:AbstractVector}
+struct SingleFuzzy{M<:AbstractVector} <: CustomLayer
     weight::M
 end
 
@@ -25,8 +25,6 @@ Flux.@layer SingleFuzzy
 # function linear_normalization(x, W)
 #     return norm(min.(x, W), 1) / (1e-3 + norm(W, 1))
 # end
-
-const ALPHA = 1e-3
 
 function (a::SingleFuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => length(a.weight))

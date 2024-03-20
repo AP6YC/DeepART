@@ -65,12 +65,17 @@ Options container for a [`INSTART`](@ref) module.
     """
     Update method ∈ ["art", "instar"].
     """
-    update::String="art"
+    update::String = "art"
 
     """
     Soft WTA update rule flag.
     """
-    softwta::Bool=false
+    softwta::Bool = false
+
+    """
+    Head layer type ∈ ["fuzzy", "hypersphere"].
+    """
+    head::String = "fuzzy"
     # """
     # Flux activation function.
     # """
@@ -148,13 +153,24 @@ function INSTART(model; kwargs...)
     )
 end
 
-"""
-Constructs an INSTART head node.
-"""
-function get_head(head_dim, weights=nothing)
-    # Dense(_, 128, sigmoid),
-    # DeepART.Fuzzy(_, 1),
-    # DeepART.SingleFuzzy(_),
+function get_hypersphere_head(head_dim, weights=nothing)
+    head = if isnothing(weights)
+        Flux.@autosize (head_dim,) Chain(
+            Flux.identity,
+            DeepART.HypersphereLayer(_),
+        )
+    else
+        Flux.@autosize (head_dim,) Chain(
+            Flux.identity,
+            DeepART.HypersphereLayer(
+                weights,
+            ),
+        )
+    end
+    return head
+end
+
+function get_fuzzy_head(head_dim, weights=nothing)
     head = if isnothing(weights)
         Flux.@autosize (head_dim,) Chain(
             DeepART.CC(),
@@ -167,6 +183,23 @@ function get_head(head_dim, weights=nothing)
                 DeepART.complement_code(weights),
             ),
         )
+    end
+    return head
+end
+
+"""
+Constructs an INSTART head node.
+"""
+function get_head(opts, weights=nothing)
+    # Dense(_, 128, sigmoid),
+    # DeepART.Fuzzy(_, 1),
+    # DeepART.SingleFuzzy(_),
+    head = if opts.head == "fuzzy"
+        get_fuzzy_head(opts.head_dim, weights)
+    elseif opts.head == "hypersphere"
+        get_hypersphere_head(opts.head_dim, weights)
+    else
+        error("Invalid head type: $(opts.head)")
     end
 
     return head
@@ -278,7 +311,8 @@ function add_node!(
     art::INSTART,
     x::RealArray,
 )
-    push!(art.heads, get_head(art.opts.head_dim, x))
+    # push!(art.heads, get_head(art.opts.head_dim, x))
+    push!(art.heads, get_head(art.opts, x))
     return
 end
 
