@@ -356,7 +356,6 @@ function train!(
             if supervised && (art.labels[bmu] != y)
                 break
             end
-
             # Update the model
             # acts = learn_model(art.model, x)
             acts = learn_model(art, x)
@@ -381,7 +380,7 @@ function train!(
         # Keep the bmu as the top activation despite creating a new category
         bmu = index[1]
         # Get the correct label for the new category
-        y_hat = supervised ? y : n_categories + 1
+        y_hat = supervised ? y : art.n_categories + 1
         # Create a new category
         create_category!(art, x, y_hat)
     end

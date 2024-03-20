@@ -111,6 +111,8 @@ GPU && fdata |> gpu
 
 n_input = size(fdata.train.x)[1]
 head_dim = 256
+# head_dim = 1000
+# head_dim = 2
 # head_dim = 512
 # head_dim = 10
 
@@ -159,10 +161,10 @@ art = DeepART.INSTART(
     head_dim=head_dim,
     # beta=0.0,
     # beta=0.0001,
-    beta=0.001,
+    beta=0.01,
     # beta=1.0,
-    # rho=0.6,
-    rho = 0.05,
+    rho=0.6,
+    # rho = 0.05,
     # update="instar",
     update="art",
     # uncommitted=true,
@@ -185,6 +187,7 @@ acts = Flux.activations(model, dev_xf)
     xf = fdata.train.x[:, ix]
     label = data.train.y[ix]
     DeepART.train!(art, xf, y=label)
+    # DeepART.train!(art, xf)
 end
 
 y_hats = Vector{Int}()
@@ -267,9 +270,9 @@ art = DeepART.INSTART(
     model,
     trainables = [1,2,3,4,5],
     activations = [1,3,5,7,9],
-    head_dim=head_dim,
-    # beta=0.00001,
-    beta = 0.0,
+    head_dim = head_dim,
+    # beta = 0.0,
+    beta=0.001,
     # beta=1.0,
     # rho=0.1,
     rho = 0.05,
@@ -288,6 +291,21 @@ for ix = 1:n_tasks
     end
 end
 
+y_hats = Vector{Int}()
+@showprogress for ix = 1:n_test
+    xf = fdata.test.x[:, ix]
+    y_hat = DeepART.classify(art, xf, get_bmu=true)
+    push!(y_hats, y_hat)
+end
+
+perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
+@info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+
+p = DeepART.create_confusion_heatmap(
+    string.(collect(0:9)),
+    data.test.y[1:n_test],
+    y_hats,
+)
 
 
 
@@ -342,4 +360,5 @@ y_hats2 = Vector{Int}()
     push!(y_hats2, y_hat)
 end
 perf2 = DeepART.ART.performance(y_hats2, data.test.y[1:n_test])
-@info "Perf: $(perf2), n_cats: $(art2.n_categories), uniques: $(unique(y_hats2))"
+@info "ORIGINAL: Perf: $(perf), n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+@info "TRIMMED: Perf: $(perf2), n_cats: $(art2.n_categories), uniques: $(unique(y_hats2))"
