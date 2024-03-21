@@ -6,6 +6,20 @@ Common model code for the DeepART project.
 """
 
 # -----------------------------------------------------------------------------
+# ABSTRACT TYPES
+# -----------------------------------------------------------------------------
+
+"""
+Supertype of all DeepART modules that adhere to the `train!` and `classify` usages.
+"""
+abstract type DeepARTModule end
+
+"""
+Union for functions accepting both [`DeepARTModule`](@ref)s and ART.ARTModules.
+"""
+const CommonARTModule = Union{DeepARTModule, ART.ARTModule}
+
+# -----------------------------------------------------------------------------
 # DOCSTRINGS
 # -----------------------------------------------------------------------------
 

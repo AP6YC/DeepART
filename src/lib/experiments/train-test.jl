@@ -9,27 +9,64 @@ Implements the variety of training/testing start-to-finish experiments.
 # EXPERIMENTS
 # -----------------------------------------------------------------------------
 
-# const DOC_DeepARTModule
+"""
+Dispatch overload for incremental supervised training for an ART.ART module.
 
-function incremental_train!(
-    art::ART.ARTModule
+# Arguments
+- `art::ART.ART`: the supervised ART.ART module.
+$X_ARG_DOCSTRING
+$ARG_Y
+"""
+function incremental_supervised_train!(
+    art::ART.ART,
+    x::RealVector,
+    y::Integer,
 )
+    return ART.train!(art, x, y=y)
 end
 
-function incremental_train!(
-    art::DeepART.DeepARTModule
+"""
+Dispatch overload for incremental supervised training for an ART.ARTMAP module.
+
+# Arguments
+- `art::ART.ARTMAP`: the supervised ART.ARTMAP module.
+$X_ARG_DOCSTRING
+$ARG_Y
+"""
+function incremental_supervised_train!(
+    art::ART.ARTMAP,
+    x::RealVector,
+    y::Integer,
 )
+    return ART.train!(art, x, y)
+end
+
+"""
+Overload for incremental supervised training for a [`DeepARTModule`](@ref) model.
+
+# Arguments
+$ARG_DEEPARTMODULE
+$X_ARG_DOCSTRING
+$ARG_Y
+"""
+function incremental_supervised_train!(
+    art::DeepARTModule,
+    x::RealVector,
+    y::Integer,
+)
+    return DeepART.train!(art, x, y=y)
+end
 
 """
 Task-homogenous training loop for a DeepART model.
 
 # Arguments
-$ARG_DEEPARTMODULE
+$ARG_COMMONARTMODULE
 $ARG_DATASPLIT
-- `n_train::Integer`: the number of training iterations.
+$ARG_N_TRAIN
 """
 function basic_train!(
-    art::DeepARTModule,
+    art::CommonARTModule,
     data::DataSplit,
     n_train::Integer,
 )
@@ -37,7 +74,8 @@ function basic_train!(
     for ix = 1:n_train
         xf = data.train.x[:, ix]
         label = data.train.y[ix]
-        DeepART.train!(art, xf, y=label)
+        # DeepART.train!(art, xf, y=label)
+        incremental_supervised_train!(art, xf, label)
         next!(pr)
         # DeepART.train!(art, xf)
     end
@@ -47,12 +85,12 @@ end
 Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
 
 # Arguments
-$ARG_DEEPARTMODULE
+$ARG_COMMONARTMODULE
 $ARG_DATASPLIT
-- `n_test::Integer`: the number of testing iterations.
+$ARG_N_TEST
 """
 function basic_test(
-    art::DeepARTModule,
+    art::CommonARTModule,
     fdata::DataSplit,
     n_test::Integer,
 )
@@ -80,8 +118,8 @@ Task-homogenous training/testing loop.
 # Arguments
 $ARG_DEEPARTMODULE
 $ARG_DATASPLIT
-- `n_train::Integer`: the number of training iterations.
-- `n_test::Integer`: the number of testing iterations.
+$ARG_N_TRAIN
+$ARG_N_TEST
 """
 function tt_basic!(
     art::DeepARTModule,
@@ -112,7 +150,7 @@ Task-incremental training/testing loop.
 # Arguments
 $ARG_DEEPARTMODULE
 $ARG_TIDATA
-- `n_train::Integer`: the number of training iterations.
+$ARG_N_TRAIN
 """
 function train_inc!(
     art::DeepARTModule,
@@ -149,8 +187,8 @@ Task-incremental training/testing loop for [`DeepARTModule`](@ref)s.
 $ARG_DEEPARTMODULE
 $ARG_TIDATA
 $ARG_DATASPLIT
-- `n_train::Integer`: the number of training iterations.
-- `n_test::Integer`: the number of testing iterations.
+$ARG_N_TRAIN
+$ARG_N_TEST
 """
 function tt_inc!(
     art::DeepARTModule,

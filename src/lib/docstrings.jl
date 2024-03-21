@@ -192,6 +192,13 @@ const X_ARG_DOCSTRING = """
 """
 
 """
+$COMMON_DOC argument for a label 'y'.
+"""
+const ARG_Y = """
+- `y::Integer`: the label for the input sample.
+"""
+
+"""
 $COMMON_DOC argument for a weight vector 'W'.
 """
 const W_ARG_DOCSTING = """
@@ -209,6 +216,13 @@ $(W_ARG_DOCSTING)
 """
 
 """
+$COMMON_DOC argument for a [`CommonARTModule`](@ref).
+"""
+const ARG_COMMONARTMODULE = """
+- `art::CommonARTModule`: the [`CommonARTModule`](@ref) model.
+"""
+
+"""
 $COMMON_DOC argument for a [`DeepARTModule`](@ref) for training or testing.
 """
 const ARG_DEEPARTMODULE = """
@@ -220,4 +234,18 @@ $COMMON_DOC argument for task-incremental data splits implemented as a [`ClassIn
 """
 const ARG_TIDATA = """
 - `tidata::ClassIncrementalDataSplit`: the task-incremental data split.
+"""
+
+"""
+$COMMON_DOC argument for the number of training samples to use.
+"""
+const ARG_N_TRAIN = """
+- `n_train::Integer`: the number of training iterations.
+"""
+
+"""
+$COMMON_DOC argument for the number of testing samples to use.
+"""
+const ARG_N_TEST = """
+- `n_test::Integer`: the number of testing iterations.
 """
