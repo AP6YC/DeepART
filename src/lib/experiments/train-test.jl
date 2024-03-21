@@ -15,25 +15,33 @@ Implements the variety of training/testing start-to-finish experiments.
 Task-homogenous training loop for a DeepART model.
 
 # Arguments
-- `art::DeepARTModule`: the [`DeepARTModule`](@ref) model to train.
-- `fdata::DataSplit`: the [`DataSplit`](@ref) training and testing data.
+$ARG_DEEPARTMODULE
+$ARG_DATASPLIT
 - `n_train::Integer`: the number of training iterations.
 """
 function basic_train!(
     art::DeepARTModule,
-    fdata::DataSplit,
+    data::DataSplit,
     n_train::Integer,
 )
     pr = Progress(n_train; desc="Task-Homogenous Training")
     for ix = 1:n_train
-        xf = fdata.train.x[:, ix]
-        label = fdata.train.y[ix]
+        xf = data.train.x[:, ix]
+        label = data.train.y[ix]
         DeepART.train!(art, xf, y=label)
         next!(pr)
         # DeepART.train!(art, xf)
     end
 end
 
+"""
+Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
+
+# Arguments
+$ARG_DEEPARTMODULE
+$ARG_DATASPLIT
+- `n_test::Integer`: the number of testing iterations.
+"""
 function basic_test(
     art::DeepARTModule,
     fdata::DataSplit,
@@ -57,22 +65,31 @@ function basic_test(
     return y_hats
 end
 
+"""
+Task-homogenous training/testing loop.
+
+# Arguments
+$ARG_DEEPARTMODULE
+$ARG_DATASPLIT
+- `n_train::Integer`: the number of training iterations.
+- `n_test::Integer`: the number of testing iterations.
+"""
 function tt_basic!(
     art::DeepARTModule,
-    fdata::DataSplit,
+    data::DataSplit,
     n_train::Integer,
     n_test::Integer,
 )
     # Train
-    basic_train!(art, fdata, n_train)
+    basic_train!(art, data, n_train)
 
     # Test
-    y_hats = basic_test(art, fdata, n_test)
+    y_hats = basic_test(art, data, n_test)
 
     # Confusion matrix
     p = DeepART.create_confusion_heatmap(
         string.(collect(0:9)),
-        fdata.test.y[1:n_test],
+        data.test.y[1:n_test],
         y_hats,
     )
 
@@ -80,32 +97,56 @@ function tt_basic!(
     return p
 end
 
+"""
+Task-incremental training/testing loop.
+
+# Arguments
+$ARG_DEEPARTMODULE
+$ARG_TIDATA
+- `n_train::Integer`: the number of training iterations.
+"""
 function train_inc!(
     art::DeepARTModule,
     tidata::ClassIncrementalDataSplit,
     n_train::Integer,
 )
+    # Infer the number of tasks to train over
     n_tasks = length(tidata.train)
 
+    # Iterate over the tasks
     for ix = 1:n_tasks
+        # Get the local batch of training data
         task_x = tidata.train[ix].x
-        # task_y = Flux.onecold(tidata.train[ix].y)
         task_y = tidata.train[ix].y
 
+        # Incrementally train over the current task's training data
         pr = Progress(n_train; desc="Task-Incremental Training: Task $(ix)")
         for jx = 1:n_train
+            # Get the current sample and label
             xf = task_x[:, jx]
             label = task_y[jx]
+            # Train the module
             DeepART.train!(art, xf, y=label)
+            # Update the progress bar
             next!(pr)
         end
     end
 end
 
+"""
+Task-incremental training/testing loop for [`DeepARTModule`](@ref)s.
+
+# Arguments
+$ARG_DEEPARTMODULE
+$ARG_TIDATA
+$ARG_DATASPLIT
+- `n_train::Integer`: the number of training iterations.
+- `n_test::Integer`: the number of testing iterations.
+"""
 function tt_inc!(
     art::DeepARTModule,
     tidata::ClassIncrementalDataSplit,
-    fdata::DataSplit,
+    data::DataSplit,
     n_train::Integer,
     n_test::Integer,
 )
@@ -113,16 +154,18 @@ function tt_inc!(
     train_inc!(art, tidata, n_train)
 
     # Test
-    y_hats = basic_test(art, fdata, n_test)
+    y_hats = basic_test(art, data, n_test)
 
-    # perf = DeepART.ART.performance(y_hats, data.test.y[1:n_test])
-    # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+    perf = ART.performance(y_hats, data.test.y[1:n_test])
+    @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     p = DeepART.create_confusion_heatmap(
         string.(collect(0:9)),
-        fdata.test.y[1:n_test],
+        data.test.y[1:n_test],
         y_hats,
     )
+
+    return p
 end
 
 # -----------------------------------------------------------------------------

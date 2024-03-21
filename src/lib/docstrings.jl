@@ -207,3 +207,17 @@ $(ART_ARG_DOCSTRING)
 $(X_ARG_DOCSTRING)
 $(W_ARG_DOCSTING)
 """
+
+"""
+$COMMON_DOC argument for a [`DeepARTModule`](@ref) for training or testing.
+"""
+const ARG_DEEPARTMODULE = """
+- `art::DeepARTModule`: the [`DeepARTModule`](@ref) model.
+"""
+
+"""
+$COMMON_DOC argument for task-incremental data splits implemented as a [`ClassIncrementalDataSplit`](@ref).
+"""
+const ARG_TIDATA = """
+- `tidata::ClassIncrementalDataSplit`: the task-incremental data split.
+"""
