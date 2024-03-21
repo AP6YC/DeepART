@@ -62,7 +62,8 @@ function train_inc!(art, tidata, n_train)
 
     for ix = 1:n_tasks
         task_x = tidata.train[ix].x
-        task_y = Flux.onecold(tidata.train[ix].y)
+        # task_y = Flux.onecold(tidata.train[ix].y)
+        task_y = tidata.train[ix].y
 
         pr = Progress(n_train; desc="Task-Incremental Training: Task $(ix)")
         for jx = 1:n_train

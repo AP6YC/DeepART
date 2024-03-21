@@ -250,11 +250,11 @@ function learn_model(art::INSTART, xf)
     # outs = [acts[jx] for jx = 2:2:n_layers]
 
     trainables = [weights[jx] for jx in art.opts.trainables]
-    # ins = [acts[jx] for jx = art.opts.trainables]
     ins = [acts[jx] for jx = art.opts.activations]
     outs = [acts[jx] for jx = art.opts.activations .+ 1]
 
     for ix in eachindex(ins)
+        #
         if art.opts.update == "art"
             # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
             local_beta = if art.opts.softwta == true

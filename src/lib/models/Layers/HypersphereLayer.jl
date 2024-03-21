@@ -20,7 +20,7 @@ end
 function HypersphereLayer(
     weight,
 )
-    R_bar = 0.5 * norm(length(weight)) # 1/2 * max_{p,q} ||w_p - w_q||_2
+    R_bar = Float32(0.5 * norm(length(weight))) # 1/2 * max_{p,q} ||w_p - w_q||_2
     HypersphereLayer(
         weight,
         norm(weight, 2),
@@ -47,15 +47,10 @@ function (a::HypersphereLayer)(x::AbstractVecOrMat)
 #   return σ.(a.weight * xT .+ a.bias)
     # _weight = complement_code(a.weight')
     # _x = complement_code(xT)
-    _weight = a.weight
     _x = xT
 
-    # xw_norm = norm(min.(_x, _weight), 1)
-    # M = xw_norm / (ALPHA + norm(_weight, 1))
-    # T = xw_norm / (length(a.weight) / 2)
+    xw_norm_max = max(a.radius, norm(min.(_x, a.weight), 2))
 
-    xw_norm = norm(min.(_x, _weight), 2)
-    xw_norm_max = max(a.radius, xw_norm)
     M = 1 - xw_norm_max / a.R_bar
     T = (a.R_bar - xw_norm_max) / (a.R_bar - a.radius + ALPHA)
 
