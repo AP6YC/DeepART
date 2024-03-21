@@ -130,6 +130,11 @@ mutable struct INSTART{T <: Flux.Chain, U <: Flux.Chain}
     Number of category weights (F2 nodes).
     """
     n_categories::Int
+
+    """
+    The statistics dictionary for logging.
+    """
+    stats::Dict{String, Any}
 end
 
 # -----------------------------------------------------------------------------
@@ -387,6 +392,10 @@ function train!(
     if isempty(art.heads)
         y_hat = supervised ? y : 1
         initialize!(art, x, y=y_hat)
+
+        art.stats["M"] = 0.0
+        art.stats["T"] = 0.0
+
         return y_hat
     end
 
@@ -426,6 +435,10 @@ function train!(
 
             # No mismatch
             mismatch_flag = false
+
+            art.stats["M"] = M[bmu]
+            art.stats["T"] = T[bmu]
+
             break
         end
     end
@@ -434,6 +447,10 @@ function train!(
     if mismatch_flag
         # Keep the bmu as the top activation despite creating a new category
         bmu = index[1]
+
+        art.stats["M"] = M[bmu]
+        art.stats["T"] = T[bmu]
+
         # Get the correct label for the new category
         y_hat = supervised ? y : art.n_categories + 1
         # Create a new category

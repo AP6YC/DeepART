@@ -39,8 +39,8 @@ include("plots.jl")
 # Pluto utils
 include("pluto.jl")
 
-# L2 definitions
-include("l2/lib.jl")
-
 # Experiment driver files that aggregate these tools
 include("experiments/lib.jl")
+
+# L2 definitions
+include("l2/lib.jl")

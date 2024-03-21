@@ -159,7 +159,8 @@ Evaluates a single agent on a single experience, training or testing as needed.
 function evaluate_agent!(
     agent::Agent,
     experience::Experience,
-    data::VectoredData,
+    # data::VectoredData,
+    data::ClassIncrementalDataSplit,
 )
     # Disect the experience
     dataset_index = get_index_from_name(data.train.labels, experience.task_name)
@@ -169,23 +170,29 @@ function evaluate_agent!(
     if experience.update_model
         sample = data.train.x[dataset_index][:, datum_index]
         label = data.train.y[dataset_index][datum_index]
-        y_hat = AdaptiveResonance.train!(agent.agent, sample, y=label)
+        # y_hat = AdaptiveResonance.train!(agent.agent, sample, y=label)
+        y_hat = incremental_supervised_train!(agent.agent, sample, label)
     # elseif experience.block_type == "test":
     else
         sample = data.test.x[dataset_index][:, datum_index]
         label = data.test.y[dataset_index][datum_index]
-        y_hat = AdaptiveResonance.classify(agent.agent, sample)
+        # y_hat = AdaptiveResonance.classify(agent.agent, sample)
+        y_hat = incremental_classify(agent.agent, sample)
     end
+
+    # Create the results dictionary
     results = Dict(
         "performance" => y_hat == label ? 1.0 : 0.0,
         "art_match" => agent.agent.stats["M"],
         "art_activation" => agent.agent.stats["T"],
     )
+
     # agent.agent
     # # Artificially create some results
     # results = Dict(
     #     "performance" => 0.0,
     # )
+
     return results
 end
 

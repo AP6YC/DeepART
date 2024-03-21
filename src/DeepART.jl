@@ -32,6 +32,7 @@ using
     AdaptiveResonance,
     ColorSchemes,
     Colors,
+    Combinatorics,
     CUDA,
     DataFrames,
     DataStructures,
