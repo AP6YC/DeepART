@@ -11,17 +11,19 @@
 
 using Revise
 using DeepART
+using ProgressMeter
+import AdaptiveResonance as ART
 # using Flux
 # using CUDA
-using ProgressMeter
 # using UnicodePlots
 # using Plots
 
-import AdaptiveResonance as ART
 
 # -----------------------------------------------------------------------------
 # CONFIG
 # -----------------------------------------------------------------------------
+
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 
 # -----------------------------------------------------------------------------
 # DATA

@@ -23,14 +23,13 @@ function get_mnist()
     X_test, y_test = testset[:]
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
-
     # dataset = tensorize_datasplit(dataset)
 
     return dataset
 end
 
 """
-Loads the MNIST dataset using MLDatasets.
+Loads the CIFAR10 dataset using MLDatasets.
 """
 function get_cifar10()
     trainset = MLDatasets.CIFAR10(:train)
@@ -40,7 +39,54 @@ function get_cifar10()
     X_test, y_test = testset[:]
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
+    # dataset = tensorize_datasplit(dataset)
 
+    return dataset
+end
+
+"""
+Loads the CIFAR100 dataset using MLDatasets.
+"""
+function get_cifar100()
+    trainset = MLDatasets.CIFAR100(:train)
+    testset = MLDatasets.CIFAR100(:test)
+
+    X_train, y_train = trainset[:]
+    X_test, y_test = testset[:]
+
+    dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
+    # dataset = tensorize_datasplit(dataset)
+
+    return dataset
+end
+
+"""
+Loads the FashionMNIST dataset using MLDatasets.
+"""
+function get_fashionmnist()
+    trainset = MLDatasets.FashionMNIST(:train)
+    testset = MLDatasets.FashionMNIST(:test)
+
+    X_train, y_train = trainset[:]
+    X_test, y_test = testset[:]
+
+    dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
+    # dataset = tensorize_datasplit(dataset)
+
+    return dataset
+end
+
+"""
+Loads the Omniglot dataset using MLDatasets.
+"""
+function get_omniglot()
+    trainset = MLDatasets.Omniglot(:train)
+    testset = MLDatasets.Omniglot(:test)
+
+    X_train, y_train = trainset[:]
+    X_test, y_test = testset[:]
+
+    dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
 
     return dataset
