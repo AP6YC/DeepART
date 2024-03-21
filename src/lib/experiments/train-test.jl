@@ -153,6 +153,49 @@ function basic_test(
     return y_hats
 end
 
+"""
+Task-incremental training/testing loop.
+
+# Arguments
+$ARG_DEEPARTMODULE
+$ARG_TIDATA
+$ARG_N_TRAIN
+"""
+function train_inc!(
+    # art::DeepARTModule,
+    art::CommonARTModule,
+    tidata::ClassIncrementalDataSplit,
+    n_train::Integer=IInf,
+)
+    # Infer the number of tasks to train over
+    n_tasks = length(tidata.train)
+
+    # Iterate over the tasks
+    for ix = 1:n_tasks
+        # Get the local batch of training data
+        task_x = tidata.train[ix].x
+        task_y = tidata.train[ix].y
+
+        # l_n_train = min(n_train, length(task_y))
+        l_n_train = get_n(n_train, tidata.train[ix])
+
+        # Incrementally train over the current task's training data
+        pr = Progress(n_train; desc="Task-Incremental Training: Task $(ix)")
+        for jx = 1:l_n_train
+            # Get the current sample and label
+            xf = task_x[:, jx]
+            label = task_y[jx]
+
+            # Train the module
+            # DeepART.train!(art, xf, y=label)
+            incremental_supervised_train!(art, xf, label)
+
+            # Update the progress bar
+            next!(pr)
+        end
+    end
+end
+
 # -----------------------------------------------------------------------------
 # FULL EXPERIMENTS
 # -----------------------------------------------------------------------------
@@ -161,7 +204,7 @@ end
 Task-homogenous training/testing loop.
 
 # Arguments
-$ART_COMMONARTMODULE
+$ARG_COMMONARTMODULE
 $ARG_DATASPLIT
 $ARG_N_TRAIN
 $ARG_N_TEST
@@ -191,47 +234,6 @@ function tt_basic!(
 end
 
 """
-Task-incremental training/testing loop.
-
-# Arguments
-$ARG_DEEPARTMODULE
-$ARG_TIDATA
-$ARG_N_TRAIN
-"""
-function train_inc!(
-    art::DeepARTModule,
-    tidata::ClassIncrementalDataSplit,
-    n_train::Integer=IInf,
-)
-    # Infer the number of tasks to train over
-    n_tasks = length(tidata.train)
-
-    # Iterate over the tasks
-    for ix = 1:n_tasks
-        # Get the local batch of training data
-        task_x = tidata.train[ix].x
-        task_y = tidata.train[ix].y
-
-        # l_n_train = min(n_train, length(task_y))
-        l_n_train = get_n(n_train, tidata.train[ix])
-
-        # Incrementally train over the current task's training data
-        pr = Progress(n_train; desc="Task-Incremental Training: Task $(ix)")
-        for jx = 1:l_n_train
-            # Get the current sample and label
-            xf = task_x[:, jx]
-            label = task_y[jx]
-
-            # Train the module
-            DeepART.train!(art, xf, y=label)
-
-            # Update the progress bar
-            next!(pr)
-        end
-    end
-end
-
-"""
 Task-incremental training/testing loop for [`DeepARTModule`](@ref)s.
 
 # Arguments
@@ -242,7 +244,8 @@ $ARG_N_TRAIN
 $ARG_N_TEST
 """
 function tt_inc!(
-    art::DeepARTModule,
+    # art::DeepARTModule,
+    art::CommonARTModule,
     tidata::ClassIncrementalDataSplit,
     data::DataSplit,
     n_train::Integer=IInf,

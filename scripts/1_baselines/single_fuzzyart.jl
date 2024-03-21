@@ -52,7 +52,12 @@ art = ART.FuzzyART(
 art.config = ART.DataConfig(0, 1, dim)
 
 # Train the FuzzyART model in simple supervised mode
-DeepART.tt_basic!(art, fdata, N_TRAIN, N_TEST)
+DeepART.tt_basic!(
+    art,
+    fdata,
+    N_TRAIN,
+    N_TEST,
+)
 
 # -----------------------------------------------------------------------------
 # TASK-INCREMENTAL TRAIN/TEST
@@ -69,7 +74,7 @@ n_tasks = length(tidata.train)
 
 # Init a new FuzzyART module
 tiart = ART.FuzzyART(
-    rho=0.6,
+    rho=0.7,
     display=true,
 )
 # Set the data config
@@ -92,6 +97,6 @@ DeepART.tt_inc!(
     tiart,
     tidata,
     fdata,
-    n_train,
-    n_test,
+    N_TRAIN,
+    N_TEST,
 )
