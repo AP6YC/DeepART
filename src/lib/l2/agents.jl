@@ -46,12 +46,16 @@ end
 # -----------------------------------------------------------------------------
 
 """
-Creates a DDVFA agent with an empty experience queue.
+Creates an agent with an empty experience queue.
 
 # Arguments
+- `agent::T`: the agent module.
 - `ddvfa_opts::opts_DDVFA`: the options struct used to initialize the DDVFA module and set the logging params.
 """
-function Agent(agent, opts)
+function Agent(
+    agent,
+    opts,
+)
 # function DDVFAAgent(ddvfa_opts::opts_DDVFA)
     # Create the DDVFA object from the opts
     # ddvfa = DDVFA(ddvfa_opts)
@@ -226,7 +230,8 @@ Runs an agent's scenario.
 """
 function run_scenario(
     agent::Agent,
-    data::VectoredData,
+    # data::VectoredData,
+    data::ClassIncrementalDataSplit,
     data_logger::PythonCall.Py,
 )
     # Initialize the "last sequence"
@@ -267,7 +272,9 @@ PythonCall.Py(T::AbstractVector) = pylist(T)
 PythonCall.Py(T::Symbol) = pystr(String(T))
 
 function full_scenario(
-    data::DSIC,
+    # data::DSIC,
+    # data::VectoredData,
+    data::ClassIncrementalDataSplit,
     exp_dir::AbstractString=DeepART.config_dir("l2")
 )
     # Load the config and scenario

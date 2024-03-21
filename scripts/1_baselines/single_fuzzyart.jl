@@ -100,3 +100,34 @@ DeepART.tt_inc!(
     N_TRAIN,
     N_TEST,
 )
+
+# -----------------------------------------------------------------------------
+# L2 METRICS
+# -----------------------------------------------------------------------------
+
+using AdaptiveResonance
+using PythonCall
+
+# -----------------------------------------------------------------------------
+# OPTIONS
+# -----------------------------------------------------------------------------
+
+# Why on Earth isn't this included in the PythonCall package?
+PythonCall.Py(T::AbstractDict) = pydict(T)
+PythonCall.Py(T::AbstractVector) = pylist(T)
+PythonCall.Py(T::Symbol) = pystr(String(T))
+
+# l2logger = Ref{PythonCall.Py}()
+l2logger[] = PythonCall.pyimport("l2logger.l2logger")
+
+# -----------------------------------------------------------------------------
+# TRAIN/TEST
+# -----------------------------------------------------------------------------
+
+# # Run the scenario
+# for (data_key, data_value) in data
+#     CFAR.full_scenario(
+#         data_value,
+#         CFAR.config_dir("l2", data_key),
+#     )
+# end

@@ -1,0 +1,7 @@
+
+[pip.deps]
+l2metrics = ""
+l2logger = ""
+
+[deps.python]
+version = "=3.11"

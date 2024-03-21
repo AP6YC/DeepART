@@ -73,7 +73,11 @@ Constructs an [`Experience`](@ref), setting the update_model field based upon th
 - `seq_nums::SequenceNums`: the block and experience number of the [`Experience`](@ref).
 - `block_type::AbstractString`: the block type ∈ ["train", "test"]. Using "train" sets `update_model` to true, "test" to false.
 """
-function Experience(task_name::AbstractString, seq_nums::SequenceNums, block_type::AbstractString)
+function Experience(
+    task_name::AbstractString,
+    seq_nums::SequenceNums,
+    block_type::AbstractString,
+)
     # Verify the block type
     sanitize_block_type(block_type)
 
