@@ -13,6 +13,26 @@ A collection of types and utilities for loading and handling datasets for the pr
 # -----------------------------------------------------------------------------
 
 """
+Converts a vector of string targets to a vector of integer targets using a target map.
+
+# Arguments
+- `targets::Vector{String}`: the vector of string targets to convert.
+- `target_map::Dict{String, Int}`: the mapping of string targets to integer targets.
+"""
+function text_targets_to_ints(
+    targets::Vector{String},
+    # target_map::Dict{String, Int},
+)
+    unique_strings = unique(targets)
+    # target_map = Dict{String, Int}()
+    target_map = Dict{String, Int}(
+        unique_strings[i] => i for i in eachindex(unique_strings)
+    )
+
+    return [target_map[t] for t in targets]
+end
+
+"""
 Loads the MNIST dataset using MLDatasets.
 """
 function get_mnist()
@@ -45,14 +65,36 @@ function get_cifar10()
 end
 
 """
-Loads the CIFAR100 dataset using MLDatasets.
+Loads the fine CIFAR100 dataset using MLDatasets.
 """
-function get_cifar100()
+function get_cifar100_fine()
     trainset = MLDatasets.CIFAR100(:train)
     testset = MLDatasets.CIFAR100(:test)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
+
+    y_train = y_train.fine
+    y_test = y_test.fine
+
+    dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
+    # dataset = tensorize_datasplit(dataset)
+
+    return dataset
+end
+
+"""
+Loads the coarse CIFAR100 dataset using MLDatasets.
+"""
+function get_cifar100_coarse()
+    trainset = MLDatasets.CIFAR100(:train)
+    testset = MLDatasets.CIFAR100(:test)
+
+    X_train, y_train = trainset[:]
+    X_test, y_test = testset[:]
+
+    y_train = y_train.coarse
+    y_test = y_test.coarse
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
@@ -86,7 +128,10 @@ function get_omniglot()
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
 
-    dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
+    y_train = text_targets_to_ints(y_train)
+    y_test = text_targets_to_ints(y_test)
+
+    dataset = DataSplit(X_train, y_train, X_test, y_test)
     # dataset = tensorize_datasplit(dataset)
 
     return dataset

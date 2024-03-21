@@ -6,7 +6,24 @@ Implements the variety of training/testing start-to-finish experiments.
 """
 
 # -----------------------------------------------------------------------------
-# EXPERIMENTS
+# TYPES
+# -----------------------------------------------------------------------------
+
+"""
+Infinity for integers, used for getting the minimum of training/testing values.
+"""
+const IInf = typemax(Int)
+
+# -----------------------------------------------------------------------------
+# COMMON FUNCTIONS
+# -----------------------------------------------------------------------------
+
+function get_n(n::Integer, data::SupervisedDataset)
+    return min(n, length(data.y))
+end
+
+# -----------------------------------------------------------------------------
+# INCREMENTAL FUNCTIONS
 # -----------------------------------------------------------------------------
 
 """
@@ -41,6 +58,13 @@ function incremental_supervised_train!(
     return ART.train!(art, x, y)
 end
 
+function incremental_classify(
+    art::ART.ARTModule,
+    x::RealVector,
+)
+    return ART.classify(art, x, get_bmu=true)
+end
+
 """
 Overload for incremental supervised training for a [`DeepARTModule`](@ref) model.
 
@@ -57,6 +81,17 @@ function incremental_supervised_train!(
     return DeepART.train!(art, x, y=y)
 end
 
+function incremental_classify(
+    art::DeepARTModule,
+    x::RealVector,
+)
+    return DeepART.classify(art, x, get_bmu=true)
+end
+
+# -----------------------------------------------------------------------------
+# TRAIN/TEST FUNCTIONS
+# -----------------------------------------------------------------------------
+
 """
 Task-homogenous training loop for a DeepART model.
 
@@ -68,16 +103,18 @@ $ARG_N_TRAIN
 function basic_train!(
     art::CommonARTModule,
     data::DataSplit,
-    n_train::Integer,
+    n_train::Integer=IInf,
 )
+    # Get the number of training samples
+    l_n_train = get_n(n_train, data.train)
+
+    # Iterate over the training samples
     pr = Progress(n_train; desc="Task-Homogenous Training")
-    for ix = 1:n_train
+    for ix = 1:l_n_train
         xf = data.train.x[:, ix]
         label = data.train.y[ix]
-        # DeepART.train!(art, xf, y=label)
         incremental_supervised_train!(art, xf, label)
         next!(pr)
-        # DeepART.train!(art, xf)
     end
 end
 
@@ -91,41 +128,50 @@ $ARG_N_TEST
 """
 function basic_test(
     art::CommonARTModule,
-    fdata::DataSplit,
-    n_test::Integer,
+    data::DataSplit,
+    n_test::Integer=IInf,
 )
+    # Get the number of testing samples
+    l_n_test = get_n(n_test, data.test)
+
     # Get the estimates on the test data
     y_hats = Vector{Int}()
     pr = Progress(n_test; desc="Task-Homogenous Testing")
-    for ix = 1:n_test
-        xf = fdata.test.x[:, ix]
-        y_hat = DeepART.classify(art, xf, get_bmu=true)
+    for ix = 1:l_n_test
+        xf = data.test.x[:, ix]
+        # y_hat = DeepART.classify(art, xf, get_bmu=true)
+        y_hat = incremental_classify(art, xf)
         push!(y_hats, y_hat)
         next!(pr)
     end
 
     # Calculate the performance and log
-    perf = DeepART.ART.performance(y_hats, fdata.test.y[1:n_test])
+    perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
     @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     # Return the estimates
     return y_hats
 end
 
+# -----------------------------------------------------------------------------
+# FULL EXPERIMENTS
+# -----------------------------------------------------------------------------
+
 """
 Task-homogenous training/testing loop.
 
 # Arguments
-$ARG_DEEPARTMODULE
+$ART_COMMONARTMODULE
 $ARG_DATASPLIT
 $ARG_N_TRAIN
 $ARG_N_TEST
 """
 function tt_basic!(
-    art::DeepARTModule,
+    # art::DeepARTModule,
+    art::CommonARTModule,
     data::DataSplit,
-    n_train::Integer,
-    n_test::Integer,
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     # Train
     basic_train!(art, data, n_train)
@@ -155,7 +201,7 @@ $ARG_N_TRAIN
 function train_inc!(
     art::DeepARTModule,
     tidata::ClassIncrementalDataSplit,
-    n_train::Integer,
+    n_train::Integer=IInf,
 )
     # Infer the number of tasks to train over
     n_tasks = length(tidata.train)
@@ -166,14 +212,19 @@ function train_inc!(
         task_x = tidata.train[ix].x
         task_y = tidata.train[ix].y
 
+        # l_n_train = min(n_train, length(task_y))
+        l_n_train = get_n(n_train, tidata.train[ix])
+
         # Incrementally train over the current task's training data
         pr = Progress(n_train; desc="Task-Incremental Training: Task $(ix)")
-        for jx = 1:n_train
+        for jx = 1:l_n_train
             # Get the current sample and label
             xf = task_x[:, jx]
             label = task_y[jx]
+
             # Train the module
             DeepART.train!(art, xf, y=label)
+
             # Update the progress bar
             next!(pr)
         end
@@ -194,21 +245,24 @@ function tt_inc!(
     art::DeepARTModule,
     tidata::ClassIncrementalDataSplit,
     data::DataSplit,
-    n_train::Integer,
-    n_test::Integer,
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     # Task-incremental training
     train_inc!(art, tidata, n_train)
 
-    # Test
-    y_hats = basic_test(art, data, n_test)
+    # Get the number of testing samples
+    l_n_test = min(n_test, length(data.test.y))
 
-    perf = ART.performance(y_hats, data.test.y[1:n_test])
+    # Test
+    y_hats = basic_test(art, data, l_n_test)
+
+    perf = ART.performance(y_hats, data.test.y[1:l_n_test])
     @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     p = DeepART.create_confusion_heatmap(
         string.(collect(0:9)),
-        data.test.y[1:n_test],
+        data.test.y[1:l_n_test],
         y_hats,
     )
 

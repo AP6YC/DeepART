@@ -18,12 +18,14 @@ import AdaptiveResonance as ART
 # using UnicodePlots
 # using Plots
 
-
 # -----------------------------------------------------------------------------
 # CONFIG
 # -----------------------------------------------------------------------------
 
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
+N_TRAIN = 1000
+N_TEST = 1000
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -42,14 +44,15 @@ dim = size(fdata.train.x)[1]
 
 # Init the FuzzyART module
 art = ART.FuzzyART(
-    rho=0.6,
+    rho=0.7,
+    display=true,
 )
 
 # Set the data config
 art.config = ART.DataConfig(0, 1, dim)
 
 # Train the FuzzyART model in simple supervised mode
-# ART.train!(art, fdata.train.x, y=fdata.train.y)
+DeepART.tt_basic!(art, fdata, N_TRAIN, N_TEST)
 
 # -----------------------------------------------------------------------------
 # TASK-INCREMENTAL TRAIN/TEST
@@ -65,9 +68,30 @@ tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
 
 # Init a new FuzzyART module
-art = ART.FuzzyART(
+tiart = ART.FuzzyART(
     rho=0.6,
+    display=true,
 )
 # Set the data config
-art.config = ART.DataConfig(0, 1, dim)
+tiart.config = ART.DataConfig(0, 1, dim)
 
+# # Train over each task
+# for ix = 1:n_tasks
+#     # Get the local batch of training data
+#     task_x = tidata.train[ix].x
+#     task_y = tidata.train[ix].y
+#     # Train the FuzzyART model in simple supervised mode
+#     ART.train!(
+#         tiart,
+#         task_x,
+#         y=task_y,
+#     )
+# end
+
+DeepART.tt_inc!(
+    tiart,
+    tidata,
+    fdata,
+    n_train,
+    n_test,
+)
