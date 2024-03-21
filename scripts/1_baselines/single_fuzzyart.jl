@@ -42,10 +42,12 @@ dim = size(fdata.train.x)[1]
 art = ART.FuzzyART(
     rho=0.6,
 )
+
 # Set the data config
 art.config = ART.DataConfig(0, 1, dim)
 
-
+# Train the FuzzyART model in simple supervised mode
+# ART.train!(art, fdata.train.x, y=fdata.train.y)
 
 # -----------------------------------------------------------------------------
 # TASK-INCREMENTAL TRAIN/TEST

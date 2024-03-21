@@ -6,7 +6,10 @@ Common code for DeepART modules.
 # ABSTRACT TYPES
 # -----------------------------------------------------------------------------
 
+abstract type CommonARTModule end
+
 abstract type DeepARTModule end
+
 
 # -----------------------------------------------------------------------------
 # FUNCTIONS

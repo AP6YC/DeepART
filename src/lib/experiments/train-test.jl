@@ -11,6 +11,15 @@ Implements the variety of training/testing start-to-finish experiments.
 
 # const DOC_DeepARTModule
 
+function incremental_train!(
+    art::ART.ARTModule
+)
+end
+
+function incremental_train!(
+    art::DeepART.DeepARTModule
+)
+
 """
 Task-homogenous training loop for a DeepART model.
 
