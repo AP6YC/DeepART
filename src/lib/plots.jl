@@ -8,12 +8,15 @@ Plotting functions and utilities.
 - Sasha Petrenko <petrenkos@mst.edu> @AP6YC
 """
 
+"""
+Terminal plot function for a simple vector of accuracies.
+"""
 function term_accuracy(
     # accs::Vector{Vector{Float}},
-    accs::Vector{Any},
+    accs::Vector{T},
     # labels::Vector{String},
     # title::String,
-)
+) where T <: Real
     p = lineplot(
         accs,
         title="Accuracy Trend",
@@ -24,6 +27,9 @@ function term_accuracy(
     return p
 end
 
+"""
+Terminal barplot function for category predictions.
+"""
 function term_preds(
     y_hats::Vector{Int};
     title::String="Prediction Counts"
@@ -100,7 +106,7 @@ Creates the confusion matrix as a heatmap using `Plots`.
 # Arguments
 - `class_labels::Vector{String}`: the string labels for the classes.
 - `y::IntegerVector`: the class truth values.
-- `y_hat::IntegerVecto`: the class estimates.
+- `y_hat::IntegerVector`: the class estimates.
 """
 function create_confusion_heatmap(
     class_labels::Vector{String},
@@ -181,10 +187,21 @@ Wrapper for saving results plots.
 function saveplot(
     p,
     filename,
-    parts...
+    parts...;
+    paper::Bool=false,
 )
-    # paper_out_dir(args...) = DeepART.paper_results_dir("instart", args...)
-    paper_out_dir(args...) = DeepART.paper_results_dir(parts..., args...)
-    mkpath(paper_out_dir())
-    Plots.savefig(p, paper_out_dir(filename))
+    # If saving to the paper directly
+    if paper
+        # paper_out_dir(args...) = DeepART.paper_results_dir("instart", args...)
+        paper_out_dir(args...) = DeepART.paper_results_dir(parts..., args...)
+        mkpath(paper_out_dir())
+        Plots.savefig(p, paper_out_dir(filename))
+    end
+
+    # Save locally too
+    results_out_dir(args...) = DeepART.results_dir(parts..., args...)
+    mkpath(results_out_dir())
+    Plots.savefig(p, results_out_dir(filename))
+
+    return
 end

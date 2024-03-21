@@ -131,7 +131,10 @@ Gets an integer index of where a string name appears in a list of strings.
 - `labels::Vector{T} where T <: AbstractString`: the list of strings to search.
 - `name::AbstractString`: the name to search for in the list of labels.
 """
-function get_index_from_name(labels::Vector{T}, name::AbstractString) where T <: AbstractString
+function get_index_from_name(
+    labels::Vector{T},
+    name::AbstractString,
+) where T <: AbstractString
     # Findall results in a list, even of only one entry
     results = findall(x -> x == name, labels)
     # If the list is longer than 1, error
@@ -149,7 +152,11 @@ Evaluates a single agent on a single experience, training or testing as needed.
 - `agent::Agent`: the [`Agent`](@ref) to evaluate.
 - `exp::Experience`: the [`Experience`](@ref) to use for training/testing.
 """
-function evaluate_agent!(agent::Agent, experience::Experience, data::VectoredData)
+function evaluate_agent!(
+    agent::Agent,
+    experience::Experience,
+    data::VectoredData,
+)
     # Disect the experience
     dataset_index = get_index_from_name(data.train.labels, experience.task_name)
     datum_index = experience.seq_nums.task_num
@@ -187,7 +194,13 @@ Logs data from an L2 [`Experience`](@ref).
 - `results::Dict`: the results from the [`AbstractAgent`](@ref)'s [`Experience`](@ref).
 - `status::AbstractString`: string expressing if the [`Experience`](@ref) was processed.
 """
-function log_data(data_logger::PythonCall.Py, experience::Experience, results::Dict, params::Dict ; status::AbstractString="complete")
+function log_data(
+    data_logger::PythonCall.Py,
+    experience::Experience,
+    results::Dict,
+    params::Dict ;
+    status::AbstractString="complete",
+)
     seq = experience.seq_nums
     worker = "l2metrics"
     record = Dict(
@@ -255,13 +268,13 @@ PythonCall.Py(T::Symbol) = pystr(String(T))
 
 function full_scenario(
     data::DSIC,
-    exp_dir::AbstractString=CFAR.config_dir("l2")
+    exp_dir::AbstractString=DeepART.config_dir("l2")
 )
     # Load the config and scenario
-    # config = CFAR.json_load(CFAR.config_dir("l2", data_key, "config.json"))
-    # scenario = CFAR.json_load(CFAR.config_dir("l2", data_key, "scenario.json"))
-    config = CFAR.json_load(joinpath(exp_dir, "config.json"))
-    scenario = CFAR.json_load(joinpath(exp_dir, "scenario.json"))
+    # config = DeepART.json_load(DeepART.config_dir("l2", data_key, "config.json"))
+    # scenario = DeepART.json_load(DeepART.config_dir("l2", data_key, "scenario.json"))
+    config = DeepART.json_load(joinpath(exp_dir, "config.json"))
+    scenario = DeepART.json_load(joinpath(exp_dir, "scenario.json"))
 
     # Setup the scenario_info dictionary as a function of the config and scenario
     scenario_info = config["META"]
@@ -297,12 +310,12 @@ function full_scenario(
     local_art.config = DataConfig(0, 1, dim)
 
     # Construct the agent from the scenario
-    agent = CFAR.Agent(
+    agent = DeepART.Agent(
         local_art,
         opts,
         scenario,
     )
 
     # Run the scenario for this dataset
-    CFAR.run_scenario(agent, data, data_logger)
+    DeepART.run_scenario(agent, data, data_logger)
 end

@@ -5,6 +5,9 @@
 # IDE ignores
 .vscode/
 
+# Julia CondaPkg folder
+.CondaPkg/
+
 # Draft workspace
 _dev/
 

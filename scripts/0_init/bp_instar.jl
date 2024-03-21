@@ -48,9 +48,9 @@ n_test = min(N_TEST, length(data.test.y))
 
 n_input = size(fdata.train.x)[1]
 
+# Move to the GPU if the flag is high
 GPU && data |> gpu
 GPU && fdata |> gpu
-
 
 # -----------------------------------------------------------------------------
 # BASELINE WITHOUT TRAINING THE EXTRACTOR
@@ -142,11 +142,12 @@ art = DeepART.INSTART(
 # Train/test
 p = DeepART.tt_basic!(art, fdata, n_train, n_test)
 
-# DeepART.saveplot(
-#     p,
-#     "confusion.png",
-#     "instart",
-# )
+DeepART.saveplot(
+    p,
+    "confusion.png",
+    "instart",
+    paper=false,
+)
 
 # -----------------------------------------------------------------------------
 # CONVOLUTIONAL

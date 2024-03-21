@@ -53,7 +53,10 @@ Initializes an [`ExperienceQueueContainer`](@ref) from the provided scenario dic
 - `eqc::ExperienceQueueContainer`: the container with the queue and stats to initialize.
 - `scenario_dict::AbstractDict`: the dictionary with the scenario regimes and block types.
 """
-function initialize_exp_queue!(eqc::ExperienceQueueContainer, scenario_dict::AbstractDict)
+function initialize_exp_queue!(
+    eqc::ExperienceQueueContainer,
+    scenario_dict::AbstractDict,
+)
     # Initialize the incremented counts and stats
     eqc.stats["n_train"] = 0    # Number of training blocks
     eqc.stats["n_test"] = 0     # Number of testing blocks
