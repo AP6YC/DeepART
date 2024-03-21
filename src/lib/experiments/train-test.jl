@@ -9,7 +9,21 @@ Implements the variety of training/testing start-to-finish experiments.
 # EXPERIMENTS
 # -----------------------------------------------------------------------------
 
-function basic_train!(art, fdata, n_train)
+# const DOC_DeepARTModule
+
+"""
+Task-homogenous training loop for a DeepART model.
+
+# Arguments
+- `art::DeepARTModule`: the [`DeepARTModule`](@ref) model to train.
+- `fdata::DataSplit`: the [`DataSplit`](@ref) training and testing data.
+- `n_train::Integer`: the number of training iterations.
+"""
+function basic_train!(
+    art::DeepARTModule,
+    fdata::DataSplit,
+    n_train::Integer,
+)
     pr = Progress(n_train; desc="Task-Homogenous Training")
     for ix = 1:n_train
         xf = fdata.train.x[:, ix]
@@ -20,7 +34,11 @@ function basic_train!(art, fdata, n_train)
     end
 end
 
-function basic_test(art, fdata, n_test)
+function basic_test(
+    art::DeepARTModule,
+    fdata::DataSplit,
+    n_test::Integer,
+)
     # Get the estimates on the test data
     y_hats = Vector{Int}()
     pr = Progress(n_test; desc="Task-Homogenous Testing")
@@ -39,7 +57,12 @@ function basic_test(art, fdata, n_test)
     return y_hats
 end
 
-function tt_basic!(art, fdata, n_train, n_test)
+function tt_basic!(
+    art::DeepARTModule,
+    fdata::DataSplit,
+    n_train::Integer,
+    n_test::Integer,
+)
     # Train
     basic_train!(art, fdata, n_train)
 
@@ -57,7 +80,11 @@ function tt_basic!(art, fdata, n_train, n_test)
     return p
 end
 
-function train_inc!(art, tidata, n_train)
+function train_inc!(
+    art::DeepARTModule,
+    tidata::ClassIncrementalDataSplit,
+    n_train::Integer,
+)
     n_tasks = length(tidata.train)
 
     for ix = 1:n_tasks
@@ -75,7 +102,13 @@ function train_inc!(art, tidata, n_train)
     end
 end
 
-function tt_inc!(art, tidata, fdata, n_train, n_test)
+function tt_inc!(
+    art::DeepARTModule,
+    tidata::ClassIncrementalDataSplit,
+    fdata::DataSplit,
+    n_train::Integer,
+    n_test::Integer,
+)
     # Task-incremental training
     train_inc!(art, tidata, n_train)
 
