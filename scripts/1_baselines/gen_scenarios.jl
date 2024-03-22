@@ -6,11 +6,11 @@ all_data = DeepART.load_all_datasets()
 
 ["$key => $(length(unique(data.train.y)))" for (key, data) in all_data]
 
-# mnist = DeepART.get_mnist()
-# cifar10 = DeepART.get_cifar10()
-# all_data["mnist"] = mnist
-# all_data["cifar10"] = cifar10
 all_data = DeepART.load_all_datasets()
+all_data["mnist"] = DeepART.get_mnist()
+all_data["cifar10"] = DeepART.get_cifar10()
+all_data["cifar100_fine"] = DeepART.get_cifar100_fine()
+all_data["cifar100_coarse"] = DeepART.get_cifar100_coarse()
 
 """
 The groupings metadata for each dataset as a dictionary of tuples.
@@ -22,3 +22,4 @@ GROUPINGS = Dict(
     "cifar100_coarse" => Dict("random" => true, "group_size" => 4),
     "CBB-R15" => Dict("random" => true, "group_size" => 5),
 )
+

@@ -267,7 +267,7 @@ function gen_scenario_from_group(
     cidata::ClassIncrementalDataSplit,
     order::Vector{Vector{Int}},
 )
-
+    # Create a task-incremental data split according to the prescribed task/class order
     tidata = DeepART.TaskIncrementalDataSplit(cidata, order)
 
     # Point to the permutation's own folder
@@ -381,14 +381,16 @@ function gen_scenarios(
 )
     cidata = DeepART.ClassIncrementalDataSplit(datasplit)
 
+    # If the groupings should be random, generate n_max groupings from random permutations
     if grouping_dict["random"]
         group_size = grouping_dict["group_size"]
         groupings = gen_random_groupings(cidata, group_size, n_max)
+    # Otherwise, generate all of the permutations, assuming one class per task
     else
         groupings = gen_permutation_groupings(cidata)
     end
 
-    # # Iterate over every permutation
+    # Iterate over every permutation
     for order in groupings
         gen_scenario_from_group(key, cidata, order)
     end
@@ -403,11 +405,10 @@ function gen_all_scenarios(
     groupings_dict::AbstractDict,
     n_max::Int=10,
 )
-    # Iterate over all datasets
-    for (key, datasplit) in datasets
-        # groupings = [collect(2*ix - 1: 2*ix) for ix = 1:5]
-        # n_classes = unique(datasplit.train.y)
-        # groupings = [collect(2*ix - 1: 2*ix) for ix = 1:n_classes]
-        gen_scenario(key, datasplit, groupings_dict[key],n_max)
+    # Iterate over all datasets in the prescribed groupings
+    # for (key, datasplit) in datasets
+    for (key, grouping_subdict) in groupings_dict
+        # gen_scenario(key, datasplit, groupings_dict[key],n_max)
+        gen_scenario(key, datasets[key], grouping_subdict,n_max)
     end
 end
