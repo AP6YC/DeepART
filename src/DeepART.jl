@@ -53,6 +53,7 @@ using
     Pluto,
     PlutoUI,
     ProgressMeter,
+    Random,
     UnicodePlots
 
 using LinearAlgebra: norm   # Trace and norms

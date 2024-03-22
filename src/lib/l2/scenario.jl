@@ -213,151 +213,201 @@ function fields_to_dict!(dict::AbstractDict, opts::Any)
     end
 end
 
-
-const GROUPINGS = Dict(
-    "mnist" => [collect(2*ix - 1: 2*ix) for ix = 1:5],
-    "cifar10" => [collect(2*ix - 1: 2*ix) for ix = 1:5],
-    "cifar100_fine" => [collect(10*(ix - 1) + 1: 10 * (ix - 1) + 10) for ix = 1:5],
-    "cifar100_coarse" => [collect(4*(ix-1) + 1 : 4*(ix-1) + 4) for ix = 1:5],
+function get_grouping(
+    groupings::Vector{Int},
+    group_size::Int,
 )
-
-function gen_all_scenarios()
-    all_data = DeepART.load_all_datasets()
-
-    # mnist = DeepART.get_mnist()
-    # cifar10 = DeepART.get_cifar10()
-    # all_data["mnist"] = mnist
-    # all_data["cifar10"] = cifar10
-
-    # Iterate over all datasets
-    for (key, datasplit) in all_data
-        # groupings = [collect(2*ix - 1: 2*ix) for ix = 1:5]
-        n_classes = unique(datasplit.train.y)
-        # groupings = [collect(2*ix - 1: 2*ix) for ix = 1:n_classes]
-        gen_scenario(key, datasplit, groupings)
-    end
+    n_classes = length(groupings)
+    return [groupings[ix : ix + group_size - 1] for ix = 1:group_size:n_classes]
 end
 
-
-function gen_scenario(
-    key::AbstractString,
-    datasplit::DataSplit,
-    groupings::Vector{Vector{Int}},
+function random_grouping(
+    data::DataSplit,
+    group_size::Int,
 )
-    tidata = DeepART.TaskIncrementalDataSplit(datasplit, groupings)
-    # local_ci_data = DeepART.TaskIncrementalDataSplit(datasplit)
-    # @info local_ci_data
+    classes = unique(data.train.y)
+    # n_classes = length(classes)
+    groupings = shuffle(classes)
 
-    # Get a list of the order indices
-    n_classes = length(tidata.train)
-    orders = collect(1:n_classes)
-    # @info orders
+    return get_grouping(groupings, group_size)
+end
 
-    # Create an iterator for all permutations and make it into a list
-    # orders = collect(permutations(orders))
-    orders = [collect(orders)]
-    # @info length(orders)
+function gen_permutation_groupings(
+    data::DataSplit,
+)
+    classes = unique(data.train.y)
+    orders = collect(permutations(classes))
+    return [[[suborder] for suborder in order] for order in orders]
+end
 
-    # @info orders
-    # # Iterate over every permutation
-    for order in orders
-        # Point to the permutation's own folder
-        # exp_dir(args...) = DeepART.configs_dir(key, join(order), args...)
-        exp_dir(args...) = DeepART.results_dir(
-            "l2metrics",
-            "scenarios",
-            key,
-            join(order),
-            args...
+function gen_random_groupings(
+    data::DataSplit,
+    group_size::Int,
+    n_groupings::Int,
+)
+    return [random_grouping(data, group_size) for _ = 1:n_groupings]
+end
+
+# const GROUPINGS = Dict(
+#     "mnist" => [collect(2*ix - 1: 2*ix) for ix = 1:5],
+#     "cifar10" => [collect(2*ix - 1: 2*ix) for ix = 1:5],
+#     "cifar100_fine" => [collect(10*(ix - 1) + 1: 10 * (ix - 1) + 10) for ix = 1:5],
+#     "cifar100_coarse" => [collect(4*(ix-1) + 1 : 4*(ix-1) + 4) for ix = 1:5],
+# )
+
+
+
+# orders = collect(permutations(orders))
+
+"""
+Generates a single scenario according to a grouping.
+"""
+function gen_scenario_from_group(
+    key::AbstractString,
+    cidata::ClassIncrementalDataSplit,
+    order::Vector{Vector{Int}},
+)
+
+    tidata = DeepART.TaskIncrementalDataSplit(cidata, order)
+
+    # Point to the permutation's own folder
+    # exp_dir(args...) = DeepART.configs_dir(key, join(order), args...)
+    exp_dir(args...) = DeepART.results_dir(
+        "l2metrics",
+        "scenarios",
+        key,
+        join(order),
+        args...
+    )
+    # Make the permutation folder
+    mkpath(exp_dir())
+    @info exp_dir()
+
+    # Point to the config and scenario files within the experiment folder
+    config_file = exp_dir("config.json")
+    scenario_file = exp_dir("scenario.json")
+
+    # -----------------------------------------------------------------
+    # CONFIG FILE
+    # -----------------------------------------------------------------
+
+    DIR = DeepART.results_dir("l2metrics", "logs", join(order))
+    NAME = "l2metrics_logger"
+    COLS = Dict(
+        # "metrics_columns" => "reward",
+        "metrics_columns" => [
+            "performance",
+            "art_match",
+            "art_activation",
+        ],
+        "log_format_version" => "1.0",
+    )
+    META = Dict(
+        "author" => "Sasha Petrenko",
+        "complexity" => "1-low",
+        "difficulty" => "2-medium",
+        "scenario_type" => "custom",
+    )
+
+    # Create the config dict
+    config_dict = Dict(
+        "DIR" => DIR,
+        "NAME" => NAME,
+        "COLS" => COLS,
+        "META" => META,
+    )
+
+    # Write the config file
+    DeepART.json_save(config_file, config_dict)
+
+    # -----------------------------------------------------------------
+    # SCENARIO FILE
+    # -----------------------------------------------------------------
+
+    # Build the scenario vector
+    SCENARIO = []
+    # for ix = 1:n_classes
+    for ix in order
+        # Create a train step and push
+        train_step = Dict(
+            "type" => "train",
+            "regimes" => [Dict(
+                # "task" => class_labels[ix],
+                "task" => join(unique(tidata.train[1].y)),
+                "count" => length(tidata.train[ix].y),
+            )],
         )
-        # Make the permutation folder
-        mkpath(exp_dir())
-        @info exp_dir()
+        push!(SCENARIO, train_step)
 
-        # Point to the config and scenario files within the experiment folder
-        config_file = exp_dir("config.json")
-        scenario_file = exp_dir("scenario.json")
-
-        # -----------------------------------------------------------------
-        # CONFIG FILE
-        # -----------------------------------------------------------------
-
-        DIR = DeepART.results_dir("l2metrics", "logs", join(order))
-        NAME = "l2metrics_logger"
-        COLS = Dict(
-            # "metrics_columns" => "reward",
-            "metrics_columns" => [
-                "performance",
-                "art_match",
-                "art_activation",
-            ],
-            "log_format_version" => "1.0",
-        )
-        META = Dict(
-            "author" => "Sasha Petrenko",
-            "complexity" => "1-low",
-            "difficulty" => "2-medium",
-            "scenario_type" => "custom",
-        )
-
-        # Create the config dict
-        config_dict = Dict(
-            "DIR" => DIR,
-            "NAME" => NAME,
-            "COLS" => COLS,
-            "META" => META,
-        )
-
-        # Write the config file
-        DeepART.json_save(config_file, config_dict)
-
-        # -----------------------------------------------------------------
-        # SCENARIO FILE
-        # -----------------------------------------------------------------
-
-        # Build the scenario vector
-        SCENARIO = []
-        # for ix = 1:n_classes
-        for ix in order
-            # Create a train step and push
-            train_step = Dict(
-                "type" => "train",
-                "regimes" => [Dict(
-                    # "task" => class_labels[ix],
-                    "task" => join(unique(tidata.train[1].y)),
-                    "count" => length(tidata.train[ix].y),
-                )],
+        # Create all test steps and push
+        regimes = []
+        for jx = 1:n_classes
+            local_regime = Dict(
+                # "task" => class_labels[jx],
+                # "task" => tidata.test[1].y[1],
+                # "task" => tidata.test[1].y,
+                "task" => join(unique(tidata.test[1].y)),
+                "count" => length(tidata.test[jx].y),
             )
-            push!(SCENARIO, train_step)
-
-            # Create all test steps and push
-            regimes = []
-            for jx = 1:n_classes
-                local_regime = Dict(
-                    # "task" => class_labels[jx],
-                    # "task" => tidata.test[1].y[1],
-                    # "task" => tidata.test[1].y,
-                    "task" => join(unique(tidata.test[1].y)),
-                    "count" => length(tidata.test[jx].y),
-                )
-                push!(regimes, local_regime)
-            end
-
-            test_step = Dict(
-                "type" => "test",
-                "regimes" => regimes,
-            )
-
-            push!(SCENARIO, test_step)
+            push!(regimes, local_regime)
         end
 
-        # Make scenario list into a dict entry
-        scenario_dict = Dict(
-            "scenario" => SCENARIO,
+        test_step = Dict(
+            "type" => "test",
+            "regimes" => regimes,
         )
 
-        # Save the scenario
-        DeepART.json_save(scenario_file, scenario_dict)
+        push!(SCENARIO, test_step)
     end
 
+    # Make scenario list into a dict entry
+    scenario_dict = Dict(
+        "scenario" => SCENARIO,
+    )
+
+    # Save the scenario
+    DeepART.json_save(scenario_file, scenario_dict)
+end
+
+"""
+Generates scenarios for one dataset.
+"""
+function gen_scenarios(
+    key::AbstractString,
+    datasplit::DataSplit,
+    # groupings::Vector{Vector{Int}},
+    grouping_dict::AbstractDict,
+    n_max::Int=10,
+)
+    cidata = DeepART.ClassIncrementalDataSplit(datasplit)
+
+    if grouping_dict["random"]
+        group_size = grouping_dict["group_size"]
+        groupings = gen_random_groupings(cidata, group_size, n_max)
+    else
+        groupings = gen_permutation_groupings(cidata)
+    end
+
+    # # Iterate over every permutation
+    for order in groupings
+        gen_scenario_from_group(key, cidata, order)
+    end
+
+end
+
+"""
+Generates all scenarios.
+"""
+function gen_all_scenarios(
+    datasets::Dict{String, DataSplit},
+    groupings_dict::AbstractDict,
+    n_max::Int=10,
+)
+    # Iterate over all datasets
+    for (key, datasplit) in datasets
+        # groupings = [collect(2*ix - 1: 2*ix) for ix = 1:5]
+        # n_classes = unique(datasplit.train.y)
+        # groupings = [collect(2*ix - 1: 2*ix) for ix = 1:n_classes]
+        gen_scenario(key, datasplit, groupings_dict[key],n_max)
+    end
 end
