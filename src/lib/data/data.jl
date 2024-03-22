@@ -241,8 +241,6 @@ function load_all_datasets(
         # Get the features and labels (Float32 precision for Flux dense networks)
         features = Matrix{FluxFloat}(dataset[:, 1:n_features]')
         labels = Vector{Int}(dataset[:, end])
-        # @info typeof(features)
-        # @info typeof(labels)
         # Create a DataSplit
         data_splits[name] = DataSplit(
             features,

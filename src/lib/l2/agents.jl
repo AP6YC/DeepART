@@ -298,6 +298,8 @@ function full_scenario(
         config["COLS"],     # This one right here, officer
         scenario_info,
     )
+    # @info config
+    @info scenario
 
     # TODO
 

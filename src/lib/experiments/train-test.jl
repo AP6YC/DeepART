@@ -222,15 +222,16 @@ function tt_basic!(
     # Test
     y_hats = basic_test(art, data, n_test)
 
-    # Confusion matrix
-    p = DeepART.create_confusion_heatmap(
-        string.(collect(0:9)),
-        data.test.y[1:n_test],
-        y_hats,
-    )
+    return y_hats
+    # # Confusion matrix
+    # p = DeepART.create_confusion_heatmap(
+    #     string.(collect(0:9)),
+    #     data.test.y[1:n_test],
+    #     y_hats,
+    # )
 
-    # Return the plot
-    return p
+    # # Return the plot
+    # return p
 end
 
 """

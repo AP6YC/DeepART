@@ -1,0 +1,30 @@
+
+# -----------------------------------------------------------------------------
+# L2 METRICS
+# -----------------------------------------------------------------------------
+
+using PythonCall
+
+# -----------------------------------------------------------------------------
+# OPTIONS
+# -----------------------------------------------------------------------------
+
+# Why on Earth isn't this included in the PythonCall package?
+PythonCall.Py(T::AbstractDict) = pydict(T)
+PythonCall.Py(T::AbstractVector) = pylist(T)
+PythonCall.Py(T::Symbol) = pystr(String(T))
+
+# l2logger = Ref{PythonCall.Py}()
+# l2logger[] = PythonCall.pyimport("l2logger.l2logger")
+l2l = PythonCall.pyimport("l2logger.l2logger")
+
+for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
+    for scenario_dir in readdir(dir, join=true)
+        # Run the scenario
+        DeepART.full_scenario(
+            tidata,
+            scenario_dir,
+            l2l,
+        )
+    end
+end

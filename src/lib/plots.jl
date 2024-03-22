@@ -100,6 +100,17 @@ function get_normalized_confusion(y::IntegerVector, y_hat::IntegerVector, n_clas
     return norm_cm
 end
 
+function create_unicode_confusion_heatmap(
+    class_labels::Vector{String},
+    y::IntegerVector,
+    y_hat::IntegerVector,
+)
+    # Number of classes from the class labels
+    n_classes = length(class_labels)
+    # Normalized confusion
+    norm_cm = get_normalized_confusion(y, y_hat, n_classes)
+end
+
 """
 Creates the confusion matrix as a heatmap using `Plots`.
 

@@ -8,7 +8,7 @@ A repository containing implementations and experiments for the upcoming paper _
   - [Table of Contents](#table-of-contents)
   - [Usage](#usage)
   - [Attribution](#attribution)
-    - [Author](#author)
+    - [Authors](#authors)
 
 ## Usage
 
@@ -16,6 +16,6 @@ TODO
 
 ## Attribution
 
-### Author
+### Authors
 
 - Sasha Petrenko - <sap625@mst.edu> - [@AP6YC](https://github.com/AP6YC)

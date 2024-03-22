@@ -2,7 +2,7 @@
     single_fuzzyart.jl
 
 # Description
-
+Simple FuzzyART training and testing.
 """
 
 # -----------------------------------------------------------------------------
@@ -13,10 +13,11 @@ using Revise
 using DeepART
 using ProgressMeter
 import AdaptiveResonance as ART
-# using Flux
-# using CUDA
-# using UnicodePlots
-# using Plots
+using Plots
+
+# theme(:dark)
+# theme(:juno)
+theme(:dracula)
 
 # -----------------------------------------------------------------------------
 # CONFIG
@@ -52,12 +53,23 @@ art = ART.FuzzyART(
 art.config = ART.DataConfig(0, 1, dim)
 
 # Train the FuzzyART model in simple supervised mode
-DeepART.tt_basic!(
+y_hats = DeepART.tt_basic!(
     art,
     fdata,
     N_TRAIN,
     N_TEST,
 )
+
+if GUI_PLOT
+    # Confusion matrix
+    p = DeepART.create_confusion_heatmap(
+        string.(collect(0:9)),
+        data.test.y[1:n_test],
+        y_hats,
+    )
+else
+
+end
 
 # -----------------------------------------------------------------------------
 # TASK-INCREMENTAL TRAIN/TEST
@@ -102,33 +114,6 @@ DeepART.tt_inc!(
     N_TRAIN,
     N_TEST,
 )
-
-# -----------------------------------------------------------------------------
-# L2 METRICS
-# -----------------------------------------------------------------------------
-
-using PythonCall
-
-# -----------------------------------------------------------------------------
-# OPTIONS
-# -----------------------------------------------------------------------------
-
-# Why on Earth isn't this included in the PythonCall package?
-PythonCall.Py(T::AbstractDict) = pydict(T)
-PythonCall.Py(T::AbstractVector) = pylist(T)
-PythonCall.Py(T::Symbol) = pystr(String(T))
-
-l2logger = Ref{PythonCall.Py}()
-l2logger[] = PythonCall.pyimport("l2logger.l2logger")
-
-l2l = PythonCall.pyimport("l2logger.l2logger")
-
-for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
-    for scenario_dir in readdir(dir, join=true)
-        # Run the scenario
-        DeepART.full_scenario(tidata, scenario_dir, l2l)
-    end
-end
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST
