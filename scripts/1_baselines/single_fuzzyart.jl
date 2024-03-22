@@ -84,6 +84,7 @@ DeepART.plot_confusion_matrix(
     string.(collect(0:9)),
     "th_conf",
     ["single_fuzzyart"],
+    PAPER,
 )
 
 # -----------------------------------------------------------------------------

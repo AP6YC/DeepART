@@ -369,11 +369,14 @@ function gen_scenario_from_group(
     # SCENARIO FILE
     # -----------------------------------------------------------------
 
+    # Init the global block number incrementer
+    block_num = 0
     # Build the scenario vector
     SCENARIO = []
     for ix = 1:n_tasks
         # Create a train step and push
         train_step = Dict(
+            "block_num" => block_num,
             "type" => "train",
             "regimes" => [Dict(
                 "task" => task_names[ix],
@@ -381,6 +384,7 @@ function gen_scenario_from_group(
             )],
         )
         push!(SCENARIO, train_step)
+        block_num += 1
 
         # Create all test steps and push
         regimes = []
@@ -393,9 +397,11 @@ function gen_scenario_from_group(
         end
 
         test_step = Dict(
+            "block_num" => block_num,
             "type" => "test",
             "regimes" => regimes,
         )
+        block_num += 1
 
         push!(SCENARIO, test_step)
     end

@@ -62,9 +62,9 @@ function basic_test(
         next!(pr)
     end
 
-    # Calculate the performance and log
-    perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
-    @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+    # # Calculate the performance and log
+    # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
+    # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     # Return the estimates
     return y_hats

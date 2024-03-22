@@ -93,7 +93,11 @@ Get the normalized confusion matrix.
 - `y_hat::IntegerVector`: the agent's estimates.
 - `n_classes::Integer`: the number of total classes in the test set.
 """
-function get_normalized_confusion(y::IntegerVector, y_hat::IntegerVector, n_classes::Integer)
+function get_normalized_confusion(
+    y::IntegerVector,
+    y_hat::IntegerVector,
+    n_classes::Integer,
+)
     cm = get_confusion(y, y_hat, n_classes)
     total = sum(cm, dims=2)
     norm_cm = cm./total
@@ -106,6 +110,7 @@ function plot_confusion_matrix(
     class_labels::Vector{String},
     filename::String,
     dir_parts::Vector{String},
+    paper::Bool=false;
     # paper::Bool=false,
     # save::Bool=true;
     # show::Bool=true;
@@ -132,7 +137,7 @@ function plot_confusion_matrix(
         p_gui,
         filename,
         dir_parts,;
-        paper=true,
+        paper=paper,
         extension=".png"
     )
 
