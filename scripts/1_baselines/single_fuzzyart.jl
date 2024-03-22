@@ -123,14 +123,8 @@ l2l = PythonCall.pyimport("l2logger.l2logger")
 
 for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
     for scenario_dir in readdir(dir, join=true)
-        # @info scenario_dir
+        # Run the scenario
         DeepART.full_scenario(tidata, scenario_dir, l2l)
-        # for file in read_dir(scenario_dir)
-        #     if occursin("l2metrics", file)
-        #         # @info joinpath(scenario_dir, file)
-        #         # l2l.l2metrics(joinpath(scenario_dir, file))
-        #     end
-        # end
     end
 end
 

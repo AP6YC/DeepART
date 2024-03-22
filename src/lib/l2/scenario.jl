@@ -213,39 +213,80 @@ function fields_to_dict!(dict::AbstractDict, opts::Any)
     end
 end
 
+"""
+Generates a new grouping from the classes vector and the group size, assuming that the length of the classes is evenly divisible by `group_size`.
+"""
 function get_grouping(
-    groupings::Vector{Int},
+    classes::Vector{Int},
     group_size::Int,
 )
-    n_classes = length(groupings)
-    return [groupings[ix : ix + group_size - 1] for ix = 1:group_size:n_classes]
+    n_classes = length(classes)
+    return [classes[ix : ix + group_size - 1] for ix = 1:group_size:n_classes]
 end
 
+"""
+Generates a random grouping from the provided dataset and selected group size.
+"""
 function random_grouping(
     data::DataSplit,
     group_size::Int,
 )
     classes = unique(data.train.y)
-    # n_classes = length(classes)
     groupings = shuffle(classes)
 
     return get_grouping(groupings, group_size)
 end
 
+"""
+Generates all permutations of groupings in the dataset.
+"""
 function gen_permutation_groupings(
     data::DataSplit,
 )
+    # Infer the unique classes
     classes = unique(data.train.y)
+    # Get all permutations of the classes, one class per task
     orders = collect(permutations(classes))
+    # Return the permutations orders
     return [[[suborder] for suborder in order] for order in orders]
 end
 
+"""
+Generates `n_groupings` random groupings of the dataset with group size `group_size`.
+"""
 function gen_random_groupings(
     data::DataSplit,
     group_size::Int,
     n_groupings::Int,
 )
     return [random_grouping(data, group_size) for _ = 1:n_groupings]
+end
+
+"""
+Takes an ordering and returns the full string representation.
+"""
+function order_to_string(
+    order::Vector{Vector{Int}},
+)
+    return join([join(suborder, "-") for suborder in order], "_")
+end
+
+"""
+Takes an ordering and returns a vector of the string representations of individual tasks.
+"""
+function order_to_task_strings(
+    order::Vector{Vector{Int}},
+)
+    return [join(suborder, "-") for suborder in order]
+end
+
+"""
+Takes a string ordering and gets back the integer ordering.
+"""
+function string_to_orders(
+    order_string::AbstractString,
+)
+    return [[parse(Int, suborder) for suborder in split(order, "-")] for order in split(order_string, "_")]
 end
 
 """
@@ -262,9 +303,14 @@ function gen_scenario_from_group(
     # Get the number of tasks
     n_tasks = length(order)
 
-    # Point to the permutation's own folder
     # exp_dir(args...) = DeepART.configs_dir(key, join(order), args...)
     file_dir = string(hash(join(order)))
+
+    # task_names = [join(unique(tidata.train[ix].y), "-") for ix = 1:n_tasks]
+    task_name_string = order_to_string(order)
+    task_names = order_to_task_strings(order)
+
+    # Point to the permutation's own folder
     exp_dir(args...) = DeepART.results_dir(
         "l2metrics",
         "scenarios",
@@ -303,7 +349,9 @@ function gen_scenario_from_group(
         "author" => "Sasha Petrenko",
         "complexity" => "1-low",
         "difficulty" => "2-medium",
-        "scenario_type" => "custom",
+        # "scenario_type" => "custom",
+        "scenario_type" => "condensed",
+        "task-orders" => task_name_string,
     )
 
     # Create the config dict
@@ -324,15 +372,11 @@ function gen_scenario_from_group(
     # Build the scenario vector
     SCENARIO = []
     for ix = 1:n_tasks
-        # @info "stuff:"
-        # @info unique(tidata.train[ix].y)
-        # @info join(unique(tidata.train[ix].y), "-")
         # Create a train step and push
         train_step = Dict(
             "type" => "train",
             "regimes" => [Dict(
-                # "task" => class_labels[ix],
-                "task" => join(unique(tidata.train[ix].y), "-"),
+                "task" => task_names[ix],
                 "count" => length(tidata.train[ix].y),
             )],
         )
@@ -342,10 +386,7 @@ function gen_scenario_from_group(
         regimes = []
         for jx = 1:n_tasks
             local_regime = Dict(
-                # "task" => class_labels[jx],
-                # "task" => tidata.test[1].y[1],
-                # "task" => tidata.test[1].y,
-                "task" => join(unique(tidata.test[jx].y), "-"),
+                "task" => task_names[jx],
                 "count" => length(tidata.test[jx].y),
             )
             push!(regimes, local_regime)
@@ -366,6 +407,8 @@ function gen_scenario_from_group(
 
     # Save the scenario
     DeepART.json_save(scenario_file, scenario_dict)
+
+    return
 end
 
 """
@@ -377,7 +420,6 @@ function gen_scenarios(
     grouping_dict::AbstractDict,
     n_max::Int=10,
 )
-
     # If the groupings should be random, generate n_max groupings from random permutations
     if grouping_dict["random"]
         group_size = grouping_dict["group_size"]
@@ -388,11 +430,13 @@ function gen_scenarios(
     end
 
     cidata = DeepART.ClassIncrementalDataSplit(datasplit)
+
     # Iterate over every permutation
     for order in groupings
         gen_scenario_from_group(key, cidata, order)
     end
 
+    return
 end
 
 """
@@ -409,4 +453,6 @@ function gen_all_scenarios(
         # gen_scenario(key, datasplit, groupings_dict[key],n_max)
         gen_scenarios(key, datasets[key], grouping_subdict, n_max)
     end
+
+    return
 end

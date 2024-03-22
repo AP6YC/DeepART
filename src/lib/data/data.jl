@@ -35,7 +35,9 @@ end
 """
 Loads the MNIST dataset using MLDatasets.
 """
-function get_mnist()
+function get_mnist(;
+    flatten::Bool=false,
+)
     trainset = MLDatasets.MNIST(:train)
     testset = MLDatasets.MNIST(:test)
 
@@ -44,6 +46,10 @@ function get_mnist()
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
+
+    if flatten
+        dataset = flatty(dataset)
+    end
 
     return dataset
 end

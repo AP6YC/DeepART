@@ -187,12 +187,6 @@ function evaluate_agent!(
         "art_activation" => agent.agent.stats["T"],
     )
 
-    # agent.agent
-    # # Artificially create some results
-    # results = Dict(
-    #     "performance" => 0.0,
-    # )
-
     return results
 end
 
