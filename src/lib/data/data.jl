@@ -51,15 +51,27 @@ end
 """
 Loads the CIFAR10 dataset using MLDatasets.
 """
-function get_cifar10()
+function get_cifar10(;
+    flatten::Bool=false,
+    gray::Bool=false,
+)
     trainset = MLDatasets.CIFAR10(:train)
     testset = MLDatasets.CIFAR10(:test)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
 
+    if gray
+        X_train = mean(X_train, dims=3)
+        X_test = mean(X_test, dims=3)
+    end
+
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
+
+    if flatten
+        dataset = flatty(dataset)
+    end
 
     return dataset
 end
@@ -67,7 +79,10 @@ end
 """
 Loads the fine CIFAR100 dataset using MLDatasets.
 """
-function get_cifar100_fine()
+function get_cifar100_fine(;
+    flatten::Bool=false,
+    gray::Bool=false,
+)
     trainset = MLDatasets.CIFAR100(:train)
     testset = MLDatasets.CIFAR100(:test)
 
@@ -77,8 +92,17 @@ function get_cifar100_fine()
     y_train = y_train.fine
     y_test = y_test.fine
 
+    if gray
+        X_train = mean(X_train, dims=3)
+        X_test = mean(X_test, dims=3)
+    end
+
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
+
+    if flatten
+        dataset = flatty(dataset)
+    end
 
     return dataset
 end
@@ -86,7 +110,10 @@ end
 """
 Loads the coarse CIFAR100 dataset using MLDatasets.
 """
-function get_cifar100_coarse()
+function get_cifar100_coarse(;
+    flatten::Bool=false,
+    gray::Bool=false,
+)
     trainset = MLDatasets.CIFAR100(:train)
     testset = MLDatasets.CIFAR100(:test)
 
@@ -96,8 +123,17 @@ function get_cifar100_coarse()
     y_train = y_train.coarse
     y_test = y_test.coarse
 
+    if gray
+        X_train = mean(X_train, dims=3)
+        X_test = mean(X_test, dims=3)
+    end
+
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
+
+    if flatten
+        dataset = flatty(dataset)
+    end
 
     return dataset
 end
@@ -105,7 +141,9 @@ end
 """
 Loads the FashionMNIST dataset using MLDatasets.
 """
-function get_fashionmnist()
+function get_fashionmnist(;
+    flatten::Bool=false,
+)
     trainset = MLDatasets.FashionMNIST(:train)
     testset = MLDatasets.FashionMNIST(:test)
 
@@ -115,13 +153,19 @@ function get_fashionmnist()
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
 
+    if flatten
+        dataset = flatty(dataset)
+    end
+
     return dataset
 end
 
 """
 Loads the Omniglot dataset using MLDatasets.
 """
-function get_omniglot()
+function get_omniglot(
+    ;flatten::Bool=false,
+)
     trainset = MLDatasets.Omniglot(:train)
     testset = MLDatasets.Omniglot(:test)
 
@@ -133,6 +177,10 @@ function get_omniglot()
 
     dataset = DataSplit(X_train, y_train, X_test, y_test)
     # dataset = tensorize_datasplit(dataset)
+
+    if flatten
+        dataset = flatty(dataset)
+    end
 
     return dataset
 end

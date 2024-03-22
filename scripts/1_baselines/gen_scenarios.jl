@@ -4,17 +4,28 @@ using DeepART
 # DeepART.gen_all_scenarios()
 all_data = DeepART.load_all_datasets()
 
+all_data = DeepART.load_all_datasets()
+all_data["mnist"] = DeepART.get_mnist(
+    flatten=true,
+)
+all_data["cifar10"] = DeepART.get_cifar10(
+    flatten=true,
+)
+all_data["cifar100_fine"] = DeepART.get_cifar100_fine(
+    flatten=true,
+)
+all_data["cifar100_coarse"] = DeepART.get_cifar100_coarse(
+    flatten=true,
+)
+all_data["omniglot"] = DeepART.get_omniglot(
+    flatten=true,
+)
+
+
+# Inspect the number of unique labels in each dataset
 ["$key => $(length(unique(data.train.y)))" for (key, data) in all_data]
 
-all_data = DeepART.load_all_datasets()
-all_data["mnist"] = DeepART.get_mnist()
-all_data["cifar10"] = DeepART.get_cifar10()
-all_data["cifar100_fine"] = DeepART.get_cifar100_fine()
-all_data["cifar100_coarse"] = DeepART.get_cifar100_coarse()
-
-"""
-The groupings metadata for each dataset as a dictionary of tuples.
-"""
+# Define which scenarios to generate and how
 GROUPINGS = Dict(
     "mnist" => Dict("random" => true, "group_size" => 2),
     "cifar10" => Dict("random" => true, "group_size" => 2),
@@ -23,3 +34,5 @@ GROUPINGS = Dict(
     "CBB-R15" => Dict("random" => true, "group_size" => 5),
 )
 
+# Generate all scenario files
+DeepART.gen_all_scenarios(all_data, GROUPINGS, 10)

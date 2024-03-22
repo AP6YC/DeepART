@@ -248,17 +248,6 @@ function gen_random_groupings(
     return [random_grouping(data, group_size) for _ = 1:n_groupings]
 end
 
-# const GROUPINGS = Dict(
-#     "mnist" => [collect(2*ix - 1: 2*ix) for ix = 1:5],
-#     "cifar10" => [collect(2*ix - 1: 2*ix) for ix = 1:5],
-#     "cifar100_fine" => [collect(10*(ix - 1) + 1: 10 * (ix - 1) + 10) for ix = 1:5],
-#     "cifar100_coarse" => [collect(4*(ix-1) + 1 : 4*(ix-1) + 4) for ix = 1:5],
-# )
-
-
-
-# orders = collect(permutations(orders))
-
 """
 Generates a single scenario according to a grouping.
 """
@@ -270,13 +259,17 @@ function gen_scenario_from_group(
     # Create a task-incremental data split according to the prescribed task/class order
     tidata = DeepART.TaskIncrementalDataSplit(cidata, order)
 
+    # Get the number of tasks
+    n_tasks = length(order)
+
     # Point to the permutation's own folder
     # exp_dir(args...) = DeepART.configs_dir(key, join(order), args...)
+    file_dir = string(hash(join(order)))
     exp_dir(args...) = DeepART.results_dir(
         "l2metrics",
         "scenarios",
         key,
-        join(order),
+        file_dir,
         args...
     )
     # Make the permutation folder
@@ -291,7 +284,11 @@ function gen_scenario_from_group(
     # CONFIG FILE
     # -----------------------------------------------------------------
 
-    DIR = DeepART.results_dir("l2metrics", "logs", join(order))
+    DIR = DeepART.results_dir(
+        "l2metrics",
+        "logs",
+        file_dir,
+    )
     NAME = "l2metrics_logger"
     COLS = Dict(
         # "metrics_columns" => "reward",
@@ -326,14 +323,16 @@ function gen_scenario_from_group(
 
     # Build the scenario vector
     SCENARIO = []
-    # for ix = 1:n_classes
-    for ix in order
+    for ix = 1:n_tasks
+        # @info "stuff:"
+        # @info unique(tidata.train[ix].y)
+        # @info join(unique(tidata.train[ix].y), "-")
         # Create a train step and push
         train_step = Dict(
             "type" => "train",
             "regimes" => [Dict(
                 # "task" => class_labels[ix],
-                "task" => join(unique(tidata.train[1].y)),
+                "task" => join(unique(tidata.train[ix].y), "-"),
                 "count" => length(tidata.train[ix].y),
             )],
         )
@@ -341,12 +340,12 @@ function gen_scenario_from_group(
 
         # Create all test steps and push
         regimes = []
-        for jx = 1:n_classes
+        for jx = 1:n_tasks
             local_regime = Dict(
                 # "task" => class_labels[jx],
                 # "task" => tidata.test[1].y[1],
                 # "task" => tidata.test[1].y,
-                "task" => join(unique(tidata.test[1].y)),
+                "task" => join(unique(tidata.test[jx].y), "-"),
                 "count" => length(tidata.test[jx].y),
             )
             push!(regimes, local_regime)
@@ -375,21 +374,20 @@ Generates scenarios for one dataset.
 function gen_scenarios(
     key::AbstractString,
     datasplit::DataSplit,
-    # groupings::Vector{Vector{Int}},
     grouping_dict::AbstractDict,
     n_max::Int=10,
 )
-    cidata = DeepART.ClassIncrementalDataSplit(datasplit)
 
     # If the groupings should be random, generate n_max groupings from random permutations
     if grouping_dict["random"]
         group_size = grouping_dict["group_size"]
-        groupings = gen_random_groupings(cidata, group_size, n_max)
-    # Otherwise, generate all of the permutations, assuming one class per task
+        groupings = gen_random_groupings(datasplit, group_size, n_max)
+        # Otherwise, generate all of the permutations, assuming one class per task
     else
-        groupings = gen_permutation_groupings(cidata)
+        groupings = gen_permutation_groupings(datasplit)
     end
 
+    cidata = DeepART.ClassIncrementalDataSplit(datasplit)
     # Iterate over every permutation
     for order in groupings
         gen_scenario_from_group(key, cidata, order)
@@ -409,6 +407,6 @@ function gen_all_scenarios(
     # for (key, datasplit) in datasets
     for (key, grouping_subdict) in groupings_dict
         # gen_scenario(key, datasplit, groupings_dict[key],n_max)
-        gen_scenario(key, datasets[key], grouping_subdict,n_max)
+        gen_scenarios(key, datasets[key], grouping_subdict, n_max)
     end
 end

@@ -54,6 +54,7 @@ using
     PlutoUI,
     ProgressMeter,
     Random,
+    # SHA,
     UnicodePlots
 
 using LinearAlgebra: norm   # Trace and norms
