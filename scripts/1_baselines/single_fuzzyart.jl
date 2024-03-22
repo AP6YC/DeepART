@@ -17,7 +17,7 @@ using Plots
 
 # theme(:dark)
 # theme(:juno)
-theme(:dracula)
+# theme(:dracula)
 
 # -----------------------------------------------------------------------------
 # CONFIG
@@ -25,6 +25,7 @@ theme(:dracula)
 
 # Accept data downloads
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
 # Fix plotting on headless
 ENV["GKSwstype"] = "100"
 
@@ -41,10 +42,13 @@ PAPER = Sys.iswindows()
 
 # Load the dataset
 data = DeepART.get_mnist()
+
 # Flatten the dataset
 fdata = DeepART.flatty(data)
+
 # Get the dimension
 dim = size(fdata.train.x)[1]
+
 # Infer other aspects of the data
 n_classes = length(unique(data.train.y))
 
@@ -73,33 +77,14 @@ results = DeepART.tt_basic!(
     n_test,
 )
 
+# Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
     data.test.y[1:n_test],
     results["y_hats"],
     string.(collect(0:9)),
-    "confusion_matrix",
+    "th_conf",
     ["single_fuzzyart"],
 )
-
-# # Confusion matrix
-# p = DeepART.create_confusion_heatmap(
-#     string.(collect(0:9)),
-#     data.test.y[1:n_test],
-#     results["y_hats"],
-# )
-# p = DeepART.create_unicode_confusion_heatmap(
-#     string.(collect(0:9)),
-#     data.test.y[1:n_test],
-#     results["y_hats"];
-#     # colormap=DeepART.COLORSCHEME,
-#     # colormap=:viridis,
-#     # blend=true,
-#     # fix_ar=true,
-#     # height=20,
-#     # blend=false,
-#     # xfact=200,
-#     # yfact=200,
-# )
 
 # -----------------------------------------------------------------------------
 # TASK-INCREMENTAL TRAIN/TEST
@@ -123,6 +108,29 @@ tiart = ART.FuzzyART(
 # Set the data config
 tiart.config = ART.DataConfig(0, 1, dim)
 
+# Simple incremental train/test loop for quick validation
+DeepART.tt_inc!(
+    tiart,
+    tidata,
+    fdata,
+    n_train,
+    n_train,
+)
+
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "ti_conf",
+    ["single_fuzzyart"],
+)
+
+# -----------------------------------------------------------------------------
+# COMPLEX TASK-INCREMENTAL TRAIN/TEST
+# -----------------------------------------------------------------------------
+
+
 # # Train over each task
 # for ix = 1:n_tasks
 #     # Get the local batch of training data
@@ -136,14 +144,7 @@ tiart.config = ART.DataConfig(0, 1, dim)
 #     )
 # end
 
-# Simple incremental train/test loop for quick validation
-DeepART.tt_inc!(
-    tiart,
-    tidata,
-    fdata,
-    N_TRAIN,
-    N_TEST,
-)
+
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST
