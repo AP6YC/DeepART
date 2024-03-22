@@ -37,6 +37,7 @@ GROUPINGS = Dict(
     "cifar10" => Dict("random" => true, "group_size" => 2),
     "cifar100_fine" => Dict("random" => true, "group_size" => 20),
     "cifar100_coarse" => Dict("random" => true, "group_size" => 4),
+    "omniglot" => Dict("random" => true, "group_size" => 6),
     "CBB-R15" => Dict("random" => true, "group_size" => 5),
 )
 
