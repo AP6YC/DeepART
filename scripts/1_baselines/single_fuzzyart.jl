@@ -77,6 +77,7 @@ tiart = ART.FuzzyART(
     rho=0.7,
     display=true,
 )
+
 # Set the data config
 tiart.config = ART.DataConfig(0, 1, dim)
 
@@ -93,6 +94,7 @@ tiart.config = ART.DataConfig(0, 1, dim)
 #     )
 # end
 
+# Simple incremental train/test loop for quick validation
 DeepART.tt_inc!(
     tiart,
     tidata,

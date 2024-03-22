@@ -1,3 +1,10 @@
+# -----------------------------------------------------------------------------
+# DEVELOPMENT REQUIREMENTS
+#
+# This file contains the list of packages that are used for DeepART tinkering
+# in Python.
+# -----------------------------------------------------------------------------
+
 jupyterlab
 tensorflow
 matplotlib
