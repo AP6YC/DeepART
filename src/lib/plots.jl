@@ -100,15 +100,101 @@ function get_normalized_confusion(y::IntegerVector, y_hat::IntegerVector, n_clas
     return norm_cm
 end
 
+function plot_confusion_matrix(
+    y::IntegerVector,
+    y_hat::IntegerVector,
+    class_labels::Vector{String},
+    filename::String,
+    dir_parts::Vector{String},
+    # paper::Bool=false,
+    # save::Bool=true;
+    # show::Bool=true;
+    kwargs...
+)
+
+    # Generate the GUI heatmap
+    p_gui = create_confusion_heatmap(
+        class_labels,
+        y,
+        y_hat;
+        kwargs...
+    )
+
+    # Try to display
+    display(p_gui)
+
+    # Save the GUI heatmap
+    saveplot(
+        p_gui,
+        filename,
+        dir_parts,;
+        paper=true,
+    )
+
+    # Generate the terminal heatmap
+    p_term = create_unicode_confusion_heatmap(
+        class_labels,
+        y,
+        y_hat;
+        kwargs...
+    )
+
+    # Try to display
+    display(p_term)
+
+    # Save the terminal heatmap
+    saveplot(
+        p_term,
+        filename,
+        dir_parts...;
+        paper=false,
+    )
+
+
+
+    # Save and show
+    # save && savefig(pgui, filename)
+    # show && display(p)
+
+    # # Number of classes from the class labels
+    # n_classes = length(class_labels)
+    # # Normalized confusion
+    # norm_cm = get_normalized_confusion(y, y_hat, n_classes)
+
+    # # Create the heatmap
+    # p = create_confusion_heatmap(
+    #     class_labels,
+    #     y,
+    #     y_hat,
+    #     title=title,
+    # )
+
+
+end
+
 function create_unicode_confusion_heatmap(
     class_labels::Vector{String},
     y::IntegerVector,
-    y_hat::IntegerVector,
+    y_hat::IntegerVector;
+    kwargs...
 )
     # Number of classes from the class labels
     n_classes = length(class_labels)
     # Normalized confusion
     norm_cm = get_normalized_confusion(y, y_hat, n_classes)
+
+    # @info kwargs
+    # @info kwargs...
+    p = UnicodePlots.heatmap(
+        norm_cm,
+        title="Normalized Confusion Matrix",
+        xlabel="Predicted",
+        ylabel="Truth";
+        kwargs...
+        # zlabel="asdf"
+        # color=:heat,
+    )
+    return p
 end
 
 """
@@ -122,12 +208,14 @@ Creates the confusion matrix as a heatmap using `Plots`.
 function create_confusion_heatmap(
     class_labels::Vector{String},
     y::IntegerVector,
-    y_hat::IntegerVector,
+    y_hat::IntegerVector;
+    kwargs...
 )
     # Number of classes from the class labels
     n_classes = length(class_labels)
     # Normalized confusion
     norm_cm = get_normalized_confusion(y, y_hat, n_classes)
+
     # Transpose reflect
     # plot_cm = reverse(norm_cm', dims=1)
     # plot_cm = reverse(norm_cm, dims=1)
@@ -151,7 +239,8 @@ function create_confusion_heatmap(
         fontfamily=FONTFAMILY,
         annotationfontfamily=FONTFAMILY,
         size=SQUARE_SIZE,
-        dpi=DPI
+        dpi=DPI;
+        kwargs...
     )
 
     # Create the annotations
@@ -196,9 +285,10 @@ end
 Wrapper for saving results plots.
 """
 function saveplot(
+    # p::Plots.Plot,    # Apparently UnicodePlots aren't Plots.Plot
     p,
-    filename,
-    parts...;
+    filename::AbstractString,
+    parts::Vector{String};
     paper::Bool=false,
 )
     # If saving to the paper directly

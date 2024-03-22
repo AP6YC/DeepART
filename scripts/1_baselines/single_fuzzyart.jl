@@ -23,10 +23,17 @@ theme(:dracula)
 # CONFIG
 # -----------------------------------------------------------------------------
 
+# Accept data downloads
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+# Fix plotting on headless
+ENV["GKSwstype"] = "100"
 
+# Train/test config
 N_TRAIN = 1000
 N_TEST = 1000
+
+# Print to the paper dir only if on Windows, assuming that unix means the cluster
+PAPER = Sys.iswindows()
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -38,6 +45,12 @@ data = DeepART.get_mnist()
 fdata = DeepART.flatty(data)
 # Get the dimension
 dim = size(fdata.train.x)[1]
+# Infer other aspects of the data
+n_classes = length(unique(data.train.y))
+
+# Get the number of samples to use for training and testing based
+n_train = min(N_TRAIN, length(data.train.y))
+n_test = min(N_TEST, length(data.test.y))
 
 # -----------------------------------------------------------------------------
 # TASK-HOMOGENOUS TRAIN/TEST
@@ -53,23 +66,40 @@ art = ART.FuzzyART(
 art.config = ART.DataConfig(0, 1, dim)
 
 # Train the FuzzyART model in simple supervised mode
-y_hats = DeepART.tt_basic!(
+results = DeepART.tt_basic!(
     art,
     fdata,
-    N_TRAIN,
-    N_TEST,
+    n_train,
+    n_test,
 )
 
-if GUI_PLOT
-    # Confusion matrix
-    p = DeepART.create_confusion_heatmap(
-        string.(collect(0:9)),
-        data.test.y[1:n_test],
-        y_hats,
-    )
-else
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "confusion_matrix",
+    ["single_fuzzyart"],
+)
 
-end
+# # Confusion matrix
+# p = DeepART.create_confusion_heatmap(
+#     string.(collect(0:9)),
+#     data.test.y[1:n_test],
+#     results["y_hats"],
+# )
+# p = DeepART.create_unicode_confusion_heatmap(
+#     string.(collect(0:9)),
+#     data.test.y[1:n_test],
+#     results["y_hats"];
+#     # colormap=DeepART.COLORSCHEME,
+#     # colormap=:viridis,
+#     # blend=true,
+#     # fix_ar=true,
+#     # height=20,
+#     # blend=false,
+#     # xfact=200,
+#     # yfact=200,
+# )
 
 # -----------------------------------------------------------------------------
 # TASK-INCREMENTAL TRAIN/TEST

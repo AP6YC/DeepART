@@ -196,6 +196,24 @@ function train_inc!(
     end
 end
 
+"""
+Computes the performance of the ART module given some estimates.
+"""
+function get_perf(
+    art::CommonARTModule,
+    data::DataSplit,
+    y_hats::Vector{Int},
+    n_test::Integer=IInf,
+)
+    # Get the number of testing samples
+    l_n_test = min(n_test, length(data.test.y))
+
+    perf = ART.performance(y_hats, data.test.y[1:l_n_test])
+    @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+
+    return perf
+end
+
 # -----------------------------------------------------------------------------
 # FULL EXPERIMENTS
 # -----------------------------------------------------------------------------
@@ -222,7 +240,17 @@ function tt_basic!(
     # Test
     y_hats = basic_test(art, data, n_test)
 
-    return y_hats
+    # Compute the performance fromt the test results
+    perf = get_perf(art, data, y_hats, n_test)
+
+    # Compile the experiment results
+    out_dict = Dict(
+        "y_hats" => y_hats,
+        "perf" => perf,
+    )
+
+    return out_dict
+
     # # Confusion matrix
     # p = DeepART.create_confusion_heatmap(
     #     string.(collect(0:9)),
@@ -261,16 +289,16 @@ function tt_inc!(
     # Test
     y_hats = basic_test(art, data, l_n_test)
 
-    perf = ART.performance(y_hats, data.test.y[1:l_n_test])
-    @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+    # Compute the performance fromt the test results
+    perf = get_perf(art, data, y_hats, n_test)
 
-    p = DeepART.create_confusion_heatmap(
-        string.(collect(0:9)),
-        data.test.y[1:l_n_test],
-        y_hats,
+    # Compile the experiment results
+    out_dict = Dict(
+        "y_hats" => y_hats,
+        "perf" => perf,
     )
 
-    return p
+    return out_dict
 end
 
 # -----------------------------------------------------------------------------

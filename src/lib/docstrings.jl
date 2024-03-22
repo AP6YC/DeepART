@@ -55,158 +55,158 @@ $(METHODLIST)
 """
 Docstring prefix denoting that the constant is used as a common docstring element for other docstrings.
 """
-const COMMON_DOC = "Common docstring:"
+const _COMMON_DOC = "Common docstring:"
 
 """
-$COMMON_DOC the arguments to `DrWatson`-style directory functions.
+$_COMMON_DOC the arguments to `DrWatson`-style directory functions.
 """
-const DRWATSON_ARGS_DOC = """
+const _ARG_DRWATSON = """
 # Arguments
 - `args...`: the string directories to append to the directory.
 """
 
 """
-$COMMON_DOC config filename argument.
+$_COMMON_DOC config filename argument.
 """
 const ARG_CONFIG_FILE = """
 - `config_file::AbstractString`: the config file name as a string.
 """
 
 """
-$COMMON_DOC config dictionary argument.
+$_COMMON_DOC config dictionary argument.
 """
 const ARG_CONFIG_DICT = """
 - `config::ConfigDict`: the config parameters as a dictionary.
 """
 
 """
-$COMMON_DOC argument for a split ratio `p`.
+$_COMMON_DOC argument for a split ratio `p`.
 """
 const ARG_P = """
 - `p::Float`: kwarg, the split ratio ∈ `(0, 1)`, default $(DEFAULT_P).
 """
 
 """
-$COMMON_DOC argument for a training dataset shuffle flag.
+$_COMMON_DOC argument for a training dataset shuffle flag.
 """
 const ARG_SHUFFLE = """
 - `shuffle::Bool`: flag for shuffling the data, default $(DEFAULT_SHUFFLE).
 """
 
 """
-$COMMON_DOC argument for an existing `Plots.Plot` object to plot atop.
+$_COMMON_DOC argument for an existing `Plots.Plot` object to plot atop.
 """
 const ARG_PLOT = """
 - `p::Plots.Plot`: an existing `Plots.Plot` object.
 """
 
 """
-$COMMON_DOC argument for a file name.
+$_COMMON_DOC argument for a file name.
 """
 const ARG_FILENAME = """
 - `filename::AbstractString`: the full file path as a string.
 """
 
 """
-$COMMON_DOC argument for a directory function
+$_COMMON_DOC argument for a directory function
 """
 const ARG_SIM_DIR_FUNC = """
 - `dir_func::Function`: the function that provides the correct file path with provided strings.
 """
 
 """
-$COMMON_DOC argument for the simulation options dictionary.
+$_COMMON_DOC argument for the simulation options dictionary.
 """
 const ARG_SIM_D = """
 - `d::AbstractDict`: the simulation options dictionary.
 """
 
 """
-$COMMON_DOC argument for additional simulation options.
+$_COMMON_DOC argument for additional simulation options.
 """
 const ARG_SIM_OPTS = """
 - `opts::AbstractDict`: additional options for the simulation.
 """
 
 """
-$COMMON_DOC argument for [`DataSplit`](@ref).
+$_COMMON_DOC argument for [`DataSplit`](@ref).
 """
 const ARG_DATASPLIT = """
 - `data::DataSplit`: a [`DataSplit`](@ref) container of a supervised train/test split.
 """
 
 """
-$COMMON_DOC argument for [`SupervisedDataset`](@ref).
+$_COMMON_DOC argument for [`SupervisedDataset`](@ref).
 """
 const ARG_SUPERVISEDDATASET = """
 - `data::SupervisedDataset`: a [`SupervisedDataset`](@ref) containing samples and their labels.
 """
 
 """
-$COMMON_DOC argument for the number of classes.
+$_COMMON_DOC argument for the number of classes.
 """
 const ARG_N_CLASS = """
 - `n_class::Int=0`: the true number of classes (if known).
 """
 
 """
-$COMMON_DOC argument for an index parameter.
+$_COMMON_DOC argument for an index parameter.
 """
 const ARG_INDEX = """
 - `index::Int`: the element index.
 """
 
 """
-$COMMON_DOC argument for input data of arbitrary dimension.
+$_COMMON_DOC argument for input data of arbitrary dimension.
 """
 const ARG_X = """
 - `x::RealArray`: the input data.
 """
 
 """
-$COMMON_DOC argument for a [`MultiHeadField`](@ref).
+$_COMMON_DOC argument for a [`MultiHeadField`](@ref).
 """
 const ARG_MULTIHEADFIELD = """
 - `field::MultiHeadField`: the [`MultiHeadField`](@ref) object.
 """
 
 """
-$COMMON_DOC argument for a [`DeepHeadART`](@ref).
+$_COMMON_DOC argument for a [`DeepHeadART`](@ref).
 """
 const ARG_DEEPHEADART = """
 - `art::DeepHeadART`: the [`DeepHeadART`](@ref) module.
 """
 
 """
-$COMMON_DOC argument for an `ARTModule`.
+$_COMMON_DOC argument for an `ARTModule`.
 """
 const ART_ARG_DOCSTRING = """
 - `art::ARTModule`: the ARTModule module.
 """
 
 """
-$COMMON_DOC argument for a sample 'x'.
+$_COMMON_DOC argument for a sample 'x'.
 """
 const X_ARG_DOCSTRING = """
 - `x::RealVector`: the input sample vector to use.
 """
 
 """
-$COMMON_DOC argument for a label 'y'.
+$_COMMON_DOC argument for a label 'y'.
 """
 const ARG_Y = """
 - `y::Integer`: the label for the input sample.
 """
 
 """
-$COMMON_DOC argument for a weight vector 'W'.
+$_COMMON_DOC argument for a weight vector 'W'.
 """
 const W_ARG_DOCSTING = """
 - `W::RealVector`: the weight vector to use.
 """
 
 """
-$COMMON_DOC shared arguments string for methods using an ART module, sample 'x', and weight vector 'W'.
+$_COMMON_DOC shared arguments string for methods using an ART module, sample 'x', and weight vector 'W'.
 """
 const ART_X_W_ARGS = """
 # Arguments
@@ -216,35 +216,35 @@ $(W_ARG_DOCSTING)
 """
 
 """
-$COMMON_DOC argument for a [`CommonARTModule`](@ref).
+$_COMMON_DOC argument for a [`CommonARTModule`](@ref).
 """
 const ARG_COMMONARTMODULE = """
 - `art::CommonARTModule`: the [`CommonARTModule`](@ref) model.
 """
 
 """
-$COMMON_DOC argument for a [`DeepARTModule`](@ref) for training or testing.
+$_COMMON_DOC argument for a [`DeepARTModule`](@ref) for training or testing.
 """
 const ARG_DEEPARTMODULE = """
 - `art::DeepARTModule`: the [`DeepARTModule`](@ref) model.
 """
 
 """
-$COMMON_DOC argument for task-incremental data splits implemented as a [`ClassIncrementalDataSplit`](@ref).
+$_COMMON_DOC argument for task-incremental data splits implemented as a [`ClassIncrementalDataSplit`](@ref).
 """
 const ARG_TIDATA = """
 - `tidata::ClassIncrementalDataSplit`: the task-incremental data split.
 """
 
 """
-$COMMON_DOC argument for the number of training samples to use.
+$_COMMON_DOC argument for the number of training samples to use.
 """
 const ARG_N_TRAIN = """
 - `n_train::Integer`: the number of training iterations.
 """
 
 """
-$COMMON_DOC argument for the number of testing samples to use.
+$_COMMON_DOC argument for the number of testing samples to use.
 """
 const ARG_N_TEST = """
 - `n_test::Integer`: the number of testing iterations.

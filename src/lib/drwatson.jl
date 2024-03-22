@@ -15,7 +15,7 @@ This file extends DrWatson workflow functionality such as by adding additional c
 """
 Points to the work directory containing raw datasets, processed datasets, and results.
 
-$DRWATSON_ARGS_DOC
+$_ARG_DRWATSON
 """
 function work_dir(args...)
     return projectdir("work", args...)
@@ -27,7 +27,7 @@ end
 """
 Points to the results directory.
 
-$DRWATSON_ARGS_DOC
+$_ARG_DRWATSON
 """
 function results_dir(args...)
     return work_dir("results", args...)
@@ -39,7 +39,7 @@ end
 """
 Points to the data directory.
 
-$DRWATSON_ARGS_DOC
+$_ARG_DRWATSON
 """
 function data_dir(args...)
     return work_dir("data", args...)
@@ -51,7 +51,7 @@ end
 """
 Points to the configs directory.
 
-$DRWATSON_ARGS_DOC
+$_ARG_DRWATSON
 """
 function config_dir(args...)
     return work_dir("configs", args...)
@@ -63,7 +63,7 @@ end
 """
 `DrWatson`-style paper results directory.
 
-$DRWATSON_ARGS_DOC
+$_ARG_DRWATSON
 """
 function paper_results_dir(args...)
     return joinpath(
@@ -83,7 +83,7 @@ end
 """
 `DrWatson`-style configs results directory.
 
-$DRWATSON_ARGS_DOC
+$_ARG_DRWATSON
 """
 function configs_dir(args...)
     # return work_dir("configs", args...)
