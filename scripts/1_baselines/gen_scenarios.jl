@@ -1,3 +1,10 @@
+"""
+    gen_scenarios.jl
+
+# Description
+Generates all scenarios for the DeepART condensed learning scenarios.
+"""
+
 using Revise
 using DeepART
 
@@ -20,7 +27,6 @@ all_data["cifar100_coarse"] = DeepART.get_cifar100_coarse(
 all_data["omniglot"] = DeepART.get_omniglot(
     flatten=true,
 )
-
 
 # Inspect the number of unique labels in each dataset
 ["$key => $(length(unique(data.train.y)))" for (key, data) in all_data]

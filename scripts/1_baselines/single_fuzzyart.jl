@@ -105,7 +105,6 @@ DeepART.tt_inc!(
 # L2 METRICS
 # -----------------------------------------------------------------------------
 
-using AdaptiveResonance
 using PythonCall
 
 # -----------------------------------------------------------------------------
@@ -117,8 +116,23 @@ PythonCall.Py(T::AbstractDict) = pydict(T)
 PythonCall.Py(T::AbstractVector) = pylist(T)
 PythonCall.Py(T::Symbol) = pystr(String(T))
 
-# l2logger = Ref{PythonCall.Py}()
+l2logger = Ref{PythonCall.Py}()
 l2logger[] = PythonCall.pyimport("l2logger.l2logger")
+
+l2l = PythonCall.pyimport("l2logger.l2logger")
+
+for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
+    for scenario_dir in readdir(dir, join=true)
+        # @info scenario_dir
+        DeepART.full_scenario(tidata, scenario_dir, l2l)
+        # for file in read_dir(scenario_dir)
+        #     if occursin("l2metrics", file)
+        #         # @info joinpath(scenario_dir, file)
+        #         # l2l.l2metrics(joinpath(scenario_dir, file))
+        #     end
+        # end
+    end
+end
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST

@@ -319,7 +319,8 @@ function train_test!(
     # model::T,
     data::DataSplit,
     opts::Dict,
-) where T <: Flux.Chain
+)
+# ) where T <: Flux.Chain
     # Get the number of classes
     n_classes = length(unique(data.train.y))
 

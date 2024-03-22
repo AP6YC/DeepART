@@ -21,5 +21,5 @@ include("experience.jl")
 # Scenario and experience definitions
 include("scenario.jl")
 
-# # Agent definitions that depend on scenario definitions
-# include("agents.jl")
+# Agent definitions that depend on scenario definitions
+include("agents.jl")

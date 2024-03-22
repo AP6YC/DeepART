@@ -273,16 +273,18 @@ function run_scenario(
     return
 end
 
-# Why on Earth isn't this included in the PythonCall package?
-PythonCall.Py(T::AbstractDict) = pydict(T)
-PythonCall.Py(T::AbstractVector) = pylist(T)
-PythonCall.Py(T::Symbol) = pystr(String(T))
+# # Why on Earth isn't this included in the PythonCall package?
+# PythonCall.Py(T::AbstractDict) = pydict(T)
+# PythonCall.Py(T::AbstractVector) = pylist(T)
+# PythonCall.Py(T::Symbol) = pystr(String(T))
 
 function full_scenario(
     # data::DSIC,
     # data::VectoredData,
     data::ClassIncrementalDataSplit,
-    exp_dir::AbstractString=DeepART.config_dir("l2")
+    # exp_dir::AbstractString=DeepART.config_dir("l2")
+    exp_dir::AbstractString,
+    l2logger::PythonCall.Py,
 )
     # Load the config and scenario
     # config = DeepART.json_load(DeepART.config_dir("l2", data_key, "config.json"))
@@ -295,41 +297,44 @@ function full_scenario(
     scenario_info["input_file"] = scenario
 
     # Instantiate the data logger
-    data_logger = l2logger[].DataLogger(
+    # data_logger = l2logger[].DataLogger(
+    data_logger = l2logger.DataLogger(
         config["DIR"],
         config["NAME"],
         config["COLS"],     # This one right here, officer
         scenario_info,
     )
 
-    # Create the DDVFA options for both initialization and logging
-    opts = opts_DDVFA(
-        # DDVFA options
-        gamma = 5.0,
-        gamma_ref = 1.0,
-        # rho=0.45,
-        rho_lb = 0.45,
-        rho_ub = 0.7,
-        similarity = :single,
-        display = false,
-    )
+    # TODO
 
-    # Instantiate the art module
-    local_art = DDVFA(opts)
+    # # Create the DDVFA options for both initialization and logging
+    # opts = opts_DDVFA(
+    #     # DDVFA options
+    #     gamma = 5.0,
+    #     gamma_ref = 1.0,
+    #     # rho=0.45,
+    #     rho_lb = 0.45,
+    #     rho_ub = 0.7,
+    #     similarity = :single,
+    #     display = false,
+    # )
 
-    # Infer the data dimension
-    dim = size(data.train.x[1])[1]
+    # # Instantiate the art module
+    # local_art = DDVFA(opts)
 
-    # Specify the input data configuration
-    local_art.config = DataConfig(0, 1, dim)
+    # # Infer the data dimension
+    # dim = size(data.train.x[1])[1]
 
-    # Construct the agent from the scenario
-    agent = DeepART.Agent(
-        local_art,
-        opts,
-        scenario,
-    )
+    # # Specify the input data configuration
+    # local_art.config = DataConfig(0, 1, dim)
 
-    # Run the scenario for this dataset
-    DeepART.run_scenario(agent, data, data_logger)
+    # # Construct the agent from the scenario
+    # agent = DeepART.Agent(
+    #     local_art,
+    #     opts,
+    #     scenario,
+    # )
+
+    # # Run the scenario for this dataset
+    # DeepART.run_scenario(agent, data, data_logger)
 end
