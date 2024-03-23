@@ -273,8 +273,6 @@ end
 # PythonCall.Py(T::Symbol) = pystr(String(T))
 
 function full_scenario(
-    # data::DSIC,
-    # data::VectoredData,
     data::ClassIncrementalDataSplit,
     # exp_dir::AbstractString=DeepART.config_dir("l2")
     exp_dir::AbstractString,

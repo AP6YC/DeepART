@@ -169,8 +169,8 @@ end
 """
 Loads the Omniglot dataset using MLDatasets.
 """
-function get_omniglot(
-    ;flatten::Bool=false,
+function get_omniglot(;
+    flatten::Bool=false,
 )
     trainset = MLDatasets.Omniglot(:train)
     testset = MLDatasets.Omniglot(:test)
@@ -186,7 +186,36 @@ function get_omniglot(
 
     if flatten
         dataset = flatty(dataset)
+    else
+        X_train = reshape(dataset.train.x, 105, 105, 1, :)
+        X_test = reshape(dataset.test.x, 105, 105, 1, :)
+        dataset = DataSplit(X_train, y_train, X_test, y_test)
     end
+
+    return dataset
+end
+
+function get_usps(;
+    flatten::Bool=false,
+)
+    # Load the train and test datasets locally
+    train = transpose(load_dataset(data_dir("usps/train.csv")))
+    test = transpose(load_dataset(data_dir("usps/test.csv")))
+
+    X_train = train[1:end-1, 2:end]
+    y_train = Int.(train[end, 2:end])
+
+    X_test = test[1:end-1, 2:end]
+    y_test = Int.(test[end, 2:end])
+
+    # Opposite of flatten operation since the dataset is already flat
+    if !flatten
+        X_train = reshape(X_train, 16, 16, 1, :)
+        X_test = reshape(X_test, 16, 16, 1, :)
+    end
+
+    # Create a DataSplit
+    dataset = DataSplit(X_train, y_train, X_test, y_test)
 
     return dataset
 end

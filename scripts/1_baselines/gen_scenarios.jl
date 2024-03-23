@@ -27,6 +27,9 @@ all_data["cifar100_coarse"] = DeepART.get_cifar100_coarse(
 all_data["omniglot"] = DeepART.get_omniglot(
     flatten=true,
 )
+all_data["usps"] = DeepART.get_usps(
+    flatten=true,
+)
 
 # Inspect the number of unique labels in each dataset
 ["$key => $(length(unique(data.train.y)))" for (key, data) in all_data]
