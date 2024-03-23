@@ -87,10 +87,12 @@ Options container for a [`INSTART`](@ref) module.
     # conv::Bool = false
 end
 
+const ARTStats = Dict{String, Any}
+
 """
 Stateful information of an INSTART model.
 """
-mutable struct INSTART{T <: Flux.Chain, U <: Flux.Chain}
+mutable struct INSTART{T <: Flux.Chain, U <: Flux.Chain} <: DeepARTModule
     """
     The shared model.
     """
@@ -134,29 +136,12 @@ mutable struct INSTART{T <: Flux.Chain, U <: Flux.Chain}
     """
     The statistics dictionary for logging.
     """
-    stats::Dict{String, Any}
+    stats::ARTStats
 end
 
 # -----------------------------------------------------------------------------
 # CONSTRUCTORS
 # -----------------------------------------------------------------------------
-
-"""
-Keyword argument constructor for a [`INSTART`](@ref) module passing the keyword arguments to the [`opts_INSTART`](@ref) for the module.
-
-# Arguments
-- `kwargs...`: the options keyword arguments.
-"""
-function INSTART(model; kwargs...)
-    # Create the options from the keyword arguments
-    opts = opts_INSTART(;kwargs...)
-
-    # Instantiate and return a constructed module
-    return INSTART(
-        model,
-        opts,
-    )
-end
 
 function get_hypersphere_head(head_dim, weights=nothing)
     head = if isnothing(weights)
@@ -236,6 +221,24 @@ function INSTART(
         Vector{Float}(undef, 0),        # M
         Vector{Int}(undef, 0),          # n_instance
         0,                              # n_categories
+        ARTStats(),                     # stats
+    )
+end
+
+"""
+Keyword argument constructor for a [`INSTART`](@ref) module passing the keyword arguments to the [`opts_INSTART`](@ref) for the module.
+
+# Arguments
+- `kwargs...`: the options keyword arguments.
+"""
+function INSTART(model; kwargs...)
+    # Create the options from the keyword arguments
+    opts = opts_INSTART(;kwargs...)
+
+    # Instantiate and return a constructed module
+    return INSTART(
+        model,
+        opts,
     )
 end
 

@@ -24,7 +24,7 @@ theme(:dracula)
 # -----------------------------------------------------------------------------
 
 # N_TRAIN = 10000
-N_TRAIN = 1000
+N_TRAIN = 2000
 N_TEST = 1000
 N_BATCH = 128
 # N_BATCH = 1
@@ -72,7 +72,7 @@ model = Flux.@autosize (n_input,) Chain(
 )
 
 art = DeepART.INSTART(
-    model,
+    model;
     trainables = [1,2,3,4],
     activations = [1,3,5,7],
     head_dim=head_dim,
@@ -85,7 +85,6 @@ art = DeepART.INSTART(
 
 # Train/test
 p = DeepART.tt_basic!(art, fdata, n_train, n_test)
-
 
 # -----------------------------------------------------------------------------
 # BASIC TRAIN/TEST
@@ -106,15 +105,22 @@ model = Flux.@autosize (n_input,) Chain(
     Dense(_, 64, sigmoid, bias=false),
     DeepART.CC(),
     Dense(_, head_dim, sigmoid, bias=false),
-
     # Dense(_, head_dim, bias=false),
     # softmax,
-
     # Dense(_, n_classes, sigmoid),
     # sigmoid,
     # softmax,
 )
-
+# model = Flux.@autosize (n_input,) Chain(
+#     DeepART.CC(),
+#     DeepART.Fuzzy(_, 256, sigmoid),
+#     DeepART.CC(),
+#     DeepART.Fuzzy(_, 128, sigmoid),
+#     DeepART.CC(),
+#     DeepART.Fuzzy(_, 64, sigmoid),
+#     DeepART.CC(),
+#     DeepART.Fuzzy(_, head_dim, sigmoid),
+# )
 
 art = DeepART.INSTART(
     model,
@@ -135,9 +141,9 @@ art = DeepART.INSTART(
 )
 
 
-# dev_xf = fdata.train.x[:, 1]
+dev_xf = fdata.train.x[:, 1]
 # prs = Flux.params(art.model)
-# acts = Flux.activations(model, dev_xf)
+acts = Flux.activations(model, dev_xf)
 
 # Train/test
 p = DeepART.tt_basic!(art, fdata, n_train, n_test)

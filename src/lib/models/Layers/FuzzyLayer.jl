@@ -59,8 +59,10 @@ end
 # -----------------------------------------------------------------------------
 
 # struct Dense{F, M<:AbstractMatrix, B}
-struct Fuzzy{M<:AbstractMatrix}
+# struct Fuzzy{M<:AbstractMatrix}
+struct Fuzzy{F, M<:AbstractMatrix}
     weight::M
+    activation::F
 end
 
 # function Fuzzy(
@@ -71,11 +73,15 @@ end
 # end
 
 function Fuzzy(
-    in::Integer, out::Integer;
+    in::Integer, out::Integer,
     # init = Flux.glorot_uniform
+    activation=identity;
     init = Flux.rand32
 )
-    Fuzzy(init(out, in))
+    Fuzzy(
+        init(out, in),
+        activation,
+    )
 end
 
 Flux.@layer Fuzzy
@@ -83,8 +89,6 @@ Flux.@layer Fuzzy
 # function linear_normalization(x, W)
 #     return norm(min.(x, W), 1) / (1e-3 + norm(W, 1))
 # end
-
-const ALPHA = 1e-3
 
 function (a::Fuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
@@ -94,8 +98,18 @@ function (a::Fuzzy)(x::AbstractVecOrMat)
     # _weight = complement_code(a.weight')
     # _x = complement_code(xT)
     _weight = a.weight'
-    _x = xT
-    return norm(min.(_x, _weight), 1) / (ALPHA + norm(_weight, 1))
+    # _x = xT
+    _x = repeat(xT, 1, size(_weight, 2))
+
+    xw_norm = sum(abs.(min.(_x, _weight)), dims=1)
+    # @info "sizes: $(size(_x)) $(size(_weight))"
+
+    w_norm = sum(abs.(_weight), dims=1)
+    M = a.activation(vec(xw_norm ./ (ALPHA .+ w_norm)))
+    # T = a.activation(vec(xw_norm ./ size(_weight, 1) ./ 2))
+    # return T
+    return M
+    # return norm(min.(_x, _weight), 1) / (ALPHA + norm(_weight, 1))
 end
 
 function (a::Fuzzy)(x::AbstractArray)
