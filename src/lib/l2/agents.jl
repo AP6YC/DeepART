@@ -303,6 +303,9 @@ function full_scenario(
 
     # TODO
 
+    # Finally close the logger
+    data_logger.close()
+
     # # Create the DDVFA options for both initialization and logging
     # opts = opts_DDVFA(
     #     # DDVFA options

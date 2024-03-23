@@ -22,7 +22,9 @@ work/**
 # Except for the gitkeeps in these subfolders
 !work/*/.gitkeep
 # Except for the existing data folder
-!work/data/
+!work/data/**
+# Except for the USPS data folder
+# !work/data/usps/**
 
 # -----------------------------------------------------------------------------
 # JULIA GITHUB TEMPLATE IGNORES
