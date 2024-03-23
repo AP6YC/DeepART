@@ -26,9 +26,10 @@ l2l = PythonCall.pyimport("l2logger.l2logger")
 top_dir = DeepART.results_dir("l2metrics", "scenarios")
 for scenario_top_dir in readdir(top_dir)
     scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)
-    # ti_data =
+    # ti_data = DeepART.load_one_dataset(scenario_top_dir)
+    data = DeepART.load_one_dataset(scenario_top_dir)
+    data = DeepART.ClassIncrementalDataSplit(data)
     for scenario_dir in readdir(dir, join=true)
-
         # Run the scenario
         DeepART.full_scenario(
             tidata,

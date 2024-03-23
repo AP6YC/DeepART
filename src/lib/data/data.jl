@@ -296,7 +296,7 @@ const DATA_PACKAGE_NAMES = [
     "wine",
 ]
 
-function load_datapackage_dataset(
+function load_data_package_dataset(
     name::AbstractString;
     shuffle::Bool=true,
     p::Float=0.8,
