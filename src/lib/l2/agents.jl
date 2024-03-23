@@ -105,8 +105,9 @@ Overload of the show function for [`Agent`](@ref).
 function Base.show(io::IO, agent::Agent)
 # function Base.show(io::IO, ::MIME"text/plain", agent::DDVFAAgent)
     # compact = get(io, :compact, false)
-    print(io, "--- Agent with options:\n")
+    print(io, "--- Agent{$(typeof(agent.agent))}:\n")
     # print(io, agent.agent.opts)
+    print(io, "\n--- Params: \n")
     print(io, agent.params)
     print(io, "\n--- Scenario: \n")
     print(io, agent.scenario)
@@ -272,7 +273,25 @@ end
 # PythonCall.Py(T::AbstractVector) = pylist(T)
 # PythonCall.Py(T::Symbol) = pystr(String(T))
 
+
+"""
+Runs a full scenario for a given dataset.
+
+A CommonARTModule here needs to have:
+- incremental_supervised_train!(...)
+- incremental_classify(...)
+- stats["M"] and stats["T"] for ART match and activation.
+
+# Arguments
+- `art::CommonARTModule`: the ART module to use.
+- `opts`: the options used to create the ART module.
+- `data::ClassIncrementalDataSplit`: the data to use.
+- `exp_dir::AbstractString`: the directory to containing the config and scenario files for each permutation.
+- `l2logger::PythonCall.Py`: the l2logger Python library module, used for instantiating the specific `DataLogger` itself here.
+"""
 function full_scenario(
+    art::CommonARTModule,
+    opts,
     data::ClassIncrementalDataSplit,
     # exp_dir::AbstractString=DeepART.config_dir("l2")
     exp_dir::AbstractString,
@@ -299,11 +318,6 @@ function full_scenario(
     # @info config
     @info scenario
 
-    # TODO
-
-    # Finally close the logger
-    data_logger.close()
-
     # # Create the DDVFA options for both initialization and logging
     # opts = opts_DDVFA(
     #     # DDVFA options
@@ -325,13 +339,19 @@ function full_scenario(
     # # Specify the input data configuration
     # local_art.config = DataConfig(0, 1, dim)
 
-    # # Construct the agent from the scenario
-    # agent = DeepART.Agent(
-    #     local_art,
-    #     opts,
-    #     scenario,
-    # )
+    # Construct the agent from the scenario
+    agent = DeepART.Agent(
+        art,
+        opts,
+        scenario,
+    )
+    @inof agent
 
     # # Run the scenario for this dataset
     # DeepART.run_scenario(agent, data, data_logger)
+
+    # Finally close the logger
+    data_logger.close()
+
+    return
 end

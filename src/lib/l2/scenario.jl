@@ -351,6 +351,7 @@ function gen_scenario_from_group(
         "difficulty" => "2-medium",
         # "scenario_type" => "custom",
         "scenario_type" => "condensed",
+        "dataset" => key,
         "task-orders" => task_name_string,
     )
 

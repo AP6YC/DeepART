@@ -22,8 +22,13 @@ PythonCall.Py(T::Symbol) = pystr(String(T))
 # l2logger[] = PythonCall.pyimport("l2logger.l2logger")
 l2l = PythonCall.pyimport("l2logger.l2logger")
 
-for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
+# for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
+top_dir = DeepART.results_dir("l2metrics", "scenarios")
+for scenario_top_dir in readdir(top_dir)
+    scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)
+    # ti_data =
     for scenario_dir in readdir(dir, join=true)
+
         # Run the scenario
         DeepART.full_scenario(
             tidata,

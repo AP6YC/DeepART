@@ -226,13 +226,110 @@ Loads a dataset from a local file.
 # Arguments
 - `filename::AbstractString`: the location of the file to load with a default value.
 """
-function load_dataset(
+function load_dataset_file(
     filename::AbstractString,
 )
     # Load the data
     data = readdlm(filename, ',', header=false)
 
     return data
+end
+
+"""
+Constructs a [`DataSplit`](@ref) from an existing dataset.
+
+This assumes that the last column is the labels and all others are features.
+
+# Arguments
+- `dataset::AbstractMatrix`: the dataset to split.
+$ARG_SHUFFLE
+$ARG_P
+"""
+function DataSplit(
+    dataset::AbstractMatrix;
+    shuffle::Bool=true,
+    p::Float=0.8,
+)
+    # Assume that the last column is the labels, all others are features
+    n_features = size(dataset)[2] - 1
+
+    # Get the features and labels (Float32 precision for Flux dense networks)
+    features = Matrix{FluxFloat}(dataset[:, 1:n_features]')
+    labels = Vector{Int}(dataset[:, end])
+
+    # Create and return a DataSplit
+    DataSplit(
+        features,
+        labels,
+        shuffle=shuffle,
+        p=p,
+    )
+end
+
+const DATA_DISPATCH = Dict(
+    "mnist" => get_mnist,
+    "cifar10" => get_cifar10,
+    "cifar100_fine" => get_cifar100_fine,
+    "cifar100_coarse" => get_cifar100_coarse,
+    "omniglot" => get_omniglot,
+    "usps" => get_usps,
+    # "CBB-R15" => get_data_package_dataset,
+)
+
+const DATA_PACKAGE_NAMES = [
+    "CBB-Aggregation",
+    "CBB-Aggregation",
+    "CBB-Compound",
+    "CBB-flame",
+    "CBB-jain",
+    "CBB-pathbased",
+    "CBB-R15",
+    "CBB-spiral",
+    "face",
+    "flag",
+    "halfring",
+    "iris",
+    "moon",
+    "ring",
+    "spiral",
+    "wave",
+    "wine",
+]
+
+function load_datapackage_dataset(
+    name::AbstractString;
+    shuffle::Bool=true,
+    p::Float=0.8,
+)
+    # Load the dataset from file
+    local_data = load_dataset_file(
+        data_dir("data-package", "$(name).csv")
+    )
+
+    # Construct and return a DataSplit
+    return DataSplit(
+        local_data,
+        shuffle=shuffle,
+        p=p,
+    )
+end
+
+"""
+Loads a single dataset by name, dispatching accordingly.
+
+# Arguments
+- `name::AbstractString`: the name of the dataset to load.
+- `args...`: additional arguments to pass to the dataset loading function.
+"""
+function load_one_dataset(name::AbstractString; kwargs...)
+    # If the name is in the datasets function dispatch map
+    if name in keys(DATA_DISPATCH)
+        return DATA_DISPATCH[name](;kwargs...)
+    elseif name in DATA_PACKAGE_NAMES
+        return load_data_package_dataset(name; kwargs...)
+    else
+        error("The dataset name $(name) is not set up.")
+    end
 end
 
 """
@@ -248,37 +345,19 @@ function load_all_datasets(
     shuffle::Bool=true,
     p::Float=0.8,
 )
-    # Walk the directory
-    data = Dict{String, Any}()
-    for (root, _, files) in walkdir(topdir)
-        # Iterate over all of the files
-        for file in files
-            # Get the full filename for the current data file
-            filename = joinpath(root, file)
-            data_name = splitext(file)[1]
-            data[data_name] = load_dataset(filename)
-            # @info typeof(data[data_name])
-        end
-    end
-
-    # Turn each dataset into a SupervisedDataset
+    # Initialize the output data splits dictionary
     data_splits = Dict{String, DataSplit}()
-    for (name, dataset) in data
-        # Assume that the last column is the labels, all others are features
-        n_features = size(dataset)[2] - 1
 
-        # Get the features and labels (Float32 precision for Flux dense networks)
-        features = Matrix{FluxFloat}(dataset[:, 1:n_features]')
-        labels = Vector{Int}(dataset[:, end])
-        # Create a DataSplit
-        data_splits[name] = DataSplit(
-            features,
-            labels,
+    # Iterate over all of the files
+    for file in readdir(topdir)
+        # Get the filename for the current data file
+        data_name = splitext(file)[1]
+        data_splits[data_name] = load_datapackage_dataset(
+            data_name,
             shuffle=shuffle,
             p=p,
         )
     end
 
-    # return data
     return data_splits
 end
