@@ -178,8 +178,8 @@ function evaluate_agent!(
     dataset_index = name_map[experience.task_name]
     datum_index = experience.seq_nums.task_num
 
-    # @info datum_index
-    # @info experience
+    # @info experience.task_name
+    # @info data.train[dataset_index]
     # @info experience.seq_nums
 
     # If we are updating the model, run the training function
@@ -371,11 +371,6 @@ function full_scenario(
     # Construct a dataset from the grouping
     # tidata = TaskIncrementalDataSplit(data, groupings)
     tidata, name_map = L2TaskIncrementalDataSplit(data, groupings)
-
-    # @info length(tidata.train[1].y)
-    @info "STUFF: " agent
-    # @info tidata.train
-    # @info name_map
 
     # # Run the scenario for this dataset
     DeepART.run_scenario(

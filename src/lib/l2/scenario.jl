@@ -443,10 +443,8 @@ function gen_scenarios(
         group_size = grouping_dict["group_size"]
         groupings = gen_random_groupings(datasplit, group_size, n_max)
         # Otherwise, generate all of the permutations, assuming one class per task
-        # @info "GROUPING FROM RANDOM"
     else
         groupings = gen_permutation_groupings(datasplit)
-        # @info "groupings from permutations"
     end
 
     cidata = DeepART.ClassIncrementalDataSplit(datasplit)
