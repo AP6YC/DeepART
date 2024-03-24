@@ -6,8 +6,8 @@ Aggregates the experiment files.
 # INCLUDES
 # -----------------------------------------------------------------------------
 
-# Common types and functions for all experiments
-include("common.jl")
+# # Common types and functions for all experiments
+# include("common.jl")
 
 # Incremental train/test functions and overloads
 include("incremental.jl")

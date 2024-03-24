@@ -306,8 +306,8 @@ function gen_scenario_from_group(
     cidata::ClassIncrementalDataSplit,
     order::Vector{Vector{Int}},
 )
-    # @info key cidata order
-    # @info length(cidata.train) length(cidata.test)
+    # @info key cidata order length(cidata.train) length(cidata.test)
+
     # Create a task-incremental data split according to the prescribed task/class order
     tidata = DeepART.TaskIncrementalDataSplit(cidata, order)
 
@@ -382,7 +382,7 @@ function gen_scenario_from_group(
     # -----------------------------------------------------------------
 
     # Init the global block number incrementer
-    block_num = 0
+    block_num = 1
     # Build the scenario vector
     SCENARIO = []
     for ix = 1:n_tasks

@@ -200,11 +200,11 @@ function tt_inc!(
     # Task-incremental training
     train_inc!(art, tidata, n_train)
 
-    # Get the number of testing samples
-    l_n_test = min(n_test, length(data.test.y))
+    # # Get the number of testing samples
+    # l_n_test = min(n_test, length(data.test.y))
 
     # Test
-    y_hats = basic_test(art, data, l_n_test)
+    y_hats = basic_test(art, data, n_test)
 
     # Compute the performance fromt the test results
     perf = get_perf(art, data, y_hats, n_test)

@@ -19,3 +19,6 @@ include("ClassIncrementalDataSplit.jl")
 
 # Dataset loaders
 include("data.jl")
+
+# Common functions for post-processing
+include("post-common.jl")

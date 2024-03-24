@@ -32,11 +32,58 @@ function text_targets_to_ints(
     return [target_map[t] for t in targets]
 end
 
+function get_x_subset(
+    x::AbstractArray,
+    n_samples::Integer=IInf,
+)
+    # Fragile, but it works for now
+    l_n_dim=ndims(x)
+    local_features = if l_n_dim == 4
+        x[:, :, :, 1:n_samples]
+    elseif l_n_dim == 3
+        x[:, :, 1:n_samples]
+    elseif l_n_dim == 2
+        x[:, 1:n_samples]
+    end
+
+    return local_features
+end
+
+function get_y_subset(
+    y::AbstractArray,
+    n_samples::Integer=IInf,
+)
+    l_n_dim = ndims(y)
+    local_labels = if l_n_dim == 2
+        y[:, 1:n_samples]
+    else
+        y[1:n_samples]
+    end
+
+    return local_labels
+end
+
+function get_data_subset(
+    data::DataSplit;
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
+)
+    return DataSplit(
+        get_x_subset(data.train.x, n_train),
+        get_y_subset(data.train.y, n_train),
+        get_x_subset(data.test.x, n_test),
+        get_y_subset(data.test.y, n_test),
+    )
+end
+
 """
 Loads the MNIST dataset using MLDatasets.
 """
 function get_mnist(;
     flatten::Bool=false,
+    gray::Bool=false,       # MNIST is already grayscale
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     trainset = MLDatasets.MNIST(:train)
     testset = MLDatasets.MNIST(:test)
@@ -46,6 +93,17 @@ function get_mnist(;
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
+
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
 
     if flatten
         dataset = flatty(dataset)
@@ -60,6 +118,8 @@ Loads the CIFAR10 dataset using MLDatasets.
 function get_cifar10(;
     flatten::Bool=false,
     gray::Bool=false,
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     trainset = MLDatasets.CIFAR10(:train)
     testset = MLDatasets.CIFAR10(:test)
@@ -75,6 +135,17 @@ function get_cifar10(;
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
 
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
+
     if flatten
         dataset = flatty(dataset)
     end
@@ -88,6 +159,8 @@ Loads the fine CIFAR100 dataset using MLDatasets.
 function get_cifar100_fine(;
     flatten::Bool=false,
     gray::Bool=false,
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     trainset = MLDatasets.CIFAR100(:train)
     testset = MLDatasets.CIFAR100(:test)
@@ -106,6 +179,17 @@ function get_cifar100_fine(;
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
 
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
+
     if flatten
         dataset = flatty(dataset)
     end
@@ -119,6 +203,8 @@ Loads the coarse CIFAR100 dataset using MLDatasets.
 function get_cifar100_coarse(;
     flatten::Bool=false,
     gray::Bool=false,
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     trainset = MLDatasets.CIFAR100(:train)
     testset = MLDatasets.CIFAR100(:test)
@@ -137,6 +223,17 @@ function get_cifar100_coarse(;
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
 
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
+
     if flatten
         dataset = flatty(dataset)
     end
@@ -149,6 +246,9 @@ Loads the FashionMNIST dataset using MLDatasets.
 """
 function get_fashionmnist(;
     flatten::Bool=false,
+    gray::Bool=false,       # FashionMNIST is already grayscale
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     trainset = MLDatasets.FashionMNIST(:train)
     testset = MLDatasets.FashionMNIST(:test)
@@ -158,6 +258,17 @@ function get_fashionmnist(;
 
     dataset = DataSplit(X_train, y_train.+1, X_test, y_test.+1)
     # dataset = tensorize_datasplit(dataset)
+
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
 
     if flatten
         dataset = flatty(dataset)
@@ -171,6 +282,9 @@ Loads the Omniglot dataset using MLDatasets.
 """
 function get_omniglot(;
     flatten::Bool=false,
+    gray::Bool=false,       # Omniglot is already grayscale
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     trainset = MLDatasets.Omniglot(:train)
     testset = MLDatasets.Omniglot(:test)
@@ -181,7 +295,13 @@ function get_omniglot(;
     y_train = text_targets_to_ints(y_train)
     y_test = text_targets_to_ints(y_test)
 
-    dataset = DataSplit(X_train, y_train, X_test, y_test)
+    dataset = DataSplit(
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+    )
+
     # dataset = tensorize_datasplit(dataset)
 
     if flatten
@@ -192,21 +312,35 @@ function get_omniglot(;
         dataset = DataSplit(X_train, y_train, X_test, y_test)
     end
 
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
+
     return dataset
 end
 
 function get_usps(;
     flatten::Bool=false,
+    gray::Bool=false,       # USPS is already grayscale
+    n_train::Integer=IInf,
+    n_test::Integer=IInf,
 )
     # Load the train and test datasets locally
     train = transpose(load_dataset_file(data_dir("usps/train.csv")))
     test = transpose(load_dataset_file(data_dir("usps/test.csv")))
 
     X_train = train[1:end-1, 2:end]
-    y_train = Int.(train[end, 2:end])
+    y_train = Int.(train[end, 2:end]) .+ 1
 
     X_test = test[1:end-1, 2:end]
-    y_test = Int.(test[end, 2:end])
+    y_test = Int.(test[end, 2:end]) .+ 1
 
     # Opposite of flatten operation since the dataset is already flat
     if !flatten
@@ -216,6 +350,17 @@ function get_usps(;
 
     # Create a DataSplit
     dataset = DataSplit(X_train, y_train, X_test, y_test)
+
+    # Get a subset of the data if necessary
+    if (n_train != IInf) || (n_test != IInf)
+        l_n_train = min(n_train, length(y_train))
+        l_n_test = min(n_test, length(y_test))
+        dataset = get_data_subset(
+            dataset,
+            n_train=l_n_train,
+            n_test=l_n_test,
+        )
+    end
 
     return dataset
 end
@@ -268,6 +413,7 @@ end
 
 const DATA_DISPATCH = Dict(
     "mnist" => get_mnist,
+    "fashionmnist" => get_fashionmnist,
     "cifar10" => get_cifar10,
     "cifar100_fine" => get_cifar100_fine,
     "cifar100_coarse" => get_cifar100_coarse,

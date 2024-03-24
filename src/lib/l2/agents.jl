@@ -175,12 +175,11 @@ function evaluate_agent!(
     #     data.train.labels,
     #     experience.task_name
     # )
-    dataset_index = name_map[experience.task_name]
-    datum_index = experience.seq_nums.task_num
 
-    # @info experience.task_name
-    # @info data.train[dataset_index]
-    # @info experience.seq_nums
+    # Get the index of the task from the task name
+    dataset_index = name_map[experience.task_name]
+    # Get the index of the datum from the sequence number
+    datum_index = experience.seq_nums.task_num
 
     # If we are updating the model, run the training function
     if experience.update_model
@@ -265,6 +264,9 @@ function run_scenario(
     while !is_complete(agent)
         # Get the next experience
         exp = popfirst!(agent.scenario.queue)
+        # @info "exp: " exp
+        # @info "next: " first(agent.scenario.queue)
+
         # Get the current sequence number
         # cur_seq = exp.seq_nums
         # Logging
@@ -272,6 +274,7 @@ function run_scenario(
             # (:Block, cur_seq.block_num),
             (:Block, exp.seq_nums.block_num),
             (:Type, exp.block_type),
+            (:NCat, agent.agent.n_categories),
         ])
         # Evaluate the agent on the experience
         results = evaluate_agent!(
@@ -368,6 +371,7 @@ function full_scenario(
 
     # Extract the groupings order from the config file
     groupings = string_to_orders(config["META"]["task-orders"])
+
     # Construct a dataset from the grouping
     # tidata = TaskIncrementalDataSplit(data, groupings)
     tidata, name_map = L2TaskIncrementalDataSplit(data, groupings)
@@ -376,7 +380,7 @@ function full_scenario(
     DeepART.run_scenario(
         agent,
         name_map,
-        data,
+        tidata,
         data_logger,
     )
 

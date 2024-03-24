@@ -24,6 +24,9 @@ include("docstrings.jl")
 # DrWatson added functionality
 include("drwatson.jl")
 
+# # Common types and functions for all experiment code
+# include("common.jl")
+
 # Datasets and their utilities
 include("data/lib.jl")
 
