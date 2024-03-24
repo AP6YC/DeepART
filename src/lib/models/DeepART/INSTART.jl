@@ -87,8 +87,6 @@ Options container for a [`INSTART`](@ref) module.
     # conv::Bool = false
 end
 
-const ARTStats = Dict{String, Any}
-
 """
 Stateful information of an INSTART model.
 """
@@ -221,7 +219,8 @@ function INSTART(
         Vector{Float}(undef, 0),        # M
         Vector{Int}(undef, 0),          # n_instance
         0,                              # n_categories
-        ARTStats(),                     # stats
+        # ARTStats(),                     # stats
+        build_art_stats(),
     )
 end
 
@@ -410,20 +409,19 @@ function train!(
     if isempty(art.heads)
         y_hat = supervised ? y : 1
         initialize!(art, x, y=y_hat)
-
-        art.stats["M"] = 0.0
-        art.stats["T"] = 0.0
+        # art.stats["M"] = 0.0
+        # art.stats["T"] = 0.0
 
         return y_hat
     end
 
     acts = Flux.activations(art.model, x)
     MT = [head(acts[end]) for head in art.heads]
-    M = [m[1] for m in MT]
-    T = [m[2] for m in MT]
+    art.M = [m[1] for m in MT]
+    art.T = [m[2] for m in MT]
 
     # Sort activation function values in descending order
-    index = sortperm(T, rev=true)
+    index = sortperm(art.T, rev=true)
 
     # Initialize mismatch as true
     mismatch_flag = true
@@ -433,7 +431,7 @@ function train!(
         # Best matching unit
         bmu = index[j]
         # Vigilance check - pass
-        if M[bmu] >= art.opts.rho
+        if art.M[bmu] >= art.opts.rho
             # If supervised and the label differed, force mismatch
             if supervised && (art.labels[bmu] != y)
                 break
@@ -454,8 +452,8 @@ function train!(
             # No mismatch
             mismatch_flag = false
 
-            art.stats["M"] = M[bmu]
-            art.stats["T"] = T[bmu]
+            # art.stats["M"] = M[bmu]
+            # art.stats["T"] = T[bmu]
 
             break
         end
@@ -466,16 +464,15 @@ function train!(
         # Keep the bmu as the top activation despite creating a new category
         bmu = index[1]
 
-        art.stats["M"] = M[bmu]
-        art.stats["T"] = T[bmu]
-
         # Get the correct label for the new category
         y_hat = supervised ? y : art.n_categories + 1
         # Create a new category
         create_category!(art, x, y_hat)
     end
 
-    # return T, M
+    # Update the stored match and activation values
+    log_art_stats!(art, bmu, mismatch_flag)
+
     return y_hat
 end
 
@@ -492,8 +489,8 @@ function classify(
     # T = [basic_match(art, f1, f2[ix]) for ix in eachindex(f2)]
     acts = Flux.activations(art.model, x)
     MT = [head(acts[end]) for head in art.heads]
-    M = [m[1] for m in MT]
-    T = [m[2] for m in MT]
+    art.M = [m[1] for m in MT]
+    art.T = [m[2] for m in MT]
 
     # Sort activation function values in descending order
     index = sortperm(T, rev=true)
@@ -508,7 +505,7 @@ function classify(
         bmu = index[jx]
 
         # Vigilance check - pass
-        if M[bmu] >= art.opts.rho
+        if art.M[bmu] >= art.opts.rho
             # Current winner
             y_hat = art.labels[bmu]
             mismatch_flag = false

@@ -24,7 +24,7 @@ theme(:dracula)
 # -----------------------------------------------------------------------------
 
 # N_TRAIN = 10000
-N_TRAIN = 2000
+N_TRAIN = 4000
 N_TEST = 1000
 N_BATCH = 128
 # N_BATCH = 1
@@ -173,24 +173,92 @@ DeepART.plot_confusion_matrix(
 #     paper=false,
 # )
 
+
+# -----------------------------------------------------------------------------
+# SFAM INSTART
+# -----------------------------------------------------------------------------
+
+# F2 layer size
+# head_dim = 256
+# head_dim = 512
+head_dim = 2048
+
+# Model definition
+model = Flux.@autosize (n_input,) Chain(
+    DeepART.CC(),
+    Dense(_, 256, sigmoid, bias=false),
+    # Dense(_, 128, sigmoid, bias=false),
+    DeepART.CC(),
+    # Dense(_, 128, sigmoid, bias=false),
+    # DeepART.CC(),
+    # Dense(_, 64, sigmoid, bias=false),
+    # DeepART.CC(),
+    Dense(_, head_dim, sigmoid, bias=false),
+)
+
+art = DeepART.ARTINSTART(
+    model,
+    head_dim=head_dim,
+    # beta=0.1,
+    beta=0.1,
+    rho=0.5,
+    update="art",
+    # head="fuzzy",
+    softwta=true,
+    # uncommitted=true,
+    gpu=GPU,
+)
+
+dev_xf = fdata.train.x[:, 1]
+prs = Flux.params(art.model)
+acts = Flux.activations(model, dev_xf)
+
+# Train/test
+# results = DeepART.tt_basic!(art, fdata, n_train, n_test)
+results = DeepART.tt_basic!(art, fdata, 6000, 2000)
+
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "basic_confusion",
+    ["bp_instar"],
+)
+
 # -----------------------------------------------------------------------------
 # CONVOLUTIONAL
 # -----------------------------------------------------------------------------
 
-# size_tuple = (28, 28, 1, 1)
-# conv_model = Flux.@autosize (size_tuple,) Chain(
-#     DeepART.CCConv(),
-#     Conv((5,5), _=>6, relu),
-#     MaxPool((2,2)),
-#     BatchNorm(_),
-#     Flux.flatten,
-#     Dense(_=>15,relu),
-#     Dense(15=>10,sigmoid),
-#     # softmax
-# )
+size_tuple = (28, 28, 1, 1)
+conv_model = Flux.@autosize (size_tuple,) Chain(
+    DeepART.CCConv(),
+    Chain(
+        Conv((5,5), _=>6, sigmoid, bias=false),
+        MaxPool((2,2)),
+    ),
+    DeepART.CCConv(),
+    Chain(
+        Conv((5,5), _=>6, sigmoid, bias=false),
+        MaxPool((2,2)),
+        Flux.flatten,
+    ),
+    # BatchNorm(_),
+    DeepART.CC(),
+    Chain(
+        Dense(_, head_dim, sigmoid, bias=false),
+    ),
+    # Dense(15=>10, sigmoid),
+    # Flux.flatten,
+    # Dense(_=>15,relu),
+    # Dense(15=>10,sigmoid),
+    # softmax
+)
 
-# dev_x = reshape(data.train.x[:,:,1], size_tuple)
-# conv_model(dev_x)
+dev_conv_x = reshape(data.train.x[:,:,1], size_tuple)
+# conv_model(dev_conv_x)
+acts_conv = Flux.activations(conv_model, dev_conv_x)
+prs_conv = Flux.params(conv_model)
 # conv_model[1](dev_x)
 # GPU && model |> gpu
 

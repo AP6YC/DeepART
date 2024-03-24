@@ -16,3 +16,6 @@ include("DeepHeadART.jl")
 
 # Deep instar learning
 include("INSTART.jl")
+
+# Deep instar learning with existing ART module as head
+include("ARTINSTART.jl")

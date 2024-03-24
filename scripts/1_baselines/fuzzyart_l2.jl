@@ -29,7 +29,6 @@ PythonCall.Py(T::AbstractDict) = pydict(T)
 PythonCall.Py(T::AbstractVector) = pylist(T)
 PythonCall.Py(T::Symbol) = pystr(String(T))
 
-
 # l2logger = Ref{PythonCall.Py}()
 # l2logger[] = PythonCall.pyimport("l2logger.l2logger")
 l2l = PythonCall.pyimport("l2logger.l2logger")
@@ -73,11 +72,15 @@ for scenario_top_dir in readdir(top_dir)
     global data = DeepART.ClassIncrementalDataSplit(data)
 
     # Create the FuzzyART model
-    opts_fuzzyart = DeepART.ART.opts_FuzzyART(
+    # opts_fuzzyart = DeepART.ART.opts_FuzzyART(
+    #     rho=0.6,
+    #     display=true,
+    # )
+    # art = DeepART.ART.FuzzyART(opts_fuzzyart)
+    opts = DeepART.ART.opts_SFAM(
         rho=0.6,
-        display=true,
     )
-    art = DeepART.ART.FuzzyART(opts_fuzzyart)
+    art = DeepART.ART.SFAM(opts)
     art.config = DeepART.ART.DataConfig(0, 1, size(data.train[1].x, 1))
 
     # Iterate over the scenarios
@@ -85,7 +88,7 @@ for scenario_top_dir in readdir(top_dir)
         # Run the scenario
         DeepART.full_scenario(
             art,
-            opts_fuzzyart,
+            opts,
             data,
             scenario_dir,
             l2l,

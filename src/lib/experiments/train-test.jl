@@ -24,14 +24,25 @@ function basic_train!(
 )
     # Get the number of training samples
     l_n_train = get_n(n_train, data.train)
+    @info "TRAINING $l_n_train samples"
 
     # Iterate over the training samples
-    pr = Progress(n_train; desc="Task-Homogenous Training")
+    pr = Progress(
+        l_n_train;
+        desc="Task-Homogenous Training",
+    )
     for ix = 1:l_n_train
+        # Get the current sample and label
         xf = data.train.x[:, ix]
         label = data.train.y[ix]
+
+        # Train on the individual sample and label
         incremental_supervised_train!(art, xf, label)
-        next!(pr)
+
+        # Loop logging
+        next!(pr; showvalues=[
+            (:NCat, art.n_categories),
+        ])
     end
 end
 
@@ -53,7 +64,7 @@ function basic_test(
 
     # Get the estimates on the test data
     y_hats = Vector{Int}()
-    pr = Progress(n_test; desc="Task-Homogenous Testing")
+    pr = Progress(l_n_test; desc="Task-Homogenous Testing")
     for ix = 1:l_n_test
         xf = data.test.x[:, ix]
         # y_hat = DeepART.classify(art, xf, get_bmu=true)
@@ -97,7 +108,7 @@ function train_inc!(
         l_n_train = get_n(n_train, tidata.train[ix])
 
         # Incrementally train over the current task's training data
-        pr = Progress(n_train; desc="Task-Incremental Training: Task $(ix)")
+        pr = Progress(l_n_train; desc="Task-Incremental Training: Task $(ix)")
         for jx = 1:l_n_train
             # Get the current sample and label
             xf = task_x[:, jx]
