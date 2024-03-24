@@ -315,8 +315,6 @@ function full_scenario(
         config["COLS"],     # This one right here, officer
         scenario_info,
     )
-    @info config
-    # @info scenario
 
     # # Create the DDVFA options for both initialization and logging
     # opts = opts_DDVFA(
@@ -339,14 +337,19 @@ function full_scenario(
     # # Specify the input data configuration
     # local_art.config = DataConfig(0, 1, dim)
 
-    # # Construct the agent from the scenario
-    # agent = DeepART.Agent(
-    #     art,
-    #     opts,
-    #     scenario,
-    # )
-    # @inof agent
+    # Construct the agent from the scenario
+    agent = DeepART.Agent(
+        art,
+        opts,
+        scenario,
+    )
+    # @info agent
 
+    @info config["META"]["task-orders"]
+    groupings = string_to_orders(config["META"]["task-orders"])
+
+    tidata = TaskIncrementalDataSplit(data, groupings)
+    @info tidata.train
     # # Run the scenario for this dataset
     # DeepART.run_scenario(agent, data, data_logger)
 

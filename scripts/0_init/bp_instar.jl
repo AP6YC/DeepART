@@ -84,7 +84,7 @@ art = DeepART.INSTART(
 )
 
 # Train/test
-p = DeepART.tt_basic!(art, fdata, n_train, n_test)
+results = DeepART.tt_basic!(art, fdata, n_train, n_test)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(

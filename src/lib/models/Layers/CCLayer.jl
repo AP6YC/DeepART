@@ -16,7 +16,8 @@ function CC()
 end
 
 function complement_code_conv(x)
-    cat(x, 1.0 .- x, dims=3)
+    # cat(x, Float32(1.0) .- x, dims=3)
+    cat(x, one(Float32) .- x, dims=3)
 end
 
 function CCConv()
