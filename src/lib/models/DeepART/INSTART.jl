@@ -52,16 +52,6 @@ Options container for a [`INSTART`](@ref) module.
     """
     gpu::Bool = false
 
-    # """
-    # List of the layer entries with trainable weights.
-    # """
-    # trainables::Vector{Int} = [1, 3, 5]
-
-    # """
-    # The activations indices to use.
-    # """
-    # activations::Vector{Int} = [1, 3, 5]
-
     """
     Update method ∈ ["art", "instar"].
     """
@@ -76,15 +66,6 @@ Options container for a [`INSTART`](@ref) module.
     Head layer type ∈ ["fuzzy", "hypersphere"].
     """
     head::String = "fuzzy"
-    # """
-    # Flux activation function.
-    # """
-    # activation_function::Function = relu
-
-    # """
-    # Flag for if the model is convolutional.
-    # """
-    # conv::Bool = false
 end
 
 """
@@ -141,7 +122,10 @@ end
 # CONSTRUCTORS
 # -----------------------------------------------------------------------------
 
-function get_hypersphere_head(head_dim, weights=nothing)
+"""
+Constructs a HypersphereART head node.
+"""
+function get_hypersphere_head(head_dim::Integer, weights=nothing)
     head = if isnothing(weights)
         Flux.@autosize (head_dim,) Chain(
             Flux.identity,
@@ -158,7 +142,10 @@ function get_hypersphere_head(head_dim, weights=nothing)
     return head
 end
 
-function get_fuzzy_head(head_dim, weights=nothing)
+"""
+Constructs a FuzzyART head node with complement coding preprocessing.
+"""
+function get_fuzzy_head(head_dim::Integer, weights=nothing)
     head = if isnothing(weights)
         Flux.@autosize (head_dim,) Chain(
             DeepART.CC(),
@@ -206,6 +193,7 @@ function INSTART(
     # Create the heads
     heads = Vector{Flux.Chain}()
 
+    # Push the models to the GPU if the option is used
     opts.gpu && model |> gpu
     opts.gpu && heads |> gpu
 
@@ -219,8 +207,7 @@ function INSTART(
         Vector{Float}(undef, 0),        # M
         Vector{Int}(undef, 0),          # n_instance
         0,                              # n_categories
-        # ARTStats(),                     # stats
-        build_art_stats(),
+        build_art_stats(),              # stats
     )
 end
 
@@ -245,24 +232,33 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
+"""
+Basic FuzzyART learning rule.
+"""
 function art_learn_basic(x, W, beta)
     return beta .* min.(x, W) + W .* (1.0 .- beta)
 end
 
+"""
+FuzzyART learning rule casting a vector input to a matrix of weights.
+"""
 function art_learn_cast(x, W, beta)
+    # Get the size of the weights
     Wy, Wx = size(W)
+    # Repeat the input across the categories dimension of the weights
     _x = repeat(x', Wy, 1)
+    # Do the same for the beta value, but across the outputs dimension
     _beta = if !isempty(size(beta))
         repeat(beta, 1, Wx)
     else
         beta
     end
-    # @info "presizes:" Wy Wx
-    # @info "sizes:" size(_x) size(W) size(_beta)
-    # return beta * min.(_x, W) + W * (1.0 - beta)
     return art_learn_basic(_x, W, _beta)
 end
 
+"""
+FuzzyART learning modification for networks using custom CC-SimpleFuzzy head layers.
+"""
 function art_learn_head(xf, head, beta)
     W = Flux.params(head[2])[1]
     _x = head[1](xf)
@@ -271,65 +267,65 @@ function art_learn_head(xf, head, beta)
     return
 end
 
-function learn_model(art::INSTART, xf)
-    weights = Flux.params(art.model)
-    acts = Flux.activations(art.model, xf)
+# function learn_model(art::INSTART, xf)
+#     weights = Flux.params(art.model)
+#     acts = Flux.activations(art.model, xf)
 
-    n_layers = length(weights)
-    # trainables = [weights[jx] for jx = 1:2:n_layers]
-    # ins = [acts[jx] for jx = 1:2:n_layers]
-    # outs = [acts[jx] for jx = 2:2:n_layers]
+#     n_layers = length(weights)
+#     # trainables = [weights[jx] for jx = 1:2:n_layers]
+#     # ins = [acts[jx] for jx = 1:2:n_layers]
+#     # outs = [acts[jx] for jx = 2:2:n_layers]
 
-    # trainables = [weights[jx] for jx = 1:n_layers]
-    # outs = [acts[jx] for jx = 2:n_layers+1]
-    # ins = [acts[jx] for jx = 1:n_layers]
+#     # trainables = [weights[jx] for jx = 1:n_layers]
+#     # outs = [acts[jx] for jx = 2:n_layers+1]
+#     # ins = [acts[jx] for jx = 1:n_layers]
 
-    # trainables = [weights[jx] for jx in art.opts.trainables]
-    # ins = [acts[jx] for jx = art.opts.activations]
-    # outs = [acts[jx] for jx = art.opts.activations .+ 1]
+#     # trainables = [weights[jx] for jx in art.opts.trainables]
+#     # ins = [acts[jx] for jx = art.opts.activations]
+#     # outs = [acts[jx] for jx = art.opts.activations .+ 1]
 
-    trainables = weights
-    ins = [acts[jx] for jx = 1:2:(n_layers*2)]
-    outs = [acts[jx] for jx = 2:2:(n_layers*2)]
+#     trainables = weights
+#     ins = [acts[jx] for jx = 1:2:(n_layers*2)]
+#     outs = [acts[jx] for jx = 2:2:(n_layers*2)]
 
-    # for ix in eachindex(ins)
-    for ix = 1:n_layers
-        # @info "sizes:" size(ins[ix]) size(outs[ix]) size(trainables[ix])
-        if art.opts.update == "art"
-            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
-            local_beta = if art.opts.softwta == true
-                # art.opts.beta .* (1 .- outs[ix])
-                art.opts.beta .* Flux.softmax(
-                    outs[ix],
-                )
-                # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
-            else
-                art.opts.beta
-            end
-            trainables[ix] .= DeepART.art_learn_cast(
-                ins[ix],
-                trainables[ix],
-                local_beta,
-            )
-        elseif art.opts.update == "instar"
-            trainables[ix] .+= DeepART.instar(
-                ins[ix],
-                outs[ix],
-                trainables[ix],
-                art.opts.beta,
-            )
-        else
-            error("Invalid update method: $(art.opts.update)")
-        end
-    end
+#     # for ix in eachindex(ins)
+#     for ix = 1:n_layers
+#         # @info "sizes:" size(ins[ix]) size(outs[ix]) size(trainables[ix])
+#         if art.opts.update == "art"
+#             # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+#             local_beta = if art.opts.softwta == true
+#                 # art.opts.beta .* (1 .- outs[ix])
+#                 art.opts.beta .* Flux.softmax(
+#                     outs[ix],
+#                 )
+#                 # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
+#             else
+#                 art.opts.beta
+#             end
+#             trainables[ix] .= DeepART.art_learn_cast(
+#                 ins[ix],
+#                 trainables[ix],
+#                 local_beta,
+#             )
+#         elseif art.opts.update == "instar"
+#             trainables[ix] .+= DeepART.instar(
+#                 ins[ix],
+#                 outs[ix],
+#                 trainables[ix],
+#                 art.opts.beta,
+#             )
+#         else
+#             error("Invalid update method: $(art.opts.update)")
+#         end
+#     end
 
-    # for ix in eachindex(trainables)
-        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
-    # end
-    # DeepART.instar(xf, acts, model, 0.0001)
+#     # for ix in eachindex(trainables)
+#         # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
+#     # end
+#     # DeepART.instar(xf, acts, model, 0.0001)
 
-    return acts
-end
+#     return acts
+# end
 
 function add_node!(
     art::INSTART,
@@ -411,9 +407,6 @@ function train!(
     if isempty(art.heads)
         y_hat = supervised ? y : 1
         initialize!(art, x, y=y_hat)
-        # art.stats["M"] = 0.0
-        # art.stats["T"] = 0.0
-
         return y_hat
     end
 
@@ -454,9 +447,6 @@ function train!(
             # No mismatch
             mismatch_flag = false
 
-            # art.stats["M"] = M[bmu]
-            # art.stats["T"] = T[bmu]
-
             break
         end
     end
@@ -495,7 +485,7 @@ function classify(
     art.T = [m[2] for m in MT]
 
     # Sort activation function values in descending order
-    index = sortperm(T, rev=true)
+    index = sortperm(art.T, rev=true)
 
     # Default is mismatch
     mismatch_flag = true

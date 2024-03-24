@@ -134,8 +134,6 @@ model = Flux.@autosize (n_input,) Chain(
 
 art = DeepART.INSTART(
     model,
-    # trainables = [1,2,3,4],
-    # activations = [1,3,5,7],
     head_dim=head_dim,
     # beta=0.0001,
     # beta=0.01,
@@ -238,19 +236,22 @@ conv_model = Flux.@autosize (size_tuple,) Chain(
     Chain(
         Conv((5,5), _ => 6, sigmoid, bias=false),
     ),
-    Chain(
-        MaxPool((2,2)),
-        DeepART.CCConv(),
-    ),
-    Chain(
-        Conv((5,5), _ => 6, sigmoid, bias=false),
-    ),
+    # Chain(
+    #     MaxPool((2,2)),
+    #     DeepART.CCConv(),
+    # ),
+    # Chain(
+    #     Conv((5,5), _ => 6, sigmoid, bias=false),
+    # ),
     # BatchNorm(_),
     Chain(
+        # MaxPool((2,2)),
         MaxPool((2,2)),
         Flux.flatten,
         DeepART.CC(),
     ),
+    # Dense(_, 128, sigmoid, bias=false),
+    # DeepART.CC(),
     Chain(
         Dense(_, head_dim, sigmoid, bias=false),
         vec,
@@ -273,33 +274,24 @@ art = DeepART.ARTINSTART(
     gpu=GPU,
 )
 
-dev_conv_x = reshape(data.train.x[:,:,1], size_tuple)
-# conv_model(dev_conv_x)
-acts_conv = Flux.activations(conv_model, dev_conv_x)
-prs_conv = Flux.params(conv_model)
-
-acts_conv |> length
-prs_conv |> length
-
-size(acts_conv[1])
-size(acts_conv[2])
-size(prs_conv[1])
-
-# The complement coded input
-dev_conv_x_cc = DeepART.CCConv()(dev_conv_x)
-# The unfolded input
-xs = Flux.NNlib.unfold(dev_conv_x_cc, size(prs_conv[1]))
-# xs = Flux.NNlib.unfold(dev_conv_x_cc, (5, 5, 2, 1))
-# The averaged inputs
-ins_conv = mean(reshape(xs, :, 5, 5, 2), dims=1)
-# The averaged outputs
-outs_conv = mean(acts_conv[2], dims=(1,2))
-
-
-DeepART.learn_model(art, dev_conv_x)
 results = DeepART.tt_basic!(art, data, 1000, 1000)
 
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "conv_basic_confusion",
+    ["bp_instar"],
+)
 
+a, b, c = rand(3,2), rand(3,2), rand(3,2)
+a[1,1] = 0.1
+w = rand(3,2)
+d = mean(cat(min.(a, w), min.(b, w), min.(c, w), dims=3), dims=3)[:,:,1]
+e = min.(mean(cat(a, b, c, dims=3), dims=3)[:,:,1], w)
+
+d == e
 # outs_conv = Flux.NNlib.fold(acts_conv[2][:,:,:,1], size(acts_conv[2]), size(prs_conv[1]))
 # outs_conv = mean(acts_conv[1], dims=(1,2))
 
@@ -387,8 +379,6 @@ model = Flux.@autosize (n_input,) Chain(
 
 art = DeepART.INSTART(
     model,
-    trainables = [1,2,3,4,5],
-    activations = [1,3,5,7,9],
     head_dim = head_dim,
     # beta = 0.0001, # good, 0.545
     # beta = 0.001,
@@ -404,6 +394,19 @@ art = DeepART.INSTART(
 )
 
 p = DeepART.tt_inc!(art, tidata, fdata, n_train, n_test)
+
+
+
+cidata = DeepART.ClassIncrementalDataSplit(data)
+# cidata = DeepART.ClassIncrementalDataSplit(data)
+# groupings = [collect(1:5), collect(6:10)]
+# groupings = [collect(1:4), collect(5:7), collect(8:10)]
+groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
+tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
+n_tasks = length(tidata.train)
+GPU && tidata |> gpu
+
+p = DeepART.tt_inc!(art, tidata, data, n_train, n_test)
 
 # -----------------------------------------------------------------------------
 # OLD TRAIN/TEST

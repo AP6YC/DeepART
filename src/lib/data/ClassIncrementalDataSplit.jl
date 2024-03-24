@@ -134,7 +134,11 @@ function group_datasets(
 )
     # Cat the features
     # @info "inside group_datasets" group length(data) data
-    local_features = hcat([data[ix].x for ix in group]...)
+    local_features = if ndims(data[1].x) == 4
+        cat([data[ix].x for ix in group]..., dims=4)
+    else
+        hcat([data[ix].x for ix in group]...)
+    end
 
     # If we have one-hot encoded labels, we need to stack them differently
     if ndims(data[1].y) == 2

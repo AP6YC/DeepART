@@ -2,7 +2,7 @@
     ARTINSTART.jl
 
 # Description
-An implementation of a deep instar learning network.
+An implementation of a deep instar learning network with an existing ART module on top.
 """
 
 # -----------------------------------------------------------------------------
@@ -52,16 +52,6 @@ Options container for a [`ARTINSTART`](@ref) module.
     """
     gpu::Bool = false
 
-    # """
-    # List of the layer entries with trainable weights.
-    # """
-    # trainables::Vector{Int} = [1, 3, 5]
-
-    # """
-    # The activations indices to use.
-    # """
-    # activations::Vector{Int} = [1, 3, 5]
-
     """
     Update method ∈ ["art", "instar"].
     """
@@ -71,20 +61,6 @@ Options container for a [`ARTINSTART`](@ref) module.
     Soft WTA update rule flag.
     """
     softwta::Bool = false
-
-    # """
-    # Head layer type ∈ ["fuzzy", "hypersphere"].
-    # """
-    # head::String = "fuzzy"
-    # """
-    # Flux activation function.
-    # """
-    # activation_function::Function = relu
-
-    # """
-    # Flag for if the model is convolutional.
-    # """
-    # conv::Bool = false
 end
 
 """
@@ -105,26 +81,6 @@ mutable struct ARTINSTART{T <: Flux.Chain, U <: ART.ARTModule} <: DeepARTModule
     An [`opts_ARTINSTART`](@ref) options container.
     """
     opts::opts_ARTINSTART
-
-    # """
-    # Incremental list of labels corresponding to each F2 node, self-prescribed or supervised.
-    # """
-    # labels::Vector{Int}
-
-    # """
-    # Activation values for every weight for a given sample.
-    # """
-    # T::Vector{Float}
-
-    # """
-    # Match values for every weight for a given sample.
-    # """
-    # M::Vector{Float}
-
-    # """
-    # Number of weights associated with each category.
-    # """
-    # n_instance::Vector{Int}
 
     """
     Number of category weights (F2 nodes).
@@ -151,25 +107,19 @@ function ARTINSTART(
     model,
     opts::opts_ARTINSTART
 )
-    # Create the heads
-    # heads = Vector{Flux.Chain}()
+    # Create the head
     head = ART.SFAM(
         rho=opts.rho,
     )
     head.config = ART.DataConfig(0.0, 1.0, opts.head_dim)
 
     opts.gpu && model |> gpu
-    # opts.gpu && heads |> gpu
 
     # Construct and return the field
     return ARTINSTART(
         model,
         head,
         opts,
-        # Vector{Int}(undef, 0),
-        # Vector{Float}(undef, 0),        # T
-        # Vector{Float}(undef, 0),        # M
-        # Vector{Int}(undef, 0),          # n_instance
         0,                              # n_categories
         build_art_stats(),
     )
@@ -196,135 +146,110 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
-# function art_learn_basic(x, W, beta)
-#     return beta .* min.(x, W) + W .* (1.0 .- beta)
-# end
-
-# function art_learn_cast(x, W, beta)
-#     Wy, Wx = size(W)
-#     _x = repeat(x', Wy, 1)
-#     _beta = if !isempty(size(beta))
-#         repeat(beta, 1, Wx)
+# function get_beta(art::DeepARTModule, outs::RealArray)
+#     local_beta = if art.opts.softwta == true
+#         # art.opts.beta .* (1 .- outs[ix])
+#         art.opts.beta .* Flux.softmax(
+#             outs,
+#         )
+#         # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
 #     else
-#         beta
+#         art.opts.beta
 #     end
-#     # return beta * min.(_x, W) + W * (1.0 - beta)
-#     return art_learn_basic(_x, W, _beta)
+#     return local_beta
 # end
 
-# function art_learn_head(xf, head, beta)
-#     W = Flux.params(head[2])[1]
-#     _x = head[1](xf)
-#     # W .= beta * min.(_x, W) + W * (1.0 - beta)
-#     W .= art_learn_basic(_x, W, beta)
-#     return
+# function learn_model(art::ARTINSTART, xf)
+#     weights = Flux.params(art.model)
+#     acts = Flux.activations(art.model, xf)
+
+#     n_layers = length(weights)
+
+#     # trainables = weights
+#     ins = [acts[jx] for jx = 1:2:(n_layers*2)]
+#     outs = [acts[jx] for jx = 2:2:(n_layers*2)]
+
+#     # @info "sizes:" n_layers size(ins) size(outs)
+
+#     # for ix in eachindex(ins)
+#     for ix = 1:n_layers
+#         # @info "sizes:" size(ins[ix]) size(outs[ix]) size(trainables[ix])
+#         if art.opts.update == "art"
+#             # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+#             # Get the local learning parameter beta
+#             # local_beta = get_beta(art, outs[ix])
+
+#             # If the layer is a convolution
+#             if ndims(weights[ix]) == 4
+#                 full_size = size(weights[ix])
+#                 n_kernels = full_size[4]
+#                 kernel_shape = full_size[1:3]
+
+#                 unfolded = Flux.NNlib.unfold(ins[ix], full_size)
+#                 local_in = reshape(
+#                     mean(
+#                         reshape(unfolded, :, kernel_shape...),
+#                         dims=1,
+#                     ),
+#                     :
+#                 )
+
+#                 # Get the averaged and reshaped local output
+#                 local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
+#                 # Reshape the weights to be (n_kernels, n_features)
+#                 local_weight = reshape(weights[ix], :, n_kernels)'
+#                 # Get the local learning parameter beta
+#                 local_beta = get_beta(art, local_out)
+#                 # new_weight = DeepART.art_learn_cast(
+#                 #     local_in,
+#                 #     local_weight,
+#                 #     local_beta,
+#                 # )
+#                 # @info sum(new_weight .- local_weight)
+#                 # local_weight .= new_weight
+
+#                 local_weight .= DeepART.art_learn_cast(
+#                     local_in,
+#                     local_weight,
+#                     local_beta,
+#                 )
+#             else
+#                 local_weight = weights[ix]
+#                 local_in = ins[ix]
+#                 local_out = outs[ix]
+#                 local_beta = get_beta(art, local_out)
+
+#                 local_weight .= DeepART.art_learn_cast(
+#                     local_in,
+#                     local_weight,
+#                     local_beta,
+#                 )
+#             end
+
+#             # weights[ix] .= DeepART.art_learn_cast(
+#             #     ins[ix],
+#             #     weights[ix],
+#             #     local_beta,
+#             # )
+#         elseif art.opts.update == "instar"
+#             weights[ix] .+= DeepART.instar(
+#                 ins[ix],
+#                 outs[ix],
+#                 weights[ix],
+#                 art.opts.beta,
+#             )
+#         else
+#             error("Invalid update method: $(art.opts.update)")
+#         end
+#     end
+
+#     # for ix in eachindex(trainables)
+#         # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
+#     # end
+#     # DeepART.instar(xf, acts, model, 0.0001)
+
+#     return acts
 # end
-
-function get_beta(art, outs)
-    local_beta = if art.opts.softwta == true
-        # art.opts.beta .* (1 .- outs[ix])
-        art.opts.beta .* Flux.softmax(
-            outs,
-        )
-        # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
-    else
-        art.opts.beta
-    end
-    return local_beta
-
-end
-
-function learn_model(art::ARTINSTART, xf)
-    weights = Flux.params(art.model)
-    acts = Flux.activations(art.model, xf)
-
-    n_layers = length(weights)
-
-    # trainables = weights
-    ins = [acts[jx] for jx = 1:2:(n_layers*2)]
-    outs = [acts[jx] for jx = 2:2:(n_layers*2)]
-
-    # @info "sizes:" n_layers size(ins) size(outs)
-
-    # for ix in eachindex(ins)
-    for ix = 1:n_layers
-        # @info "sizes:" size(ins[ix]) size(outs[ix]) size(trainables[ix])
-        if art.opts.update == "art"
-            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
-            # Get the local learning parameter beta
-            # local_beta = get_beta(art, outs[ix])
-
-            # If the layer is a convolution
-            if ndims(weights[ix]) == 4
-                full_size = size(weights[ix])
-                n_kernels = full_size[4]
-                kernel_shape = full_size[1:3]
-
-                unfolded = Flux.NNlib.unfold(ins[ix], full_size)
-                local_in = reshape(
-                    mean(
-                        reshape(unfolded, :, kernel_shape...),
-                        dims=1,
-                    ),
-                    :
-                )
-
-                # Get the averaged and reshaped local output
-                local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
-                # Reshape the weights to be (n_kernels, n_features)
-                local_weight = reshape(weights[ix], :, n_kernels)'
-                # Get the local learning parameter beta
-                local_beta = get_beta(art, local_out)
-                # new_weight = DeepART.art_learn_cast(
-                #     local_in,
-                #     local_weight,
-                #     local_beta,
-                # )
-                # @info sum(new_weight .- local_weight)
-                # local_weight .= new_weight
-
-                local_weight .= DeepART.art_learn_cast(
-                    local_in,
-                    local_weight,
-                    local_beta,
-                )
-            else
-                local_weight = weights[ix]
-                local_in = ins[ix]
-                local_out = outs[ix]
-                local_beta = get_beta(art, local_out)
-
-                local_weight .= DeepART.art_learn_cast(
-                    local_in,
-                    local_weight,
-                    local_beta,
-                )
-            end
-
-            # weights[ix] .= DeepART.art_learn_cast(
-            #     ins[ix],
-            #     weights[ix],
-            #     local_beta,
-            # )
-        elseif art.opts.update == "instar"
-            weights[ix] .+= DeepART.instar(
-                ins[ix],
-                outs[ix],
-                weights[ix],
-                art.opts.beta,
-            )
-        else
-            error("Invalid update method: $(art.opts.update)")
-        end
-    end
-
-    # for ix in eachindex(trainables)
-        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
-    # end
-    # DeepART.instar(xf, acts, model, 0.0001)
-
-    return acts
-end
 
 """
 Copies the statistics from the head module to the top of the [`ARTINSTART`](@ref) module.

@@ -122,7 +122,11 @@ function train_inc!(
             incremental_supervised_train!(art, xf, label)
 
             # Update the progress bar
-            next!(pr)
+            # next!(pr)
+            # Loop logging
+            next!(pr; showvalues=[
+                (:NCat, art.n_categories),
+            ])
         end
     end
 end

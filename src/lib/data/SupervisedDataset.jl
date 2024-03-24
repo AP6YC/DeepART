@@ -29,6 +29,19 @@ end
 # -----------------------------------------------------------------------------
 
 """
+Sample getter for a matrix, determining convention depending on the array dimension.
+"""
+function get_sample(mat::AbstractArray, index::Integer)
+    # return mat[:, index]
+    sample = if ndims(mat) == 4
+        reshape(mat[:, :, :, index], size(mat)[1:3]..., 1)
+    else
+        mat[:, index]
+    end
+    return sample
+end
+
+"""
 Returns a feature sample from a [`SupervisedDataset`](@ref) at the provided `index`.
 
 # Arguments
@@ -36,14 +49,7 @@ $ARG_SUPERVISEDDATASET
 $ARG_INDEX
 """
 function get_sample(data::SupervisedDataset, index::Integer)
-    # return data.x[:, index]
-    sample = if ndims(data.x) == 4
-        s_size = size(data.x)
-        reshape(data.x[:, :, :, index], s_size[1:3]..., 1)
-    else
-        data.x[:, index]
-    end
-    return sample
+    return get_sample(data.x, index)
 end
 
 """

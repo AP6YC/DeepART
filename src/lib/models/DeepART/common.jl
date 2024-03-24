@@ -172,3 +172,107 @@ function log_art_stats!(art::DeepARTModule, bmu::Integer, mismatch::Bool)
     # Return empty
     return
 end
+
+
+"""
+Gets the local learning parameter.
+"""
+function get_beta(art::DeepARTModule, outs::RealArray)
+    local_beta = if art.opts.softwta == true
+        # art.opts.beta .* (1 .- outs[ix])
+        art.opts.beta .* Flux.softmax(
+            outs,
+        )
+        # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
+    else
+        art.opts.beta
+    end
+    return local_beta
+end
+
+"""
+Weight update rule for the deep model component of a [`DeepARTModule`](@ref).
+"""
+function learn_model(
+    art::DeepARTModule,
+    xf::RealArray
+)
+    weights = Flux.params(art.model)
+    acts = Flux.activations(art.model, xf)
+
+    n_layers = length(weights)
+
+    # trainables = weights
+    ins = [acts[jx] for jx = 1:2:(n_layers*2)]
+    outs = [acts[jx] for jx = 2:2:(n_layers*2)]
+
+    for ix = 1:n_layers
+        if art.opts.update == "art"
+            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+            # Get the local learning parameter beta
+            # local_beta = get_beta(art, outs[ix])
+
+            # If the layer is a convolution
+            if ndims(weights[ix]) == 4
+                full_size = size(weights[ix])
+                n_kernels = full_size[4]
+                kernel_shape = full_size[1:3]
+
+                unfolded = Flux.NNlib.unfold(ins[ix], full_size)
+                local_in = reshape(
+                    mean(
+                        reshape(unfolded, :, kernel_shape...),
+                        dims=1,
+                    ),
+                    :
+                )
+
+                # Get the averaged and reshaped local output
+                local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
+                # Reshape the weights to be (n_kernels, n_features)
+                local_weight = reshape(weights[ix], :, n_kernels)'
+                # Get the local learning parameter beta
+                local_beta = get_beta(art, local_out)
+
+                local_weight .= DeepART.art_learn_cast(
+                    local_in,
+                    local_weight,
+                    local_beta,
+                )
+            else
+                local_weight = weights[ix]
+                local_in = ins[ix]
+                local_out = outs[ix]
+                local_beta = get_beta(art, local_out)
+
+                local_weight .= DeepART.art_learn_cast(
+                    local_in,
+                    local_weight,
+                    local_beta,
+                )
+            end
+
+            # weights[ix] .= DeepART.art_learn_cast(
+            #     ins[ix],
+            #     weights[ix],
+            #     local_beta,
+            # )
+        elseif art.opts.update == "instar"
+            weights[ix] .+= DeepART.instar(
+                ins[ix],
+                outs[ix],
+                weights[ix],
+                art.opts.beta,
+            )
+        else
+            error("Invalid update method: $(art.opts.update)")
+        end
+    end
+
+    # for ix in eachindex(trainables)
+        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
+    # end
+    # DeepART.instar(xf, acts, model, 0.0001)
+
+    return acts
+end
