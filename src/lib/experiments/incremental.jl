@@ -19,7 +19,7 @@ $ARG_Y
 """
 function incremental_supervised_train!(
     art::ART.ART,
-    x::RealVector,
+    x::RealArray,
     y::Integer,
 )
     return ART.train!(art, x, y=y)
@@ -35,7 +35,7 @@ $ARG_Y
 """
 function incremental_supervised_train!(
     art::ART.ARTMAP,
-    x::RealVector,
+    x::RealArray,
     y::Integer,
 )
     return ART.train!(art, x, y)
@@ -51,7 +51,7 @@ $ARG_Y
 """
 function incremental_supervised_train!(
     art::DeepARTModule,
-    x::RealVector,
+    x::RealArray,
     y::Integer,
 )
     return DeepART.train!(art, x, y=y)
@@ -70,7 +70,7 @@ $X_ARG_DOCSTRING
 """
 function incremental_classify(
     art::ART.ARTModule,
-    x::RealVector,
+    x::RealArray,
 )
     return ART.classify(art, x, get_bmu=true)
 end
@@ -84,7 +84,7 @@ $X_ARG_DOCSTRING
 """
 function incremental_classify(
     art::DeepARTModule,
-    x::RealVector,
+    x::RealArray,
 )
     return DeepART.classify(art, x, get_bmu=true)
 end

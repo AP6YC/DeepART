@@ -107,6 +107,13 @@ function get_mnist(;
 
     if flatten
         dataset = flatty(dataset)
+    else
+        dataset = DataSplit(
+            reshape(dataset.train.x, 28, 28, 1, :),
+            dataset.train.y,
+            reshape(dataset.test.x, 28, 28, 1, :),
+            dataset.test.y,
+        )
     end
 
     return dataset
@@ -364,6 +371,18 @@ function get_usps(;
 
     return dataset
 end
+
+# function get_sample(
+#     data::SupervisedDataset,
+#     index::Integer,
+# )
+#     sample = if ndims(data.x) == 4
+#         data.x[:, :, :, index]
+#     else
+#         data.x[:, index]
+#     end
+#     return sample
+# end
 
 """
 Loads a dataset from a local file.

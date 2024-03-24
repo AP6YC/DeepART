@@ -33,7 +33,8 @@ function basic_train!(
     )
     for ix = 1:l_n_train
         # Get the current sample and label
-        xf = data.train.x[:, ix]
+        # xf = data.train.x[:, ix]
+        xf = get_sample(data.train, ix)
         label = data.train.y[ix]
 
         # Train on the individual sample and label
@@ -66,7 +67,8 @@ function basic_test(
     y_hats = Vector{Int}()
     pr = Progress(l_n_test; desc="Task-Homogenous Testing")
     for ix = 1:l_n_test
-        xf = data.test.x[:, ix]
+        # xf = data.test.x[:, ix]
+        xf = get_sample(data.test, ix)
         # y_hat = DeepART.classify(art, xf, get_bmu=true)
         y_hat = incremental_classify(art, xf)
         push!(y_hats, y_hat)
@@ -111,7 +113,8 @@ function train_inc!(
         pr = Progress(l_n_train; desc="Task-Incremental Training: Task $(ix)")
         for jx = 1:l_n_train
             # Get the current sample and label
-            xf = task_x[:, jx]
+            # xf = task_x[:, jx]
+            xf = get_sample(task_x, jx)
             label = task_y[jx]
 
             # Train the module

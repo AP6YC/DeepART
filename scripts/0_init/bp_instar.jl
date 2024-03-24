@@ -200,8 +200,10 @@ art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
     # beta=0.1,
-    beta=0.1,
-    rho=0.5,
+    # beta=0.5,
+    beta=0.01,
+    # beta=0.0,
+    rho=0.65,
     update="art",
     # head="fuzzy",
     softwta=true,
@@ -215,7 +217,7 @@ acts = Flux.activations(model, dev_xf)
 
 # Train/test
 # results = DeepART.tt_basic!(art, fdata, n_train, n_test)
-results = DeepART.tt_basic!(art, fdata, 6000, 2000)
+results = DeepART.tt_basic!(art, fdata, 1000, 1000)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -234,19 +236,24 @@ size_tuple = (28, 28, 1, 1)
 conv_model = Flux.@autosize (size_tuple,) Chain(
     DeepART.CCConv(),
     Chain(
-        Conv((5,5), _=>6, sigmoid, bias=false),
-        MaxPool((2,2)),
+        Conv((5,5), _ => 6, sigmoid, bias=false),
     ),
-    DeepART.CCConv(),
     Chain(
-        Conv((5,5), _=>6, sigmoid, bias=false),
         MaxPool((2,2)),
-        Flux.flatten,
+        DeepART.CCConv(),
+    ),
+    Chain(
+        Conv((5,5), _ => 6, sigmoid, bias=false),
     ),
     # BatchNorm(_),
-    DeepART.CC(),
+    Chain(
+        MaxPool((2,2)),
+        Flux.flatten,
+        DeepART.CC(),
+    ),
     Chain(
         Dense(_, head_dim, sigmoid, bias=false),
+        vec,
     ),
     # Dense(15=>10, sigmoid),
     # Flux.flatten,
@@ -255,10 +262,65 @@ conv_model = Flux.@autosize (size_tuple,) Chain(
     # softmax
 )
 
+art = DeepART.ARTINSTART(
+    conv_model,
+    head_dim=head_dim,
+    # beta=0.01,
+    beta=0.1,
+    rho=0.65,
+    update="art",
+    softwta=true,
+    gpu=GPU,
+)
+
 dev_conv_x = reshape(data.train.x[:,:,1], size_tuple)
 # conv_model(dev_conv_x)
 acts_conv = Flux.activations(conv_model, dev_conv_x)
 prs_conv = Flux.params(conv_model)
+
+acts_conv |> length
+prs_conv |> length
+
+size(acts_conv[1])
+size(acts_conv[2])
+size(prs_conv[1])
+
+# The complement coded input
+dev_conv_x_cc = DeepART.CCConv()(dev_conv_x)
+# The unfolded input
+xs = Flux.NNlib.unfold(dev_conv_x_cc, size(prs_conv[1]))
+# xs = Flux.NNlib.unfold(dev_conv_x_cc, (5, 5, 2, 1))
+# The averaged inputs
+ins_conv = mean(reshape(xs, :, 5, 5, 2), dims=1)
+# The averaged outputs
+outs_conv = mean(acts_conv[2], dims=(1,2))
+
+
+DeepART.learn_model(art, dev_conv_x)
+results = DeepART.tt_basic!(art, data, 1000, 1000)
+
+
+# outs_conv = Flux.NNlib.fold(acts_conv[2][:,:,:,1], size(acts_conv[2]), size(prs_conv[1]))
+# outs_conv = mean(acts_conv[1], dims=(1,2))
+
+# function get_conv_inputs(image::Array, cdims)
+#     # Convert the 2D image to 4D tensor with dimensions (height, width, channels, batch)
+#     # image_4d = reshape(image, size(image)..., 1, 1)
+
+#     col=similar(image, Flux.NNlib.im2col_dims(cdims))
+#     # Use im2col to transform the image into columns
+#     cols = Flux.NNlib.im2col!(col, image, cdims)
+
+#     # Each column of 'cols' now represents a distinct receptive field of the convolution kernel
+#     # Convert 'cols' back to a 2D array where each column is a vectorized receptive field
+#     # conv_inputs = reshape(cols, :, size(cols, 4))
+#     # return conv_inputs
+#     return cols
+# end
+
+# xs = get_conv_inputs(dev_conv_x, (5,5,2,6))
+
+
 # conv_model[1](dev_x)
 # GPU && model |> gpu
 

@@ -257,6 +257,8 @@ function art_learn_cast(x, W, beta)
     else
         beta
     end
+    # @info "presizes:" Wy Wx
+    # @info "sizes:" size(_x) size(W) size(_beta)
     # return beta * min.(_x, W) + W * (1.0 - beta)
     return art_learn_basic(_x, W, _beta)
 end
