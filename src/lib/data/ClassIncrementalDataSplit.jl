@@ -195,6 +195,32 @@ function TaskIncrementalDataSplit(
     )
 end
 
+"""
+Combines classes in the training and testing datasets of a [`ClassIncrementalDataSplit`](@ref) according to the provided `groupings`.
+
+# Arguments
+- `datasplit::ClassIncrementalDataSplit`: a [`ClassIncrementalDataSplit`](@ref) to combine elements of according to the groupings
+- `groupings::Vector{Vector{Int}}`: the set of groupings to perform.
+$ARG_SHUFFLE
+"""
+function L2TaskIncrementalDataSplit(
+    datasplit::ClassIncrementalDataSplit,
+    groupings::Vector{Vector{Int}};
+    shuffle::Bool=true,
+)
+    # names =
+    dataset = ClassIncrementalDataSplit(
+        task_incrementalize(datasplit.train, groupings, shuffle),
+        task_incrementalize(datasplit.test, groupings, shuffle),
+    )
+    name_map = Dict{String, Int}(
+        # groupings[ix] => ix for ix in 1:length(groupings)
+        suborder_to_string(groupings[ix]) => ix for ix in 1:length(groupings)
+    )
+
+    return dataset, name_map
+end
+
 # -----------------------------------------------------------------------------
 # OVERLOADS
 # -----------------------------------------------------------------------------

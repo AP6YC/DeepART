@@ -82,7 +82,11 @@ Constructor for a [`Agent`](@ref) using the scenario dictionary and optional DDV
 # Arguments
 - `scenario::AbstractDict`: l2logger scenario as a dictionary.
 """
-function Agent(agent, opts, scenario_dict::AbstractDict)
+function Agent(
+    agent,
+    opts,
+    scenario_dict::AbstractDict,
+)
     # Create an agent with an empty queue
     agent = Agent(agent, opts)
     # Initialize the agent's scenario container with the dictionary
@@ -150,6 +154,8 @@ function get_index_from_name(
     return results[1]
 end
 
+# const GroupingMap = Dict{String, Int}
+
 """
 Evaluates a single agent on a single experience, training or testing as needed.
 
@@ -162,21 +168,26 @@ function evaluate_agent!(
     experience::Experience,
     # data::VectoredData,
     data::ClassIncrementalDataSplit,
+    name_map::Dict{String, Int},
 )
     # Disect the experience
-    dataset_index = get_index_from_name(data.train.labels, experience.task_name)
+    # dataset_index = get_index_from_name(
+    #     data.train.labels,
+    #     experience.task_name
+    # )
+    dataset_index = name_map[experience.task_name]
     datum_index = experience.seq_nums.task_num
 
     # If we are updating the model, run the training function
     if experience.update_model
-        sample = data.train.x[dataset_index][:, datum_index]
-        label = data.train.y[dataset_index][datum_index]
+        sample = data.train[dataset_index].x[:, datum_index]
+        label = data.train[dataset_index].y[datum_index]
         # y_hat = AdaptiveResonance.train!(agent.agent, sample, y=label)
         y_hat = incremental_supervised_train!(agent.agent, sample, label)
     # elseif experience.block_type == "test":
     else
-        sample = data.test.x[dataset_index][:, datum_index]
-        label = data.test.y[dataset_index][datum_index]
+        sample = data.test[dataset_index].x[:, datum_index]
+        label = data.test[dataset_index].y[datum_index]
         # y_hat = AdaptiveResonance.classify(agent.agent, sample)
         y_hat = incremental_classify(agent.agent, sample)
     end
@@ -233,6 +244,8 @@ Runs an agent's scenario.
 function run_scenario(
     agent::Agent,
     # data::VectoredData,
+    # groupings,
+    name_map,
     data::ClassIncrementalDataSplit,
     data_logger::PythonCall.Py,
 )
@@ -243,6 +256,7 @@ function run_scenario(
     n_exp = length(agent.scenario.queue)
     # block_log_string = "Block 1"
     p = Progress(n_exp; showspeed=true)
+    @info agent.scenario.queue
     # Iterate while the agent's scenario is incomplete
     while !is_complete(agent)
         # Get the next experience
@@ -256,7 +270,12 @@ function run_scenario(
             (:Type, exp.block_type),
         ])
         # Evaluate the agent on the experience
-        results = evaluate_agent!(agent, exp, data)
+        results = evaluate_agent!(
+            agent,
+            exp,
+            data,
+            name_map,
+        )
 
         # Log the data
         log_data(data_logger, exp, results, agent.params)
@@ -272,7 +291,6 @@ end
 # PythonCall.Py(T::AbstractDict) = pydict(T)
 # PythonCall.Py(T::AbstractVector) = pylist(T)
 # PythonCall.Py(T::Symbol) = pystr(String(T))
-
 
 """
 Runs a full scenario for a given dataset.
@@ -343,15 +361,23 @@ function full_scenario(
         opts,
         scenario,
     )
-    # @info agent
 
-    @info config["META"]["task-orders"]
+    # Extract the groupings order from the config file
     groupings = string_to_orders(config["META"]["task-orders"])
+    # Construct a dataset from the grouping
+    # tidata = TaskIncrementalDataSplit(data, groupings)
+    tidata, name_map = L2TaskIncrementalDataSplit(data, groupings)
 
-    tidata = TaskIncrementalDataSplit(data, groupings)
-    @info tidata.train
+    # @info tidata.train
+    # @info name_map
+
     # # Run the scenario for this dataset
-    # DeepART.run_scenario(agent, data, data_logger)
+    DeepART.run_scenario(
+        agent,
+        name_map,
+        data,
+        data_logger,
+    )
 
     # Finally close the logger
     data_logger.close()

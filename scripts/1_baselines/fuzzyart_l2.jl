@@ -37,7 +37,7 @@ l2l = PythonCall.pyimport("l2logger.l2logger")
 # ALL SCENARIOS
 # -----------------------------------------------------------------------------
 
-# for dir in readdir(DeepART.results_dir("l2metrics", "scenarios"), join=true)
+# Iterate over every scenario top directory
 for scenario_top_dir in readdir(top_dir)
     # Get the full path to the scenario directory
     scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)

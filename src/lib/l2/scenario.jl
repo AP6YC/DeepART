@@ -262,13 +262,21 @@ function gen_random_groupings(
     return [random_grouping(data, group_size) for _ = 1:n_groupings]
 end
 
+function suborder_to_string(
+    suborder::Vector{Int},
+)
+    return join(suborder, "-")
+end
+
+
 """
 Takes an ordering and returns the full string representation.
 """
 function order_to_string(
     order::Vector{Vector{Int}},
 )
-    return join([join(suborder, "-") for suborder in order], "_")
+    # return join([join(suborder, "-") for suborder in order], "_")
+    return join([suborder_to_string(suborder) for suborder in order], "_")
 end
 
 """
@@ -277,7 +285,8 @@ Takes an ordering and returns a vector of the string representations of individu
 function order_to_task_strings(
     order::Vector{Vector{Int}},
 )
-    return [join(suborder, "-") for suborder in order]
+    # return [join(suborder, "-") for suborder in order]
+    return [suborder_to_string(suborder) for suborder in order]
 end
 
 """
