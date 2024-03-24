@@ -306,6 +306,8 @@ function gen_scenario_from_group(
     cidata::ClassIncrementalDataSplit,
     order::Vector{Vector{Int}},
 )
+    # @info key cidata order
+    # @info length(cidata.train) length(cidata.test)
     # Create a task-incremental data split according to the prescribed task/class order
     tidata = DeepART.TaskIncrementalDataSplit(cidata, order)
 
@@ -441,8 +443,10 @@ function gen_scenarios(
         group_size = grouping_dict["group_size"]
         groupings = gen_random_groupings(datasplit, group_size, n_max)
         # Otherwise, generate all of the permutations, assuming one class per task
+        # @info "GROUPING FROM RANDOM"
     else
         groupings = gen_permutation_groupings(datasplit)
+        # @info "groupings from permutations"
     end
 
     cidata = DeepART.ClassIncrementalDataSplit(datasplit)

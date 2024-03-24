@@ -46,7 +46,7 @@ for scenario_top_dir in readdir(top_dir)
     data = DeepART.load_one_dataset(scenario_top_dir)
     # Convert this dataset to its class-incremental version, letting the scenario determine the grouping
     data = DeepART.ClassIncrementalDataSplit(data)
-    @info data
+    # @info data
 
     # Create the FuzzyART model
     opts_fuzzyart = DeepART.ART.opts_FuzzyART(

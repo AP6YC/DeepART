@@ -199,8 +199,8 @@ function get_usps(;
     flatten::Bool=false,
 )
     # Load the train and test datasets locally
-    train = transpose(load_dataset(data_dir("usps/train.csv")))
-    test = transpose(load_dataset(data_dir("usps/test.csv")))
+    train = transpose(load_dataset_file(data_dir("usps/train.csv")))
+    test = transpose(load_dataset_file(data_dir("usps/test.csv")))
 
     X_train = train[1:end-1, 2:end]
     y_train = Int.(train[end, 2:end])
@@ -352,7 +352,7 @@ function load_all_datasets(
     for file in readdir(topdir)
         # Get the filename for the current data file
         data_name = splitext(file)[1]
-        data_splits[data_name] = load_datapackage_dataset(
+        data_splits[data_name] = load_data_package_dataset(
             data_name,
             shuffle=shuffle,
             p=p,

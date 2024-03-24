@@ -178,6 +178,10 @@ function evaluate_agent!(
     dataset_index = name_map[experience.task_name]
     datum_index = experience.seq_nums.task_num
 
+    # @info datum_index
+    # @info experience
+    # @info experience.seq_nums
+
     # If we are updating the model, run the training function
     if experience.update_model
         sample = data.train[dataset_index].x[:, datum_index]
@@ -256,7 +260,7 @@ function run_scenario(
     n_exp = length(agent.scenario.queue)
     # block_log_string = "Block 1"
     p = Progress(n_exp; showspeed=true)
-    @info agent.scenario.queue
+    # @info agent.scenario.queue
     # Iterate while the agent's scenario is incomplete
     while !is_complete(agent)
         # Get the next experience
@@ -368,6 +372,8 @@ function full_scenario(
     # tidata = TaskIncrementalDataSplit(data, groupings)
     tidata, name_map = L2TaskIncrementalDataSplit(data, groupings)
 
+    # @info length(tidata.train[1].y)
+    @info "STUFF: " agent
     # @info tidata.train
     # @info name_map
 

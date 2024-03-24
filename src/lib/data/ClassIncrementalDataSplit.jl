@@ -133,6 +133,7 @@ function group_datasets(
     shuffle::Bool=true,
 )
     # Cat the features
+    # @info "inside group_datasets" group length(data) data
     local_features = hcat([data[ix].x for ix in group]...)
 
     # If we have one-hot encoded labels, we need to stack them differently
@@ -167,7 +168,7 @@ function task_incrementalize(
     shuffle::Bool=true,
 )
     new_data = ClassIncrementalSupervisedDataset()
-
+    # @info groupings
     for group in groupings
         # push!(new_data, SupervisedDataset(local_features, local_labels))
         push!(new_data, group_datasets(data, group, shuffle))
@@ -189,6 +190,12 @@ function TaskIncrementalDataSplit(
     groupings::Vector{Vector{Int}};
     shuffle::Bool=true,
 )
+    # trains = task_incrementalize(datasplit.train, groupings, shuffle)
+    # tests = task_incrementalize(datasplit.test, groupings, shuffle)
+    # return ClassIncrementalDataSplit(
+    #     trains,
+    #     tests,
+    # )
     return ClassIncrementalDataSplit(
         task_incrementalize(datasplit.train, groupings, shuffle),
         task_incrementalize(datasplit.test, groupings, shuffle),
