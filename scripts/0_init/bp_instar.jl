@@ -73,8 +73,8 @@ model = Flux.@autosize (n_input,) Chain(
 
 art = DeepART.INSTART(
     model;
-    trainables = [1,2,3,4],
-    activations = [1,3,5,7],
+    # trainables = [1,2,3,4],
+    # activations = [1,3,5,7],
     head_dim=head_dim,
     beta=0.0,
     rho=0.6,
@@ -85,6 +85,15 @@ art = DeepART.INSTART(
 
 # Train/test
 p = DeepART.tt_basic!(art, fdata, n_train, n_test)
+
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "baseline_confusion",
+    ["bp_instar"],
+)
 
 # -----------------------------------------------------------------------------
 # BASIC TRAIN/TEST
@@ -111,6 +120,7 @@ model = Flux.@autosize (n_input,) Chain(
     # sigmoid,
     # softmax,
 )
+
 # model = Flux.@autosize (n_input,) Chain(
 #     DeepART.CC(),
 #     DeepART.Fuzzy(_, 256, sigmoid),
@@ -124,13 +134,13 @@ model = Flux.@autosize (n_input,) Chain(
 
 art = DeepART.INSTART(
     model,
-    trainables = [1,2,3,4],
-    activations = [1,3,5,7],
+    # trainables = [1,2,3,4],
+    # activations = [1,3,5,7],
     head_dim=head_dim,
     # beta=0.0001,
     # beta=0.01,
     beta=0.1,
-    rho=0.9,
+    rho=0.6,
     # update="instar",
     update="art",
     # head="hypersphere",
@@ -140,20 +150,28 @@ art = DeepART.INSTART(
     gpu=GPU,
 )
 
-
 dev_xf = fdata.train.x[:, 1]
-# prs = Flux.params(art.model)
+prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
 # Train/test
-p = DeepART.tt_basic!(art, fdata, n_train, n_test)
+results = DeepART.tt_basic!(art, fdata, n_train, n_test)
 
-DeepART.saveplot(
-    p,
-    "confusion.png",
-    "instart",
-    paper=false,
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "basic_confusion",
+    ["bp_instar"],
 )
+
+# DeepART.saveplot(
+#     p,
+#     "confusion.png",
+#     "instart",
+#     paper=false,
+# )
 
 # -----------------------------------------------------------------------------
 # CONVOLUTIONAL

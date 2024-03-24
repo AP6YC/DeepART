@@ -52,15 +52,15 @@ Options container for a [`INSTART`](@ref) module.
     """
     gpu::Bool = false
 
-    """
-    List of the layer entries with trainable weights.
-    """
-    trainables::Vector{Int} = [1, 3, 5]
+    # """
+    # List of the layer entries with trainable weights.
+    # """
+    # trainables::Vector{Int} = [1, 3, 5]
 
-    """
-    The activations indices to use.
-    """
-    activations::Vector{Int} = [1, 3, 5]
+    # """
+    # The activations indices to use.
+    # """
+    # activations::Vector{Int} = [1, 3, 5]
 
     """
     Update method ∈ ["art", "instar"].
@@ -246,48 +246,6 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
-# function learn_model(model, xf)
-function learn_model(art::INSTART, xf)
-    # eta = 0.1
-    weights = Flux.params(art.model)
-    acts = Flux.activations(art.model, xf)
-
-    # n_layers = length(weights)
-    # trainables = [weights[jx] for jx = 1:2:n_layers]
-    # ins = [acts[jx] for jx = 1:2:n_layers]
-    # outs = [acts[jx] for jx = 2:2:n_layers]
-
-    trainables = [weights[jx] for jx in art.opts.trainables]
-    ins = [acts[jx] for jx = art.opts.activations]
-    outs = [acts[jx] for jx = art.opts.activations .+ 1]
-
-    for ix in eachindex(ins)
-        #
-        if art.opts.update == "art"
-            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
-            local_beta = if art.opts.softwta == true
-                # art.opts.beta .* (1 .- outs[ix])
-                art.opts.beta .* Flux.softmax(outs[ix])
-                # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
-            else
-                art.opts.beta
-            end
-            trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], local_beta)
-        elseif art.opts.update == "instar"
-            trainables[ix] .+= DeepART.instar(ins[ix], outs[ix], trainables[ix], art.opts.beta)
-        else
-            error("Invalid update method: $(art.opts.update)")
-        end
-    end
-
-    # for ix in eachindex(trainables)
-        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
-    # end
-    # DeepART.instar(xf, acts, model, 0.0001)
-
-    return acts
-end
-
 function art_learn_basic(x, W, beta)
     return beta .* min.(x, W) + W .* (1.0 .- beta)
 end
@@ -300,9 +258,6 @@ function art_learn_cast(x, W, beta)
     else
         beta
     end
-    # @info size(_beta)
-    # @info size(_x)
-    # @info size(W)
     # return beta * min.(_x, W) + W * (1.0 - beta)
     return art_learn_basic(_x, W, _beta)
 end
@@ -313,6 +268,66 @@ function art_learn_head(xf, head, beta)
     # W .= beta * min.(_x, W) + W * (1.0 - beta)
     W .= art_learn_basic(_x, W, beta)
     return
+end
+
+function learn_model(art::INSTART, xf)
+    weights = Flux.params(art.model)
+    acts = Flux.activations(art.model, xf)
+
+    n_layers = length(weights)
+    # trainables = [weights[jx] for jx = 1:2:n_layers]
+    # ins = [acts[jx] for jx = 1:2:n_layers]
+    # outs = [acts[jx] for jx = 2:2:n_layers]
+
+    # trainables = [weights[jx] for jx = 1:n_layers]
+    # outs = [acts[jx] for jx = 2:n_layers+1]
+    # ins = [acts[jx] for jx = 1:n_layers]
+
+    # trainables = [weights[jx] for jx in art.opts.trainables]
+    # ins = [acts[jx] for jx = art.opts.activations]
+    # outs = [acts[jx] for jx = art.opts.activations .+ 1]
+
+    trainables = weights
+    ins = [acts[jx] for jx = 1:2:(n_layers*2)]
+    outs = [acts[jx] for jx = 2:2:(n_layers*2)]
+
+    # for ix in eachindex(ins)
+    for ix = 1:n_layers
+        # @info "sizes:" size(ins[ix]) size(outs[ix]) size(trainables[ix])
+        if art.opts.update == "art"
+            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
+            local_beta = if art.opts.softwta == true
+                # art.opts.beta .* (1 .- outs[ix])
+                art.opts.beta .* Flux.softmax(
+                    outs[ix],
+                )
+                # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
+            else
+                art.opts.beta
+            end
+            trainables[ix] .= DeepART.art_learn_cast(
+                ins[ix],
+                trainables[ix],
+                local_beta,
+            )
+        elseif art.opts.update == "instar"
+            trainables[ix] .+= DeepART.instar(
+                ins[ix],
+                outs[ix],
+                trainables[ix],
+                art.opts.beta,
+            )
+        else
+            error("Invalid update method: $(art.opts.update)")
+        end
+    end
+
+    # for ix in eachindex(trainables)
+        # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)
+    # end
+    # DeepART.instar(xf, acts, model, 0.0001)
+
+    return acts
 end
 
 function add_node!(

@@ -104,57 +104,6 @@ function get_normalized_confusion(
     return norm_cm
 end
 
-function plot_confusion_matrix(
-    y::IntegerVector,
-    y_hat::IntegerVector,
-    class_labels::Vector{String},
-    filename::String,
-    dir_parts::Vector{String},
-    paper::Bool=false;
-    # paper::Bool=false,
-    # save::Bool=true;
-    # show::Bool=true;
-    kwargs...
-)
-    # # Number of classes from the class labels
-    # n_classes = length(class_labels)
-    # # Normalized confusion
-    # norm_cm = get_normalized_confusion(y, y_hat, n_classes)
-
-    # Generate the GUI heatmap
-    p_gui = create_confusion_heatmap(
-        class_labels,
-        y,
-        y_hat;
-        kwargs...
-    )
-
-    # Try to display
-    display(p_gui)
-
-    # Save the GUI heatmap
-    saveplot(
-        p_gui,
-        filename,
-        dir_parts,;
-        paper=paper,
-        extension=".png"
-    )
-
-    # Generate the terminal heatmap
-    p_term = create_unicode_confusion_heatmap(
-        class_labels,
-        y,
-        y_hat;
-        kwargs...
-    )
-
-    # Try to display
-    display(p_term)
-
-    return
-end
-
 """
 Makes and returns a unicode confusion heatmap for terminal viewing.
 """
@@ -265,6 +214,57 @@ function create_confusion_heatmap(
 
     # Return the plot handle for display or saving
     return h
+end
+
+function plot_confusion_matrix(
+    y::IntegerVector,
+    y_hat::IntegerVector,
+    class_labels::Vector{String},
+    filename::String,
+    dir_parts::Vector{String},
+    paper::Bool=false;
+    # paper::Bool=false,
+    # save::Bool=true;
+    # show::Bool=true;
+    kwargs...
+)
+    # # Number of classes from the class labels
+    # n_classes = length(class_labels)
+    # # Normalized confusion
+    # norm_cm = get_normalized_confusion(y, y_hat, n_classes)
+
+    # Generate the GUI heatmap
+    p_gui = create_confusion_heatmap(
+        class_labels,
+        y,
+        y_hat;
+        kwargs...
+    )
+
+    # Try to display
+    display(p_gui)
+
+    # Save the GUI heatmap
+    saveplot(
+        p_gui,
+        filename,
+        dir_parts,;
+        paper=paper,
+        extension=".png"
+    )
+
+    # Generate the terminal heatmap
+    p_term = create_unicode_confusion_heatmap(
+        class_labels,
+        y,
+        y_hat;
+        kwargs...
+    )
+
+    # Try to display
+    display(p_term)
+
+    return
 end
 
 """
