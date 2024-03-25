@@ -61,6 +61,11 @@ Options container for a [`ARTINSTART`](@ref) module.
     Soft WTA update rule flag.
     """
     softwta::Bool = false
+
+    """
+    Flag for the use of a leader neuron, which negates the use of the SFAM head.
+    """
+    leader::Bool=false
 end
 
 """
@@ -272,7 +277,13 @@ function train!(
     acts = learn_model(art, x)
 
     # Train the head
-    y_hat = ART.train!(art.head, acts[end], y)
+    if art.opts.leader
+        # y_hat = ART.train!(art.head, acts[end], y)
+        y_hat = argmax(acts[end])
+    else
+        y_hat = ART.train!(art.head, acts[end], y)
+    end
+
 
     copy_stats!(art)
 
@@ -289,7 +300,10 @@ function classify(
 
     acts = Flux.activations(art.model, x)
 
-    y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)
+    if art.opts.leader
+    else
+        y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)
+    end
 
     copy_stats!(art)
 

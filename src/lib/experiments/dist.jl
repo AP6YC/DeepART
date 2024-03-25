@@ -140,23 +140,6 @@ function tt_dist(
             gpu=true,
         )
 
-        # model = Chain(
-        #     Conv((3, 3), 1=>16, relu),
-        #     x -> maxpool(x, (2, 2)),
-        #     Conv((3, 3), 16=>32, relu),
-        #     x -> maxpool(x, (2, 2)),
-        #     x -> reshape(x, :, size(x, 4)),
-        #     Dense(288, 10),
-        #     softmax,
-        # )
-        # local_art = DeepART.ARTINSTART(
-        #     model,
-        #     head_dim=10,
-        #     beta=0.01,
-        #     softwta=true,
-        #     gpu=true,
-        #     rho=d["rho"],
-        # )
         local_art
     else
         error("Unknown model: $(d["m"])")
