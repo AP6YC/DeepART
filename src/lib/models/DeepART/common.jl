@@ -209,6 +209,7 @@ function learn_model(
 
     # Leader neuron modification
     if !iszero(y) && art.opts.leader
+        outs[end][:] .= 0.0
         outs[end][y] = 1.0
     end
 

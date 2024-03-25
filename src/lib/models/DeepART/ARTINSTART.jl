@@ -284,7 +284,6 @@ function train!(
         y_hat = ART.train!(art.head, acts[end], y)
     end
 
-
     copy_stats!(art)
 
     return y_hat
@@ -301,6 +300,7 @@ function classify(
     acts = Flux.activations(art.model, x)
 
     if art.opts.leader
+        # @info size(acts[end])
         y_hat = argmax(acts[end])
     else
         y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)

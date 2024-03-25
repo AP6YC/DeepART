@@ -61,21 +61,11 @@ GPU && fdata |> gpu
 head_dim = 256
 
 # Model definition
-model = Flux.@autosize (n_input,) Chain(
-    DeepART.CC(),
-    Dense(_, 256, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 128, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 64, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, head_dim, sigmoid, bias=false),
-)
+model = DeepART.get_rep_dense(n_input, head_dim)
 
 art = DeepART.INSTART(
+# art = DeepART.ARTINSTART(
     model;
-    # trainables = [1,2,3,4],
-    # activations = [1,3,5,7],
     head_dim=head_dim,
     beta=0.0,
     rho=0.6,
@@ -101,51 +91,23 @@ DeepART.plot_confusion_matrix(
 # -----------------------------------------------------------------------------
 
 # F2 layer size
-head_dim = 256
+# head_dim = 256
+head_dim = 2048
 
 # Model definition
-model = Flux.@autosize (n_input,) Chain(
-    # DeepART.CC(),
-    # Dense(_, 512, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 256, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 128, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 64, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, head_dim, sigmoid, bias=false),
-    # Dense(_, head_dim, bias=false),
-    # softmax,
-    # Dense(_, n_classes, sigmoid),
-    # sigmoid,
-    # softmax,
-)
+model = DeepART.get_rep_dense(n_input, head_dim)
 
-# model = Flux.@autosize (n_input,) Chain(
-#     DeepART.CC(),
-#     DeepART.Fuzzy(_, 256, sigmoid),
-#     DeepART.CC(),
-#     DeepART.Fuzzy(_, 128, sigmoid),
-#     DeepART.CC(),
-#     DeepART.Fuzzy(_, 64, sigmoid),
-#     DeepART.CC(),
-#     DeepART.Fuzzy(_, head_dim, sigmoid),
-# )
-
-art = DeepART.INSTART(
+# art = DeepART.INSTART(
+art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
-    # beta=0.0001,
-    # beta=0.01,
-    beta=0.1,
+    beta=0.01,
     rho=0.6,
     # update="instar",
     update="art",
     # head="hypersphere",
-    head="fuzzy",
+    # head="fuzzy",
     softwta=true,
-    # uncommitted=true,
     gpu=GPU,
 )
 
@@ -165,14 +127,6 @@ DeepART.plot_confusion_matrix(
     ["bp_instar"],
 )
 
-# DeepART.saveplot(
-#     p,
-#     "confusion.png",
-#     "instart",
-#     paper=false,
-# )
-
-
 # -----------------------------------------------------------------------------
 # SFAM INSTART
 # -----------------------------------------------------------------------------
@@ -180,29 +134,22 @@ DeepART.plot_confusion_matrix(
 # F2 layer size
 # head_dim = 256
 # head_dim = 512
-head_dim = 2048
+# head_dim = 2048
+head_dim = 1024
 
 # Model definition
-model = Flux.@autosize (n_input,) Chain(
-    DeepART.CC(),
-    Dense(_, 256, sigmoid, bias=false),
-    # Dense(_, 128, sigmoid, bias=false),
-    DeepART.CC(),
-    # Dense(_, 128, sigmoid, bias=false),
-    # DeepART.CC(),
-    # Dense(_, 64, sigmoid, bias=false),
-    # DeepART.CC(),
-    Dense(_, head_dim, sigmoid, bias=false),
-)
+model = DeepART.get_rep_dense(n_input, head_dim)
 
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
-    # beta=0.1,
-    # beta=0.5,
     beta=0.01,
-    # beta=0.0,
-    rho=0.65,
+    # beta=0.001,
+    # beta = 0.0,
+    # rho=0.65,
+    rho=0.2,
+    # epsilon=0.01,
+    # rho=0.7,
     update="art",
     # head="fuzzy",
     softwta=true,
@@ -210,20 +157,16 @@ art = DeepART.ARTINSTART(
     gpu=GPU,
 )
 
-dev_xf = fdata.train.x[:, 1]
-prs = Flux.params(art.model)
-acts = Flux.activations(model, dev_xf)
-
 # Train/test
-# results = DeepART.tt_basic!(art, fdata, n_train, n_test)
-results = DeepART.tt_basic!(art, fdata, 1000, 1000)
+results = DeepART.tt_basic!(art, fdata, n_train, n_test)
+# results = DeepART.tt_basic!(art, fdata, 1000, 1000)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
     data.test.y[1:n_test],
     results["y_hats"],
     string.(collect(0:9)),
-    "basic_confusion",
+    "basic_artinstart",
     ["bp_instar"],
 )
 
@@ -231,44 +174,15 @@ DeepART.plot_confusion_matrix(
 # CONVOLUTIONAL
 # -----------------------------------------------------------------------------
 
-size_tuple = (28, 28, 1, 1)
-conv_model = Flux.@autosize (size_tuple,) Chain(
-    DeepART.CCConv(),
-    Chain(
-        Conv((5,5), _ => 6, sigmoid, bias=false),
-    ),
-    # Chain(
-    #     MaxPool((2,2)),
-    #     DeepART.CCConv(),
-    # ),
-    # Chain(
-    #     Conv((5,5), _ => 6, sigmoid, bias=false),
-    # ),
-    # BatchNorm(_),
-    Chain(
-        # MaxPool((2,2)),
-        MaxPool((2,2)),
-        Flux.flatten,
-        DeepART.CC(),
-    ),
-    # Dense(_, 128, sigmoid, bias=false),
-    # DeepART.CC(),
-    Chain(
-        Dense(_, head_dim, sigmoid, bias=false),
-        vec,
-    ),
-    # Dense(15=>10, sigmoid),
-    # Flux.flatten,
-    # Dense(_=>15,relu),
-    # Dense(15=>10,sigmoid),
-    # softmax
-)
+head_dim = 2048
+# size_tuple = (28, 28, 1, 1)
+size_tuple = (size(data.train.x)[1:3]..., 1)
+conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
 
 art = DeepART.ARTINSTART(
     conv_model,
     head_dim=head_dim,
-    # beta=0.01,
-    beta=0.1,
+    beta=0.01,
     rho=0.65,
     update="art",
     softwta=true,
@@ -286,13 +200,15 @@ DeepART.plot_confusion_matrix(
     ["bp_instar"],
 )
 
-a, b, c = rand(3,2), rand(3,2), rand(3,2)
-a[1,1] = 0.1
-w = rand(3,2)
-d = mean(cat(min.(a, w), min.(b, w), min.(c, w), dims=3), dims=3)[:,:,1]
-e = min.(mean(cat(a, b, c, dims=3), dims=3)[:,:,1], w)
+# a, b, c = rand(3,2), rand(3,2), rand(3,2)
+# a[1,1] = 0.1
+# w = rand(3,2)
+# d = mean(cat(min.(a, w), min.(b, w), min.(c, w), dims=3), dims=3)[:,:,1]
+# e = min.(mean(cat(a, b, c, dims=3), dims=3)[:,:,1], w)
 
-d == e
+# d == e
+
+
 # outs_conv = Flux.NNlib.fold(acts_conv[2][:,:,:,1], size(acts_conv[2]), size(prs_conv[1]))
 # outs_conv = mean(acts_conv[1], dims=(1,2))
 
@@ -316,6 +232,44 @@ d == e
 
 # conv_model[1](dev_x)
 # GPU && model |> gpu
+
+# -----------------------------------------------------------------------------
+# LEADER NEURON
+# -----------------------------------------------------------------------------
+
+head_dim = 10
+
+# Model definition
+model = DeepART.get_rep_dense(n_input, head_dim)
+
+art = DeepART.ARTINSTART(
+    model,
+    head_dim=head_dim,
+    # beta=0.1,
+    beta=0.1,
+    rho=0.65,
+    update="art",
+    softwta=true,
+    gpu=GPU,
+    leader=true,
+)
+
+dev_xf = fdata.train.x[:, 1]
+prs = Flux.params(art.model)
+acts = Flux.activations(model, dev_xf)
+
+# Train/test
+results = DeepART.tt_basic!(art, fdata, n_train, n_test)
+# results = DeepART.tt_basic!(art, fdata, 1000, 1000)
+
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "leader_confusion",
+    ["bp_instar"],
+)
 
 
 # -----------------------------------------------------------------------------

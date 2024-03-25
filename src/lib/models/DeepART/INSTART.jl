@@ -66,6 +66,11 @@ Options container for a [`INSTART`](@ref) module.
     Head layer type ∈ ["fuzzy", "hypersphere"].
     """
     head::String = "fuzzy"
+
+    """
+    Flag for the use of a leader neuron, which negates the use of the SFAM head.
+    """
+    leader::Bool=false
 end
 
 """

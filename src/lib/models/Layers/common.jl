@@ -24,6 +24,10 @@ const ALPHA = 1e-3
 """
 Returns the complement code of the input
 """
-function complement_code(x)
-    vcat(x, 1.0 .- x)
+function complement_code(
+    x
+    # x::AbstractVecOrMat{Float32}
+)
+    # vcat(x, 1.0 .- x)
+    vcat(x, one(Float32) .- x)
 end

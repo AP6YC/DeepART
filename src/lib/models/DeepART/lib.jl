@@ -19,3 +19,6 @@ include("INSTART.jl")
 
 # Deep instar learning with existing ART module as head
 include("ARTINSTART.jl")
+
+# Representative models
+include("representatives.jl")
