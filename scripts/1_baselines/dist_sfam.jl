@@ -40,7 +40,7 @@ sim_params = Dict{String, Any}(
     "rng_seed" => collect(1:N_SIMS),
     "n_train" => N_TRAIN,
     "n_test" => N_TEST,
-    "datasets" => [
+    "dataset" => [
         "mnist",
         "fashionmnist",
         "cifar10",
@@ -107,6 +107,6 @@ println("--- Simulation complete ---")
 # -----------------------------------------------------------------------------
 
 # Close the workers after simulation
-if pargs["procs"] > 0
-    rmprocs(workers())
-end
+# if pargs["procs"] > 0
+rmprocs(workers())
+# end
