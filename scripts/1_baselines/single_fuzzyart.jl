@@ -1,8 +1,8 @@
 """
-    single_fuzzyart.jl
+    single_sfam.jl
 
 # Description
-Simple FuzzyART training and testing.
+Simple FuzzyARTMAP training and testing.
 """
 
 # -----------------------------------------------------------------------------
@@ -60,9 +60,9 @@ n_test = min(N_TEST, length(data.test.y))
 # TASK-HOMOGENOUS TRAIN/TEST
 # -----------------------------------------------------------------------------
 
-# Init the FuzzyART module
-art = ART.FuzzyART(
-    rho=0.7,
+# Init the SFAM module
+art = ART.SFAM(
+    rho=0.6,
     display=true,
 )
 
@@ -101,8 +101,8 @@ tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
 
 # Init a new FuzzyART module
-tiart = ART.FuzzyART(
-    rho=0.7,
+tiart = ART.SFAM(
+    rho=0.6,
     display=true,
 )
 

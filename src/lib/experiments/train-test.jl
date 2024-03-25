@@ -48,6 +48,46 @@ function basic_train!(
     end
 end
 
+
+"""
+Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
+
+# Arguments
+$ARG_COMMONARTMODULE
+$ARG_N_TEST
+"""
+function basic_test(
+    art::CommonARTModule,
+    data::SupervisedDataset,
+    n_test::Integer=IInf,
+)
+    # Get the number of testing samples
+    l_n_test = get_n(n_test, data)
+
+    # Get the estimates on the test data
+    y_hats = Vector{Int}()
+    pr = Progress(
+        l_n_test;
+        desc="Task-Homogenous Testing",
+        enabled = Sys.iswindows(),
+    )
+    for ix = 1:l_n_test
+        # xf = data.test.x[:, ix]
+        xf = get_sample(data, ix)
+        # y_hat = DeepART.classify(art, xf, get_bmu=true)
+        y_hat = incremental_classify(art, xf)
+        push!(y_hats, y_hat)
+        next!(pr)
+    end
+
+    # # Calculate the performance and log
+    # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
+    # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+
+    # Return the estimates
+    return y_hats
+end
+
 """
 Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
 
@@ -244,6 +284,25 @@ function tt_inc!(
 
     return out_dict
 end
+
+"""
+Get a list of the percentage accuracies.
+
+# Arguments
+- `y::IntegerVector`: the target values.
+- `y_hat::IntegerVector`: the agent's estimates.
+- `n_classes::Integer`: the number of total classes in the test set.
+"""
+function get_accuracies(y::IntegerVector, y_hat::IntegerVector, n_classes::Integer)
+    cm = get_confusion(y, y_hat, n_classes)
+    correct = [cm[i,i] for i = 1:n_classes]
+    # total = sum(cm, dims=1)
+    total = sum(cm, dims=2)'
+    accuracies = correct'./total
+
+    return accuracies
+end
+
 
 # -----------------------------------------------------------------------------
 # OLD EXPERIMENTS
