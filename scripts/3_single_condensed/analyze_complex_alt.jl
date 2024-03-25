@@ -21,10 +21,10 @@ using DeepART
 # -----------------------------------------------------------------------------
 
 # Experiment save directory name
-experiment_top = "4_condensed"
+experiment_top = "3_single_condensed"
 
 # Saving names
-plot_name = "4_condensed_complex_alt.png"
+plot_name = "3_single_condensed.png"
 
 # Load name
 data_file = DeepART.results_dir(experiment_top, "condensed_complex_data.jld2")
@@ -44,6 +44,7 @@ data_file = DeepART.results_dir(experiment_top, "condensed_complex_data.jld2")
 
 # Load the data used for generating the condensed scenario plot
 perfs, vals, class_labels = DeepART.load_sim_results(data_file, "perfs", "vals", "class_labels")
+# class_labels = vcat("", class_labels)
 
 # -----------------------------------------------------------------------------
 # PLOTTING
@@ -51,14 +52,16 @@ perfs, vals, class_labels = DeepART.load_sim_results(data_file, "perfs", "vals",
 
 # Alternative simplified condensed scenario plot
 # p = create_condensed_plot(perfs, class_labels)
-p, training_vals, x_training_vals = DeepART.create_complex_condensed_plot_alt(perfs, vals, class_labels)
+p, training_vals, x_training_vals = DeepART.create_complex_condensed_plot_alt(
+    perfs, vals, class_labels
+)
 # DeepART.handle_display(p, pargs)
 
 # Save the plot
-DeepART.save_DeepART(
-    "figure",
+DeepART.saveplot(
     p,
-    experiment_top,
-    plot_name,
-    to_paper=pargs["paper"]
+    "single_condensed",
+    [experiment_top,],
+    paper=Sys.iswindows(),
+    extension=".png",
 )

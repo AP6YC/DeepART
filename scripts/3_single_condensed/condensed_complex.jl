@@ -37,7 +37,7 @@ experiment_top = "3_single_condensed"
 
 # Saving names
 # plot_name = "4_condensed_complex.png"
-mkdir(DeepART.results_dir(experiment_top))
+mkpath(DeepART.results_dir(experiment_top))
 data_file = DeepART.results_dir(experiment_top, "condensed_complex_data.jld2")
 
 # Simulation options
@@ -110,7 +110,7 @@ art = DeepART.ARTINSTART(
 # _, n_test = size(data.test.x)
 
 # Create the estimate containers
-perfs = [[] for i = 1:n_classes]
+perfs = [[] for i = 1:n_tasks]
 # vals = [[] for i = 1:n_classes]
 
 # Initial testing block
@@ -148,14 +148,10 @@ for ix = 1:n_tasks
             # local_y_hat = basic_test(art, data.train, n_test=N_TEST)
             # local_val = DeepART.get_accuracies(data.train.y, local_y_hat, n_classes)
 
-            local_y_hat = DeepART.basic_test(art, tidata.train[ix], N_TEST)
-            # local_y_hat = Vector{Int}()
-            # for jy = 1:length(tidata.train[ix].y)
-            #     xf = DeepART.get_sample(tidata.train[ix].x, ix)
-            #     y_hat = DeepART.incremental_classify(art, xf)
-            #     push!(local_y_hat, y_hat)
-            # end
-            local_val = DeepART.get_accuracies(tidata.train[ix].y, local_y_hat, n_classes)
+            # local_y_hat = DeepART.basic_test(art, tidata.train[ix], N_TEST)
+            # local_val = DeepART.get_accuracies(tidata.train[ix].y, local_y_hat, n_classes)
+            local_y_hat = DeepART.basic_test(art, data.train, N_TEST)
+            local_val = DeepART.get_accuracies(data.train.y, local_y_hat, n_classes)
             local_vals = hcat(local_vals, local_val')
         end
     end

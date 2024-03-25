@@ -198,6 +198,19 @@ function get_perf(
     return perf
 end
 
+
+"""
+Wrapper for loading simulation results with arbitrarily many fields.
+
+# Arguments
+- `data_file::AbstractString`: the location of the datafile for loading.
+- `args...`: the string names of the files to open.
+"""
+function load_sim_results(data_file::AbstractString, args...)
+    # Load and return the tuple of entries from the data file
+    return JLD2.load(data_file, args...)
+end
+
 # -----------------------------------------------------------------------------
 # FULL EXPERIMENTS
 # -----------------------------------------------------------------------------
