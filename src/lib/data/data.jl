@@ -155,6 +155,13 @@ function get_cifar10(;
 
     if flatten
         dataset = flatty(dataset)
+    else
+        dataset = DataSplit(
+            reshape(dataset.train.x, 32, 32, 1, :),
+            dataset.train.y,
+            reshape(dataset.test.x, 32, 32, 1, :),
+            dataset.test.y,
+        )
     end
 
     return dataset
@@ -199,6 +206,13 @@ function get_cifar100_fine(;
 
     if flatten
         dataset = flatty(dataset)
+    else
+        dataset = DataSplit(
+            reshape(dataset.train.x, 32, 32, 1, :),
+            dataset.train.y,
+            reshape(dataset.test.x, 32, 32, 1, :),
+            dataset.test.y,
+        )
     end
 
     return dataset
@@ -243,6 +257,13 @@ function get_cifar100_coarse(;
 
     if flatten
         dataset = flatty(dataset)
+    else
+        dataset = DataSplit(
+            reshape(dataset.train.x, 32, 32, 1, :),
+            dataset.train.y,
+            reshape(dataset.test.x, 32, 32, 1, :),
+            dataset.test.y,
+        )
     end
 
     return dataset
@@ -279,6 +300,13 @@ function get_fashionmnist(;
 
     if flatten
         dataset = flatty(dataset)
+    else
+        dataset = DataSplit(
+            reshape(dataset.train.x, 28, 28, 1, :),
+            dataset.train.y,
+            reshape(dataset.test.x, 28, 28, 1, :),
+            dataset.test.y,
+        )
     end
 
     return dataset

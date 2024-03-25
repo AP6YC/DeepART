@@ -52,9 +52,10 @@ function tt_dist(
     Random.seed!(d["rng_seed"])
 
     # Load the dataset with the provided options
+    isconv = !(d["m"] == "DeepARTConv")
     data = load_one_dataset(
         d["dataset"],
-        flatten=true,
+        flatten=isconv,
         n_train=d["n_train"],
         n_test=d["n_test"],
     )
@@ -68,7 +69,7 @@ function tt_dist(
         )
         local_art.config = ART.DataConfig(0.0, 1.0, n_input)
         local_art
-    elseif d["m"] == "DeepART"
+    elseif d["m"] == "DeepARTDense"
         # Model definition
         head_dim = 2048
         model = Flux.@autosize (n_input,) Chain(
@@ -90,6 +91,72 @@ function tt_dist(
             gpu=true,
             rho=d["rho"],
         )
+        local_art
+    elseif d["m"] == "DeepARTConv"
+        # Model definition
+        head_dim = 2048
+
+        size_tuple = (size(data.train.x)[1:3]..., 1)
+        # size_tuple = (28, 28, 1, 1)
+        conv_model = Flux.@autosize (size_tuple,) Chain(
+            DeepART.CCConv(),
+            Chain(
+                Conv((5,5), _ => 6, sigmoid, bias=false),
+            ),
+            # Chain(
+            #     MaxPool((2,2)),
+            #     DeepART.CCConv(),
+            # ),
+            # Chain(
+            #     Conv((5,5), _ => 6, sigmoid, bias=false),
+            # ),
+            # BatchNorm(_),
+            Chain(
+                # MaxPool((2,2)),
+                MaxPool((2,2)),
+                Flux.flatten,
+                DeepART.CC(),
+            ),
+            # Dense(_, 128, sigmoid, bias=false),
+            # DeepART.CC(),
+            Chain(
+                Dense(_, head_dim, sigmoid, bias=false),
+                vec,
+            ),
+            # Dense(15=>10, sigmoid),
+            # Flux.flatten,
+            # Dense(_=>15,relu),
+            # Dense(15=>10,sigmoid),
+            # softmax
+        )
+        local_art = DeepART.ARTINSTART(
+            conv_model,
+            head_dim=head_dim,
+            # beta=0.01,
+            beta=0.1,
+            rho=0.65,
+            update="art",
+            softwta=true,
+            gpu=true,
+        )
+
+        # model = Chain(
+        #     Conv((3, 3), 1=>16, relu),
+        #     x -> maxpool(x, (2, 2)),
+        #     Conv((3, 3), 16=>32, relu),
+        #     x -> maxpool(x, (2, 2)),
+        #     x -> reshape(x, :, size(x, 4)),
+        #     Dense(288, 10),
+        #     softmax,
+        # )
+        # local_art = DeepART.ARTINSTART(
+        #     model,
+        #     head_dim=10,
+        #     beta=0.01,
+        #     softwta=true,
+        #     gpu=true,
+        #     rho=d["rho"],
+        # )
         local_art
     else
         error("Unknown model: $(d["m"])")

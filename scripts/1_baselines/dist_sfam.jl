@@ -1,11 +1,11 @@
 """
-    dist_fuzzyart.jl
+    dist_sfam.jl
 
 # Description
-This script runs FuzzyART
+This script runs the distributed task-homogenous train/test experiment.
 
 # Authors
-- Sasha Petrenko <petrenkos@mst.edu>
+- Sasha Petrenko <petrenkos@mst.edu> @AP6YC
 """
 # -----------------------------------------------------------------------------
 # PREAMBLE
@@ -26,9 +26,8 @@ using DrWatson
 # -----------------------------------------------------------------------------
 
 EXP_TOP = "1_baselines"
-EXP_NAME = "dist_sfam"
+EXP_NAME = "dist"
 N_PROCS = Sys.iswindows() ? 0 : 31
-# N_PROCS = 1
 
 N_SIMS = Sys.iswindows() ? 1 : 1000
 N_TRAIN = 1000
@@ -36,11 +35,10 @@ N_TEST = 1000
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
-    # "m" => "SFAM",
-    # "m" => "DeepART",
     "m" => [
         "SFAM",
-        "DeepART",
+        "DeepARTDense",
+        "DeepARTConv"
     ],
     "rho" => 0.6,
     "rng_seed" => collect(1:N_SIMS),

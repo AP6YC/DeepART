@@ -30,6 +30,7 @@ function basic_train!(
     pr = Progress(
         l_n_train;
         desc="Task-Homogenous Training",
+        enabled = Sys.iswindows()
     )
     for ix = 1:l_n_train
         # Get the current sample and label
@@ -65,7 +66,11 @@ function basic_test(
 
     # Get the estimates on the test data
     y_hats = Vector{Int}()
-    pr = Progress(l_n_test; desc="Task-Homogenous Testing")
+    pr = Progress(
+        l_n_test;
+        desc="Task-Homogenous Testing",
+        enabled = Sys.iswindows(),
+    )
     for ix = 1:l_n_test
         # xf = data.test.x[:, ix]
         xf = get_sample(data.test, ix)
@@ -110,7 +115,11 @@ function train_inc!(
         l_n_train = get_n(n_train, tidata.train[ix])
 
         # Incrementally train over the current task's training data
-        pr = Progress(l_n_train; desc="Task-Incremental Training: Task $(ix)")
+        pr = Progress(
+            l_n_train;
+            desc="Task-Incremental Training: Task $(ix)",
+            enabled = Sys.iswindows(),
+        )
         for jx = 1:l_n_train
             # Get the current sample and label
             # xf = task_x[:, jx]
