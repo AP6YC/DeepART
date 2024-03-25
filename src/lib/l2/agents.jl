@@ -215,7 +215,8 @@ Logs data from an L2 [`Experience`](@ref).
 - `status::AbstractString`: string expressing if the [`Experience`](@ref) was processed.
 """
 function log_data(
-    data_logger::PythonCall.Py,
+    # data_logger::PythonCall.Py,
+    data_logger,
     experience::Experience,
     results::Dict,
     params::Dict ;
@@ -250,7 +251,8 @@ function run_scenario(
     # groupings,
     name_map,
     data::ClassIncrementalDataSplit,
-    data_logger::PythonCall.Py,
+    # data_logger::PythonCall.Py,
+    data_logger,
 )
     # Initialize the "last sequence"
     # last_seq = SequenceNums(-1, -1, -1)
@@ -320,7 +322,8 @@ function full_scenario(
     data::ClassIncrementalDataSplit,
     # exp_dir::AbstractString=DeepART.config_dir("l2")
     exp_dir::AbstractString,
-    l2logger::PythonCall.Py,
+    # l2logger::PythonCall.Py,
+    l2logger,
 )
     # Load the config and scenario
     # config = DeepART.json_load(DeepART.config_dir("l2", data_key, "config.json"))
