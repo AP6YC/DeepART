@@ -144,7 +144,7 @@ function get_perf(
     l_n_test = min(n_test, length(data.test.y))
 
     perf = ART.performance(y_hats, data.test.y[1:l_n_test])
-    @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+    # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     return perf
 end

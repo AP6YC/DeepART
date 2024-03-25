@@ -17,3 +17,6 @@ include("train-test.jl")
 
 # Experiment drivers for baselines
 include("baselines.jl")
+
+# Distributed experiment drivers
+include("dist.jl")

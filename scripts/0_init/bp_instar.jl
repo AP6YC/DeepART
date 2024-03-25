@@ -406,7 +406,16 @@ tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
 GPU && tidata |> gpu
 
-p = DeepART.tt_inc!(art, tidata, data, n_train, n_test)
+results = DeepART.tt_inc!(art, tidata, data, n_train, n_test)
+
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y[1:n_test],
+    results["y_hats"],
+    string.(collect(0:9)),
+    "conv_ti_confusion",
+    ["bp_instar"],
+)
 
 # -----------------------------------------------------------------------------
 # OLD TRAIN/TEST
