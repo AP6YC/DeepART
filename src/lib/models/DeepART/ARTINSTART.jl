@@ -274,7 +274,7 @@ function train!(
 )
     # Compute the activations
     # acts = Flux.activations(art.model, x)
-    acts = learn_model(art, x)
+    acts = learn_model(art, x, y=y)
 
     # Train the head
     if art.opts.leader
@@ -301,6 +301,7 @@ function classify(
     acts = Flux.activations(art.model, x)
 
     if art.opts.leader
+        y_hat = argmax(acts[end])
     else
         y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)
     end

@@ -433,7 +433,7 @@ function train!(
             end
             # Update the model
             # acts = learn_model(art.model, x)
-            acts = learn_model(art, x)
+            acts = learn_model(art, x, y=y)
 
             # Update the head
             art_learn_head(acts[end], art.heads[bmu], art.opts.beta)

@@ -195,7 +195,8 @@ Weight update rule for the deep model component of a [`DeepARTModule`](@ref).
 """
 function learn_model(
     art::DeepARTModule,
-    xf::RealArray
+    xf::RealArray;
+    y::Integer=0,
 )
     weights = Flux.params(art.model)
     acts = Flux.activations(art.model, xf)
@@ -205,6 +206,11 @@ function learn_model(
     # trainables = weights
     ins = [acts[jx] for jx = 1:2:(n_layers*2)]
     outs = [acts[jx] for jx = 2:2:(n_layers*2)]
+
+    # Leader neuron modification
+    if !iszero(y) && art.opts.leader
+        outs[end][y] = 1.0
+    end
 
     for ix = 1:n_layers
         if art.opts.update == "art"
