@@ -1,0 +1,1 @@
+wget --directory-prefix=$DIR'/../data/work/core50' http://bias.csr.unibo.it/maltoni/download/core50/core50_128x128.zip

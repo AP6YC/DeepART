@@ -146,8 +146,8 @@ art = DeepART.ARTINSTART(
     beta=0.01,
     # beta=0.001,
     # beta = 0.0,
-    # rho=0.65,
-    rho=0.2,
+    rho=0.65,
+    # rho=0.3,
     # epsilon=0.01,
     # rho=0.7,
     update="art",
@@ -159,7 +159,7 @@ art = DeepART.ARTINSTART(
 
 # Train/test
 results = DeepART.tt_basic!(art, fdata, n_train, n_test)
-# results = DeepART.tt_basic!(art, fdata, 1000, 1000)
+results = DeepART.tt_basic!(art, fdata, 2000, 2000)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(

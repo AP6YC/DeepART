@@ -37,6 +37,25 @@ l2l = PythonCall.pyimport("l2logger.l2logger")
 # ALL SCENARIOS
 # -----------------------------------------------------------------------------
 
+# configs = []
+# scenarios = []
+# # Iterate over every scenario top directory
+# for scenario_top_dir in readdir(top_dir)
+#     # Get the full path to the scenario directory
+#     scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)
+#     for scenario_dir in readdir(scenario_top_dir_full, join=true)
+#         config = DeepART.json_load(joinpath(scenario_dir, "config.json"))
+#         scenario = DeepART.json_load(joinpath(scenario_dir, "scenario.json"))
+#         push!(configs, config)
+#         push!(scenarios, scenario)
+#     end
+# end
+
+# using JSON
+# function show_json(dict, index)
+#     JSON.print(dict[index], 2)
+# end
+
 # Iterate over every scenario top directory
 for scenario_top_dir in readdir(top_dir)
     # Get the full path to the scenario directory
@@ -74,6 +93,25 @@ for scenario_top_dir in readdir(top_dir)
             scenario_dir,
             l2l,
         )
+        # # Construct the agent from the scenario
+        # global scenario = DeepART.json_load(joinpath(scenario_dir, "scenario.json"))
+        # global agent = DeepART.Agent(
+        #     art,
+        #     opts_fuzzyart,
+        #     scenario,
+        # )
+        # global config = DeepART.json_load(joinpath(scenario_dir, "config.json"))
+
+        # # Setup the scenario_info dictionary as a function of the config and scenario
+        # scenario_info = config["META"]
+        # scenario_info["input_file"] = scenario
+
+        # # Extract the groupings order from the config file
+        # global groupings = DeepART.string_to_orders(config["META"]["task-orders"])
+
+        # # Construct a dataset from the grouping
+        # # tidata = TaskIncrementalDataSplit(data, groupings)
+        # global tidata, name_map = DeepART.L2TaskIncrementalDataSplit(data, groupings)
 
         ONE_SCENARIO && break
     end

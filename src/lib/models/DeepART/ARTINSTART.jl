@@ -115,6 +115,7 @@ function ARTINSTART(
     # Create the head
     head = ART.SFAM(
         rho=opts.rho,
+        epsilon=1e-4,
     )
     head.config = ART.DataConfig(0.0, 1.0, opts.head_dim)
 

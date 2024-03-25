@@ -1,12 +1,12 @@
 """
-    4_analyze_complex_alt.jl
+    analyze_complex_alt.jl
 
 # Description
 This script analyzes a complex single condensed scenario iteration.
 This script is updated to use the updated full condensed scenario plot.
 
 # Authors
-- Sasha Petrenko <sap625@mst.edu>
+- Sasha Petrenko <petrenkos@mst.edu>
 """
 
 # -----------------------------------------------------------------------------
@@ -28,15 +28,6 @@ plot_name = "3_single_condensed.png"
 
 # Load name
 data_file = DeepART.results_dir(experiment_top, "condensed_complex_data.jld2")
-
-# -----------------------------------------------------------------------------
-# PARSE ARGS
-# -----------------------------------------------------------------------------
-
-# # Parse the arguments provided to this script
-# pargs = DeepART.exp_parse(
-#     "4_analyze_complex_alt: alternative full condensed scenario plot."
-# )
 
 # -----------------------------------------------------------------------------
 # LOAD DATA
