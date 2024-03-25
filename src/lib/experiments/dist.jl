@@ -19,7 +19,7 @@ function save_sim(
     sim_save_name = dir_func(savename(
         d,
         "jld2";
-        digits=4,
+        # digits=4,
         # ignores=[
         #     "rng_seed",
         #     "m",
@@ -27,7 +27,8 @@ function save_sim(
     ))
 
     # Log completion of the simulation
-    @info "Worker $(myid()): saving to $(sim_save_name)"
+    # @info "Worker $(myid()): saving to $(sim_save_name)"
+    @info "Saving to $(sim_save_name)"
 
     # DrWatson function to save the results with an additional tag entry
     tagsave(sim_save_name, fulld)
@@ -63,21 +64,22 @@ function tt_dist(
         local_art = ART.SFAM(
             rho=d["rho"],
         )
-        local_art.config = ART.DataConfig(0.0, 1.0, size(data.train[1].x, 1))
+        local_art.config = ART.DataConfig(0.0, 1.0, size(data.train.x, 1))
         local_art
     else
         error("Unknown model: $(d["m"])")
     end
 
     # Process the statements
-    @info "Worker $(myid()): training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
+    # @info "Worker $(myid()): training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
+    @info "Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
     results = tt_basic!(art, data, 1000, 1000)
 
     # Compute the confusion while we have the true y for this dataset shuffle
     n_classes = length(unique(data.test.y))
 
-    conf = get_confusion_matrix(
-        data.test.y[1:n_test],
+    conf = get_normalized_confusion(
+        data.test.y,
         results["y_hats"],
         n_classes,
     )

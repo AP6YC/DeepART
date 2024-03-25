@@ -27,7 +27,8 @@ using DrWatson
 
 EXP_TOP = "1_baselines"
 EXP_NAME = "dist_sfam"
-N_PROCS = Sys.iswindows() ? 15 : 31
+N_PROCS = Sys.iswindows() ? 0 : 31
+# N_PROCS = 1
 
 N_SIMS = 10
 N_TRAIN = 1000
