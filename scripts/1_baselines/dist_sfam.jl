@@ -68,8 +68,9 @@ addprocs(N_PROCS, exeflags="--project=.")
 
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
-        "1_wta",
-        "sweep",
+        "1_dist",
+        "sfam",
+        # "sweep",
         args...
     )
 

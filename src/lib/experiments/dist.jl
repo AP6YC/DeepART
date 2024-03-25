@@ -55,6 +55,8 @@ function tt_dist(
         ART.SFAM(
             rho=d["rho"],
         )
+    else
+        error("Unknown model: $(d["m"])")
     end
 
     # Load the dataset with the provided options
@@ -70,6 +72,7 @@ function tt_dist(
 
     # Compute the confusion while we have the true y for this dataset shuffle
     n_classes = length(unique(data.test.y))
+
     conf = get_confusion_matrix(
         data.test.y[1:n_test],
         results["y_hats"],
