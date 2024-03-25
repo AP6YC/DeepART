@@ -81,7 +81,7 @@ for scenario_top_dir in readdir(top_dir)
         rho=0.6,
     )
     art = DeepART.ART.SFAM(opts)
-    art.config = DeepART.ART.DataConfig(0, 1, size(data.train[1].x, 1))
+    art.config = DeepART.ART.DataConfig(0.0, 1.0, size(data.train[1].x, 1))
 
     # Iterate over the scenarios
     for scenario_dir in readdir(scenario_top_dir_full, join=true)

@@ -50,15 +50,6 @@ function tt_dist(
     # Initialize the random seed at the beginning of the experiment
     Random.seed!(d["rng_seed"])
 
-    # Initialize the ART module
-    art = if d["m"] == "SFAM"
-        ART.SFAM(
-            rho=d["rho"],
-        )
-    else
-        error("Unknown model: $(d["m"])")
-    end
-
     # Load the dataset with the provided options
     data = load_one_dataset(
         d["dataset"],
@@ -67,7 +58,19 @@ function tt_dist(
         n_test=d["n_test"],
     )
 
+    # Initialize the ART module
+    art = if d["m"] == "SFAM"
+        local_art = ART.SFAM(
+            rho=d["rho"],
+        )
+        local_art.config = ART.DataConfig(0.0, 1.0, size(data.train[1].x, 1))
+        local_art
+    else
+        error("Unknown model: $(d["m"])")
+    end
+
     # Process the statements
+    @info "Worker $(myid()): training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
     results = tt_basic!(art, data, 1000, 1000)
 
     # Compute the confusion while we have the true y for this dataset shuffle

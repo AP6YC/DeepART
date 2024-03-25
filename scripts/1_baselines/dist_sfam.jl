@@ -64,6 +64,7 @@ addprocs(N_PROCS, exeflags="--project=.")
     # Activate the project in case
     using Pkg
     Pkg.activate(".")
+    using Revise
     using DeepART
 
     # Point to the sweep results
