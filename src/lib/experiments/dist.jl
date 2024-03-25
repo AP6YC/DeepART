@@ -59,12 +59,37 @@ function tt_dist(
         n_test=d["n_test"],
     )
 
+    n_input = size(data.train.x, 1)
+
     # Initialize the ART module
     art = if d["m"] == "SFAM"
         local_art = ART.SFAM(
             rho=d["rho"],
         )
-        local_art.config = ART.DataConfig(0.0, 1.0, size(data.train.x, 1))
+        local_art.config = ART.DataConfig(0.0, 1.0, n_input)
+        local_art
+    elseif d["m"] == "DeepART"
+        # Model definition
+        head_dim = 2048
+        model = Flux.@autosize (n_input,) Chain(
+            DeepART.CC(),
+            Dense(_, 256, sigmoid, bias=false),
+            # Dense(_, 128, sigmoid, bias=false),
+            DeepART.CC(),
+            # Dense(_, 128, sigmoid, bias=false),
+            # DeepART.CC(),
+            # Dense(_, 64, sigmoid, bias=false),
+            # DeepART.CC(),
+            Dense(_, head_dim, sigmoid, bias=false),
+        )
+        local_art = DeepART.ARTINSTART(
+            model,
+            head_dim=head_dim,
+            beta=0.01,
+            softwta=true,
+            gpu=true,
+            rho=d["rho"],
+        )
         local_art
     else
         error("Unknown model: $(d["m"])")

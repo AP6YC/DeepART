@@ -30,13 +30,18 @@ EXP_NAME = "dist_sfam"
 N_PROCS = Sys.iswindows() ? 0 : 31
 # N_PROCS = 1
 
-N_SIMS = 10
+N_SIMS = Sys.iswindows() ? 1 : 1000
 N_TRAIN = 1000
 N_TEST = 1000
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
-    "m" => "SFAM",
+    # "m" => "SFAM",
+    # "m" => "DeepART",
+    "m" => [
+        "SFAM",
+        "DeepART",
+    ],
     "rho" => 0.6,
     "rng_seed" => collect(1:N_SIMS),
     "n_train" => N_TRAIN,
@@ -71,7 +76,7 @@ addprocs(N_PROCS, exeflags="--project=.")
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
         "1_dist",
-        "sfam",
+        # "sfam",
         # "sweep",
         args...
     )
@@ -110,6 +115,4 @@ println("--- Simulation complete ---")
 # -----------------------------------------------------------------------------
 
 # Close the workers after simulation
-# if pargs["procs"] > 0
 rmprocs(workers())
-# end
