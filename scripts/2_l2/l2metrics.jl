@@ -41,13 +41,17 @@ full_l2m_script = DeepART.projectdir(
     "l2metrics.bat",
 )
 
-for group_dir in readdir(DeepART.results_dir(experiment_top, "logs"), join=true)
+# Iterate over each group directory
+# for group_dir in readdir(DeepART.results_dir(experiment_top, "logs"), join=true)
+logs_dir = DeepART.results_dir(experiment_top, "logs")
+for group_dir in readdir(logs_dir)
+    full_group_dir = joinpath(logs_dir, group_dir)
     # Get the location of the last log
-    last_log = readdir(group_dir, join=true)[end]
-    out_dir = DeepART.results_dir(experiment_top, "metrics", last_log)
+    last_log = readdir(full_group_dir, join=true)[end]
+    out_dir = DeepART.results_dir(experiment_top, "metrics", group_dir)
 
     @info "Generating L2 metrics for dir: $last_log, $(isdir(last_log))"
-
+    # @info out_dir
     # Run the command for the batch script
     run(`cmd /c activate deepart-l2m \&\& $full_l2m_script $last_log $out_dir`)
 end
