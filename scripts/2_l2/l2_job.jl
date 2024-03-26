@@ -42,10 +42,10 @@ sim_params = Dict{String, Any}(
         @onlyif("m" == "DeepARTConv", 0.3),
     ],
     "beta" => 0.01,
-    "rng_seed" => collect(1:N_SIMS),
-    "n_train" => N_TRAIN,
-    "n_test" => N_TEST,
-    "head_dim" => 1024
+    # "rng_seed" => collect(1:N_SIMS),
+    # "n_train" => N_TRAIN,
+    # "n_test" => N_TEST,
+    "head_dim" => 1024,
     "dataset" => [
         "mnist",
         "fashionmnist",
@@ -56,8 +56,11 @@ sim_params = Dict{String, Any}(
     ],
 )
 
+# Log the simulation scale
+@info "Running $(dict_list_count(sim_params)) simulations."
 
-
+# Turn the dictionary of lists into a list of dictionaries
+dicts = dict_list(sim_params)
 
 # -----------------------------------------------------------------------------
 # PYTHONCALL SETUP

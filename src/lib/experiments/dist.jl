@@ -71,41 +71,31 @@ function tt_dist(
         local_art
     elseif d["m"] == "DeepARTDense"
         # Model definition
-        head_dim = 2048
-        model = Flux.@autosize (n_input,) Chain(
-            DeepART.CC(),
-            Dense(_, 256, sigmoid, bias=false),
-            # Dense(_, 128, sigmoid, bias=false),
-            DeepART.CC(),
-            # Dense(_, 128, sigmoid, bias=false),
-            # DeepART.CC(),
-            # Dense(_, 64, sigmoid, bias=false),
-            # DeepART.CC(),
-            Dense(_, head_dim, sigmoid, bias=false),
-        )
+        head_dim = d["head_dim"]
+        # Model definition
+        model = DeepART.get_rep_dense(n_input, head_dim)
+
         local_art = DeepART.ARTINSTART(
             model,
             head_dim=head_dim,
-            beta=0.01,
+            beta=d["beta"],
+            rho=d["rho"],
+            update="art",
             softwta=true,
             gpu=true,
-            rho=d["rho"],
         )
         local_art
     elseif d["m"] == "DeepARTConv"
         # Model definition
-        head_dim = 2048
+        head_dim = d["head_dim"]
 
         size_tuple = (size(data.train.x)[1:3]..., 1)
-        # size_tuple = (28, 28, 1, 1)
         conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
         local_art = DeepART.ARTINSTART(
             conv_model,
             head_dim=head_dim,
-            # beta=0.01,
-            beta=0.1,
-            # rho=0.65,
-            rho=0.65,
+            beta=d["beta"],
+            rho=d["rho"],
             update="art",
             softwta=true,
             gpu=true,
@@ -119,7 +109,8 @@ function tt_dist(
     # Process the statements
     # @info "Worker $(myid()): training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
     @info "Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
-    results = tt_basic!(art, data, 1000, 1000)
+    # results = tt_basic!(art, data, d["n_train"], d["n_test"])
+    results = tt_basic!(art, data)
 
     # Compute the confusion while we have the true y for this dataset shuffle
     n_classes = length(unique(data.test.y))

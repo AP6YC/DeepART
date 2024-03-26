@@ -29,8 +29,8 @@ EXP_TOP = "1_baselines"
 EXP_NAME = "dist"
 N_PROCS = Sys.iswindows() ? 0 : 31
 
-N_SIMS = Sys.iswindows() ? 1 : 1000
-N_TRAIN = 1000
+N_SIMS = Sys.iswindows() ? 1 : 5
+N_TRAIN = 2000
 N_TEST = 1000
 
 # Set the simulation parameters
@@ -42,13 +42,14 @@ sim_params = Dict{String, Any}(
     ],
     "rho" => [
         @onlyif("m" == "SFAM", 0.6),
-        @onlyif("m" == "DeepARTDense", 0.2),
-        @onlyif("m" == "DeepARTConv", 0.2),
+        @onlyif("m" == "DeepARTDense", 0.3),
+        @onlyif("m" == "DeepARTConv", 0.3),
     ],
-    # "rho" => @onlyif("m" == "DeepARTDense", 0.2),
+    "beta" => 0.01,
     "rng_seed" => collect(1:N_SIMS),
     "n_train" => N_TRAIN,
     "n_test" => N_TEST,
+    "head_dim" => 1024,
     "dataset" => [
         "mnist",
         "fashionmnist",
@@ -78,7 +79,7 @@ addprocs(N_PROCS, exeflags="--project=.")
 
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
-        "1_dist",
+        "1_baselines",
         # "sfam",
         # "sweep",
         args...
