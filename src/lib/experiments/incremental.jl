@@ -22,7 +22,9 @@ function incremental_supervised_train!(
     x::RealArray,
     y::Integer,
 )
-    return ART.train!(art, x, y=y)
+    # return ART.train!(art, x, y=y)
+    ART.train!(art, x, y=y)
+    return art.labels[art.stats["bmu"]]
 end
 
 """
@@ -38,7 +40,9 @@ function incremental_supervised_train!(
     x::RealArray,
     y::Integer,
 )
-    return ART.train!(art, x, y)
+    # return ART.train!(art, x, y)
+    ART.train!(art, x, y)
+    return art.labels[art.stats["bmu"]]
 end
 
 """
@@ -54,7 +58,9 @@ function incremental_supervised_train!(
     x::RealArray,
     y::Integer,
 )
-    return DeepART.train!(art, x, y=y)
+    # return DeepART.train!(art, x, y=y)
+    DeepART.train!(art, x, y=y)
+    return art.labels[art.stats["bmu"]]
 end
 
 # -----------------------------------------------------------------------------
