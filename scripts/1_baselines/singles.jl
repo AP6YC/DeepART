@@ -39,6 +39,8 @@ EXP_TOP = ["singles"]
 # DATA
 # -----------------------------------------------------------------------------
 
+@info "----------------- LOADING DATA -----------------"
+
 # all_data = DeepART.load_all_datasets()
 # data = all_data["moon"]
 data = DeepART.get_mnist()
@@ -58,6 +60,8 @@ GPU && fdata |> gpu
 # -----------------------------------------------------------------------------
 # BASELINE WITHOUT TRAINING THE EXTRACTOR
 # -----------------------------------------------------------------------------
+
+@info "----------------- BASELINE -----------------"
 
 # F2 layer size
 head_dim = 256
@@ -91,6 +95,8 @@ DeepART.plot_confusion_matrix(
 # -----------------------------------------------------------------------------
 # DENSE
 # -----------------------------------------------------------------------------
+
+@info "----------------- DENSE -----------------"
 
 # F2 layer size
 # head_dim = 256
@@ -131,6 +137,8 @@ DeepART.plot_confusion_matrix(
 # CONVOLUTIONAL
 # -----------------------------------------------------------------------------
 
+@info "----------------- CONVOLUTIONAL -----------------"
+
 head_dim = 1024
 size_tuple = (size(data.train.x)[1:3]..., 1)
 conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
@@ -157,10 +165,11 @@ DeepART.plot_confusion_matrix(
     EXP_TOP,
 )
 
-
 # -----------------------------------------------------------------------------
 # LEADER NEURON
 # -----------------------------------------------------------------------------
+
+@info "----------------- LEADER NEURON -----------------"
 
 head_dim = 10
 
@@ -199,6 +208,8 @@ DeepART.plot_confusion_matrix(
 # -----------------------------------------------------------------------------
 # L2M DENSE
 # -----------------------------------------------------------------------------
+
+@info "----------------- L2M DENSE -----------------"
 
 cidata = DeepART.ClassIncrementalDataSplit(fdata)
 # cidata = DeepART.ClassIncrementalDataSplit(data)
@@ -247,6 +258,8 @@ DeepART.plot_confusion_matrix(
 # -----------------------------------------------------------------------------
 # L2M CONV
 # -----------------------------------------------------------------------------
+
+@info "----------------- L2M CONVOLUTIONAL -----------------"
 
 cidata = DeepART.ClassIncrementalDataSplit(data)
 groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
