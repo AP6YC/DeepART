@@ -128,12 +128,6 @@ function get_data_subset(
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
-    # return DataSplit(
-    #     get_x_subset(data.train.x, n_train),
-    #     get_y_subset(data.train.y, n_train),
-    #     get_x_subset(data.test.x, n_test),
-    #     get_y_subset(data.test.y, n_test),
-    # )
     return DataSplit(
         get_supervised_subset(data.train, n_train),
         get_supervised_subset(data.test, n_test),
