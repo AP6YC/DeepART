@@ -33,8 +33,8 @@ DEV = Sys.iswindows()
 ONE_SCENARIO = false
 # DISPLAY = DEV
 DISPLAY = true
-GPU = !DEV
-# GPU = true
+# GPU = !DEV
+GPU = true
 
 # -----------------------------------------------------------------------------
 # SIM PARAMETERS
@@ -43,7 +43,7 @@ GPU = !DEV
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        # "SFAM",
+        "SFAM",
         "DeepARTDense",
         "DeepARTConv",
     ],
@@ -115,6 +115,7 @@ for scenario_top_dir in readdir(top_dir)
                 data,
                 scenario_dir,
                 l2l,
+                d,
             )
 
             ONE_SCENARIO && break

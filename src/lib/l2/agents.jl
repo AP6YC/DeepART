@@ -255,6 +255,7 @@ function run_scenario(
     data::ClassIncrementalDataSplit,
     # data_logger::PythonCall.Py,
     data_logger,
+    d::AbstractDict,
 )
     # Initialize the "last sequence"
     # last_seq = SequenceNums(-1, -1, -1)
@@ -262,9 +263,9 @@ function run_scenario(
     # Initialize the progressbar
     n_exp = length(agent.scenario.queue)
     # block_log_string = "Block 1"
+
     p = Progress(n_exp; showspeed=true)
-    # @info agent.scenario.queue
-    agent_name = typeof(agent.agent).name
+
     # Iterate while the agent's scenario is incomplete
     while !is_complete(agent)
         # Get the next experience
@@ -277,7 +278,8 @@ function run_scenario(
         # Logging
         next!(p; showvalues = [
             # (:Block, cur_seq.block_num),
-            (:Alg, agent_name),
+            (:Alg, d["m"]),
+            (:GPU, d["gpu"]),
             (:Block, exp.seq_nums.block_num),
             (:Type, exp.block_type),
             (:NCat, agent.agent.n_categories),
@@ -328,6 +330,7 @@ function full_scenario(
     exp_dir::AbstractString,
     # l2logger::PythonCall.Py,
     l2logger,
+    d::AbstractDict,
 )
     # Load the config and scenario
     # config = DeepART.json_load(DeepART.config_dir("l2", data_key, "config.json"))
@@ -373,6 +376,7 @@ function full_scenario(
         name_map,
         tidata,
         data_logger,
+        d,
     )
 
     # Finally close the logger
