@@ -23,6 +23,12 @@ theme(:dracula)
 # CONFIG
 # -----------------------------------------------------------------------------
 
+# Accept data downloads
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
+# Fix plotting on headless
+ENV["GKSwstype"] = "100"
+
 # N_TRAIN = 10000
 # N_TRAIN = 4000
 N_TRAIN = 1000

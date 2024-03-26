@@ -7,19 +7,25 @@ This script runs the distributed task-homogenous train/test experiment.
 # Authors
 - Sasha Petrenko <petrenkos@mst.edu> @AP6YC
 """
+
 # -----------------------------------------------------------------------------
-# PREAMBLE
+# DEPENDENCIES
 # -----------------------------------------------------------------------------
 
 using Revise
 using DeepART
-
-# -----------------------------------------------------------------------------
-# ADDITIONAL DEPENDENCIES
-# -----------------------------------------------------------------------------
-
 using Distributed
 using DrWatson
+
+# -----------------------------------------------------------------------------
+# CONFIG
+# -----------------------------------------------------------------------------
+
+# Accept data downloads
+ENV["DATADEPS_ALWAYS_ACCEPT"] = true
+
+# Fix plotting on headless
+ENV["GKSwstype"] = "100"
 
 # -----------------------------------------------------------------------------
 # VARIABLES
