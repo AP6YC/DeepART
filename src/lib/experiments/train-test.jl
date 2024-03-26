@@ -356,11 +356,25 @@ end
 # function train_test_plot(
 #     data::DataSplit,
 #     opts::Dict,
+#     conv::Bool=false,
 # )
+#     # Load the dataset with the provided options
+#     # isconv = !(d["m"] == "DeepARTConv")
+#     # data = load_one_dataset(
+#     #     d["dataset"],
+#     #     flatten=isconv,
+#     #     gray=true,
+#     #     n_train=d["n_train"],
+#     #     n_test=d["n_test"],
+#     # )
 
 #     head_dim = 1024
 #     size_tuple = (size(data.train.x)[1:3]..., 1)
 #     conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
+
+#     # Construct the module from the options
+#     art = get_module_from_options(d, data)
+
 
 #     art = DeepART.ARTINSTART(
 #         conv_model,

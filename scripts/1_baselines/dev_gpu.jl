@@ -9,10 +9,10 @@ Development script for deep instar learning.
 using Revise
 using DeepART
 using Flux
+using Plots
 # using CUDA
 # using ProgressMeter
 # using AdaptiveResonance
-using Plots
 
 # theme(:dark)
 # theme(:juno)
