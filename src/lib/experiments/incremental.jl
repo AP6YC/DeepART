@@ -23,8 +23,14 @@ function incremental_supervised_train!(
     y::Integer,
 )
     # return ART.train!(art, x, y=y)
-    ART.train!(art, x, y=y)
-    return art.labels[art.stats["bmu"]]
+
+    y_hat = ART.train!(art, x, y=y)
+    # bmu = art.labels[art.stats["bmu"]]
+    # bmu = isempty(art.labels) ? 0 : art.labels[art.stats["bmu"]]
+    # return (bmu == 0) ? y_hat : bmu
+    bmu = art.stats["bmu"]
+    return iszero(bmu) ? y_hat : art.labels[bmu]
+    # return isempty(art.labels) ? y_hat : art.labels[art.stats["bmu"]]
 end
 
 """
@@ -41,8 +47,13 @@ function incremental_supervised_train!(
     y::Integer,
 )
     # return ART.train!(art, x, y)
-    ART.train!(art, x, y)
-    return art.labels[art.stats["bmu"]]
+
+    y_hat = ART.train!(art, x, y)
+    # bmu = isempty(art.labels) ? 0 : art.labels[art.stats["bmu"]]
+    # return (bmu == 0) ? y_hat : bmu
+    bmu = art.stats["bmu"]
+    return iszero(bmu) ? y_hat : art.labels[bmu]
+    # return isempty(art.labels) ? y_hat : art.labels[art.stats["bmu"]]
 end
 
 """
@@ -59,8 +70,14 @@ function incremental_supervised_train!(
     y::Integer,
 )
     # return DeepART.train!(art, x, y=y)
-    DeepART.train!(art, x, y=y)
-    return art.labels[art.stats["bmu"]]
+
+    y_hat = DeepART.train!(art, x, y=y)
+    # return art.labels[art.stats["bmu"]]
+    # bmu = art.labels[art.stats["bmu"]]
+    # bmu = isempty(art.labels) ? 0 : art.labels[art.stats["bmu"]]
+    bmu = art.stats["bmu"]
+    return iszero(bmu) ? y_hat : art.labels[bmu]
+    # return isempty(art.labels) ? y_hat : art.labels[art.stats["bmu"]]
 end
 
 # -----------------------------------------------------------------------------
