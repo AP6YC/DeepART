@@ -56,6 +56,7 @@ function tt_dist(
     data = load_one_dataset(
         d["dataset"],
         flatten=isconv,
+        gray=true,
         n_train=d["n_train"],
         n_test=d["n_test"],
     )
