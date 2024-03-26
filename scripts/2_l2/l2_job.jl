@@ -18,7 +18,44 @@ using PythonCall
 # -----------------------------------------------------------------------------
 
 top_dir = DeepART.results_dir("l2metrics", "scenarios")
+
 ONE_SCENARIO = true
+
+EXP_TOP = "2_l2"
+EXP_NAME = "l2logs"
+# N_PROCS = Sys.iswindows() ? 0 : 31
+
+# N_SIMS = Sys.iswindows() ? 1 : 1000
+N_TRAIN = 1000
+N_TEST = 1000
+
+# Set the simulation parameters
+sim_params = Dict{String, Any}(
+    "m" => [
+        "SFAM",
+        "DeepARTDense",
+        "DeepARTConv",
+    ],
+    "rho" => [
+        @onlyif("m" == "SFAM", 0.6),
+        @onlyif("m" == "DeepARTDense", 0.2),
+        @onlyif("m" == "DeepARTConv", 0.2),
+    ],
+    "rng_seed" => collect(1:N_SIMS),
+    "n_train" => N_TRAIN,
+    "n_test" => N_TEST,
+    "dataset" => [
+        "mnist",
+        "fashionmnist",
+        "cifar10",
+        "cifar100_fine",
+        "cifar100_coarse",
+        "usps",
+    ],
+)
+
+
+
 
 # -----------------------------------------------------------------------------
 # PYTHONCALL SETUP

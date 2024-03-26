@@ -318,57 +318,41 @@ tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
 GPU && tidata |> gpu
 
+# Model definition
+head_dim = 1024
+model = DeepART.get_rep_dense(n_input, head_dim)
 
-model = Flux.@autosize (n_input,) Chain(
-    DeepART.CC(),
-    Dense(_, 512, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 256, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 128, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, 64, sigmoid, bias=false),
-    DeepART.CC(),
-    Dense(_, head_dim, sigmoid, bias=false),
-)
-
-art = DeepART.INSTART(
+art = DeepART.ARTINSTART(
     model,
     head_dim = head_dim,
     # beta = 0.0001, # good, 0.545
-    # beta = 0.001,
-    # beta=1.0,
     beta = 0.01,
-    # beta = 0.1,
     update="art",
     softwta=true,
-    # rho=0.1,
-    rho = 0.05,
+    rho=0.3,
     # uncommitted=true,
     gpu=GPU,
 )
 
-p = DeepART.tt_inc!(art, tidata, fdata, n_train, n_test)
+results = DeepART.tt_inc!(art, tidata, fdata, n_train, n_test)
 
 
 
-cidata = DeepART.ClassIncrementalDataSplit(data)
 # cidata = DeepART.ClassIncrementalDataSplit(data)
-# groupings = [collect(1:5), collect(6:10)]
-# groupings = [collect(1:4), collect(5:7), collect(8:10)]
-groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
-tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
-n_tasks = length(tidata.train)
-GPU && tidata |> gpu
+# # cidata = DeepART.ClassIncrementalDataSplit(data)
+# groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
+# tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
+# n_tasks = length(tidata.train)
+# GPU && tidata |> gpu
 
-results = DeepART.tt_inc!(art, tidata, data, n_train, n_test)
+# results = DeepART.tt_inc!(art, tidata, data, n_train, n_test)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
     data.test.y[1:n_test],
     results["y_hats"],
     string.(collect(0:9)),
-    "conv_ti_confusion",
+    "ti_confusion",
     ["bp_instar"],
 )
 

@@ -98,42 +98,13 @@ function tt_dist(
 
         size_tuple = (size(data.train.x)[1:3]..., 1)
         # size_tuple = (28, 28, 1, 1)
-        conv_model = Flux.@autosize (size_tuple,) Chain(
-            DeepART.CCConv(),
-            Chain(
-                Conv((5,5), _ => 6, sigmoid, bias=false),
-            ),
-            # Chain(
-            #     MaxPool((2,2)),
-            #     DeepART.CCConv(),
-            # ),
-            # Chain(
-            #     Conv((5,5), _ => 6, sigmoid, bias=false),
-            # ),
-            # BatchNorm(_),
-            Chain(
-                # MaxPool((2,2)),
-                MaxPool((2,2)),
-                Flux.flatten,
-                DeepART.CC(),
-            ),
-            # Dense(_, 128, sigmoid, bias=false),
-            # DeepART.CC(),
-            Chain(
-                Dense(_, head_dim, sigmoid, bias=false),
-                vec,
-            ),
-            # Dense(15=>10, sigmoid),
-            # Flux.flatten,
-            # Dense(_=>15,relu),
-            # Dense(15=>10,sigmoid),
-            # softmax
-        )
+        conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
         local_art = DeepART.ARTINSTART(
             conv_model,
             head_dim=head_dim,
             # beta=0.01,
             beta=0.1,
+            # rho=0.65,
             rho=0.65,
             update="art",
             softwta=true,

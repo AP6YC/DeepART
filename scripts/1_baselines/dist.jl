@@ -38,9 +38,14 @@ sim_params = Dict{String, Any}(
     "m" => [
         "SFAM",
         "DeepARTDense",
-        "DeepARTConv"
+        "DeepARTConv",
     ],
-    "rho" => 0.6,
+    "rho" => [
+        @onlyif("m" == "SFAM", 0.6),
+        @onlyif("m" == "DeepARTDense", 0.2),
+        @onlyif("m" == "DeepARTConv", 0.2),
+    ],
+    # "rho" => @onlyif("m" == "DeepARTDense", 0.2),
     "rng_seed" => collect(1:N_SIMS),
     "n_train" => N_TRAIN,
     "n_test" => N_TEST,
