@@ -214,7 +214,7 @@ cidata = DeepART.ClassIncrementalDataSplit(fdata)
 groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
-GPU && tidata |> gpu
+# GPU && tidata |> gpu
 
 # Model definition
 head_dim = 1024

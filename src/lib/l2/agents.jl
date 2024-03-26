@@ -183,14 +183,16 @@ function evaluate_agent!(
 
     # If we are updating the model, run the training function
     if experience.update_model
-        sample = data.train[dataset_index].x[:, datum_index]
-        label = data.train[dataset_index].y[datum_index]
+        # sample = data.train[dataset_index].x[:, datum_index]
+        # label = data.train[dataset_index].y[datum_index]
+        sample, label = data.train[dataset_index][datum_index]
         # y_hat = AdaptiveResonance.train!(agent.agent, sample, y=label)
         y_hat = incremental_supervised_train!(agent.agent, sample, label)
     # elseif experience.block_type == "test":
     else
-        sample = data.test[dataset_index].x[:, datum_index]
-        label = data.test[dataset_index].y[datum_index]
+        # sample = data.test[dataset_index].x[:, datum_index]
+        # label = data.test[dataset_index].y[datum_index]
+        sample, label = data.train[dataset_index][datum_index]
         # y_hat = AdaptiveResonance.classify(agent.agent, sample)
         y_hat = incremental_classify(agent.agent, sample)
     end
@@ -360,6 +362,11 @@ function full_scenario(
     # tidata = TaskIncrementalDataSplit(data, groupings)
     tidata, name_map = L2TaskIncrementalDataSplit(data, groupings)
 
+    # Put the x data onto the GPU if required
+    if agent.agent.opts.gpu
+        tidata = gputize(tidata)
+    end
+
     # # Run the scenario for this dataset
     DeepART.run_scenario(
         agent,
@@ -372,4 +379,31 @@ function full_scenario(
     data_logger.close()
 
     return
+end
+
+function gputize(
+    data::SupervisedDataset
+)
+    return SupervisedDataset(
+        gpu(data.x),
+        data.y
+    )
+end
+
+function gputize(
+    data::DataSplit,
+)
+    return DataSplit(
+        gputize(data.train),
+        gputize(data.test),
+    )
+end
+
+function gputize(
+    tidata::ClassIncrementalDataSplit
+)
+    return ClassIncrementalDataSplit(
+        [gputize(t) for t in tidata.train],
+        [gputize(t) for t in tidata.test],
+    )
 end

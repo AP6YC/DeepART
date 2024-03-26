@@ -10,9 +10,6 @@ using Revise
 using DeepART
 using Flux
 using Plots
-# using CUDA
-# using ProgressMeter
-# using AdaptiveResonance
 
 # theme(:dark)
 # theme(:juno)
@@ -37,12 +34,11 @@ DISPLAY = true
 DEV = Sys.iswindows()
 N_TRAIN = DEV ? 500 : 4000
 N_TEST = DEV ? 500 : 4000
-GPU = !DEV
+# GPU = !DEV
+GPU = true
 
 BETA_S = 0.5
 BETA_D = 0.01
-
-GPU = true
 
 EXP_TOP = ["singles", "gpus"]
 
@@ -60,6 +56,8 @@ data = DeepART.load_one_dataset(
 
 # fdata = DeepART.flatty_hotty(data)
 fdata = DeepART.flatty(data)
+
+gpudata = DeepART.gputize(fdata)
 
 n_classes = length(unique(data.train.y))
 
@@ -89,6 +87,9 @@ art = DeepART.ARTINSTART(
     gpu=GPU,
     # gpu=false,
 )
+
+xf = DeepART.get_sample(gpudata.train, 1)
+art.model(xf)
 
 # Train/test
 results = DeepART.tt_basic!(

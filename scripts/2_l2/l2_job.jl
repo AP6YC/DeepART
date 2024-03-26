@@ -29,9 +29,12 @@ EXP_NAME = "l2logs"
 # -----------------------------------------------------------------------------
 
 DEV = Sys.iswindows()
-ONE_SCENARIO = DEV
-DISPLAY = DEV
+# ONE_SCENARIO = DEV
+ONE_SCENARIO = false
+# DISPLAY = DEV
+DISPLAY = true
 GPU = !DEV
+# GPU = true
 
 # -----------------------------------------------------------------------------
 # SIM PARAMETERS
@@ -40,7 +43,7 @@ GPU = !DEV
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        "SFAM",
+        # "SFAM",
         "DeepARTDense",
         "DeepARTConv",
     ],
@@ -89,13 +92,14 @@ for scenario_top_dir in readdir(top_dir)
     # Iterate over every each model and parameter combination
     for d in dicts
 
+        isconv = !(d["m"] == "DeepARTConv")
+
         # Load the dataset associated with the top scenario name
         data = DeepART.load_one_dataset(
             scenario_top_dir,
-            flatten=true,
-            # n_train=100,
-            # n_test=100,
+            flatten=!isconv,
         )
+
         # Convert this dataset to its class-incremental version, letting the scenario determine the grouping
         data = DeepART.ClassIncrementalDataSplit(data)
 
