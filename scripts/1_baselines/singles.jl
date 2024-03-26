@@ -47,7 +47,7 @@ EXP_TOP = ["singles"]
 
 @info "----------------- LOADING DATA -----------------"
 
-data = load_one_dataset(
+data = DeepART.load_one_dataset(
     DATASET,
     n_train=N_TRAIN,
     n_test=N_TEST,
