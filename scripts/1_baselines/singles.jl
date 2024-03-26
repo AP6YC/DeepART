@@ -9,8 +9,8 @@ Development script for deep instar learning.
 using Revise
 using DeepART
 using Flux
-using CUDA
-using ProgressMeter
+# using CUDA
+# using ProgressMeter
 using AdaptiveResonance
 using Plots
 
@@ -29,10 +29,8 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 # Fix plotting on headless
 ENV["GKSwstype"] = "100"
 
-# N_BATCH = 128
-# N_BATCH = 1
-# N_EPOCH = 1
-# ACC_ITER = 10
+# Dataset selection
+DATASET = "mnist"
 DISPLAY = true
 
 # Separate development and cluster settings
@@ -49,17 +47,11 @@ EXP_TOP = ["singles"]
 
 @info "----------------- LOADING DATA -----------------"
 
-# all_data = DeepART.load_all_datasets()
-# data = all_data["moon"]
-data = DeepART.get_mnist(
+data = load_one_dataset(
+    DATASET,
     n_train=N_TRAIN,
     n_test=N_TEST,
 )
-# data = DeepART.get_cifar10(
-#     # gray=true
-#     n_train=N_TRAIN,
-#     n_test=N_TEST,
-# )
 fdata = DeepART.flatty(data)
 
 n_classes = length(unique(data.train.y))
@@ -185,56 +177,6 @@ DeepART.plot_confusion_matrix(
     results["y_hats"],
     string.(collect(0:9)),
     "conv_basic_confusion",
-    EXP_TOP,
-)
-
-# -----------------------------------------------------------------------------
-# LEADER NEURON
-# -----------------------------------------------------------------------------
-
-@info "----------------- LEADER NEURON -----------------"
-
-head_dim = 10
-
-# Model definition
-model = DeepART.get_rep_dense(n_input, head_dim)
-
-art = DeepART.ARTINSTART(
-    model,
-    head_dim=head_dim,
-    # beta=1.0,
-    beta=0.1,
-    rho=0.65,
-    update="art",
-    softwta=true,
-    gpu=GPU,
-    leader=true,
-)
-
-dev_xf = fdata.train.x[:, 1]
-prs = Flux.params(art.model)
-acts = Flux.activations(art.model, dev_xf)
-out = art.model(dev_xf)
-local_data = DeepART.get_mnist(
-    flatten=true,
-    n_train=2000,
-    n_test=1000,
-)
-
-# Train/test
-results = DeepART.tt_basic!(
-    art,
-    local_data,
-    display=DISPLAY,
-)
-@info "Results: " results["perf"] results["n_cat"]
-
-# Create the confusion matrix from this experiment
-DeepART.plot_confusion_matrix(
-    local_data.test.y,
-    results["y_hats"],
-    string.(collect(0:9)),
-    "leader_basic_confusion",
     EXP_TOP,
 )
 
