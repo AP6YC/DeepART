@@ -73,93 +73,37 @@ $ARG_N_TRAIN
 """
 function basic_train!(
     art::CommonARTModule,
-    data::DataSplit,
-    n_train::Integer=IInf,
+    # data::DataSplit;
+    data::SupervisedDataset;
+    display::Bool=false,
+    desc::AbstractString="Task-Homogenous Train",
 )
-    # Get the number of training samples
-    l_n_train = get_n(n_train, data.train)
-    # @info "TRAINING $l_n_train samples"
+    # Create the data loader
+    train_loader = Flux.DataLoader(data, batchsize=1)
 
-
-    train_loader = Flux.DataLoader(data.train, batchsize=1)
-
+    # If using the gpu, push the data onto it
     if art.opts.gpu
         train_loader = train_loader |> gpu
     end
 
     # Iterate over the training samples
     pr = Progress(
-        # l_n_train;
         length(train_loader);
-        desc="Task-Homogenous Training",
-        enabled = Sys.iswindows()
+        desc=desc,
+        enabled = display,
     )
 
-    # for ix = 1:l_n_train
+    # Get the estimates on the training data
+    y_hats = Vector{Int}()
     for (xf, label) in train_loader
-        # Get the current sample and label
-        # xf = data.train.x[:, ix]
-        # xf = get_sample(data.train, ix)
-        # label = data.train.y[ix]
-
-        # Train on the individual sample and label
-        # local_label = art.opts.gpu ? cpu(label)[1] : label[1]
-
-        incremental_supervised_train!(art, xf, cpu(label)[1])
-
-        # Loop logging
+        y_hat = incremental_supervised_train!(art, xf, cpu(label)[1])
+        # Push the estimate
+        push!(y_hats, y_hat)
+        # Update the display iterator
         next!(pr; showvalues=[
             (:NCat, art.n_categories),
         ])
     end
-end
-
-
-"""
-Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
-
-# Arguments
-$ARG_COMMONARTMODULE
-$ARG_N_TEST
-"""
-function basic_test(
-    art::CommonARTModule,
-    data::SupervisedDataset,
-    n_test::Integer=IInf,
-)
-    # Get the number of testing samples
-    l_n_test = get_n(n_test, data)
-
-    # Get the estimates on the test data
-    y_hats = Vector{Int}()
-
-
-    test_loader = Flux.DataLoader(data.test, batchsize=1)
-
-    if art.opts.gpu
-        test_loader = test_loader |> gpu
-    end
-
-    pr = Progress(
-        # l_n_test;
-        length(test_loader);
-        desc="Task-Homogenous Testing",
-        enabled = Sys.iswindows(),
-    )
-
-    # for ix = 1:l_n_test
-    for (xf, _) in test_loader
-        # xf = data.test.x[:, ix]
-        # xf = get_sample(data, ix)
-        # y_hat = DeepART.classify(art, xf, get_bmu=true)
-        y_hat = incremental_classify(art, xf)
-        push!(y_hats, y_hat)
-        next!(pr)
-    end
-
-    # # Calculate the performance and log
-    # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
-    # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     # Return the estimates
     return y_hats
@@ -170,56 +114,94 @@ Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
 
 # Arguments
 $ARG_COMMONARTMODULE
-$ARG_DATASPLIT
 $ARG_N_TEST
 """
 function basic_test(
     art::CommonARTModule,
-    data::DataSplit,
-    n_test::Integer=IInf,
+    data::SupervisedDataset;
+    display::Bool=false,
+    desc::AbstractString="Task-Homogenous Test",
 )
-    # Get the number of testing samples
-    l_n_test = get_n(n_test, data.test)
+    # Create the data loader
+    test_loader = Flux.DataLoader(data, batchsize=1)
 
-    # Get the estimates on the test data
-    y_hats = Vector{Int}()
-
-    # pr = Progress(
-    #     l_n_test;
-    #     desc="Task-Homogenous Testing",
-    #     enabled = Sys.iswindows(),
-    # )
-
-    test_loader = Flux.DataLoader(data.test, batchsize=1)
-
+    # If using the gpu, push the data onto it
     if art.opts.gpu
         test_loader = test_loader |> gpu
     end
 
+    # Create a display iterator
     pr = Progress(
-        # l_n_test;
         length(test_loader);
-        desc="Task-Homogenous Testing",
-        enabled = Sys.iswindows(),
+        desc=desc,
+        enabled = display,
     )
 
-    # for ix = 1:l_n_test
+    # Get the estimates on the test data
+    y_hats = Vector{Int}()
     for (xf, _) in test_loader
-        # xf = data.test.x[:, ix]
-        # xf = get_sample(data.test, ix)
-        # y_hat = DeepART.classify(art, xf, get_bmu=true)
+        # Classify the sample
         y_hat = incremental_classify(art, xf)
+        # Push the estimate
         push!(y_hats, y_hat)
+        # Update the display iterator
         next!(pr)
     end
-
-    # # Calculate the performance and log
-    # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
-    # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     # Return the estimates
     return y_hats
 end
+
+# """
+# Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
+
+# # Arguments
+# $ARG_COMMONARTMODULE
+# $ARG_DATASPLIT
+# $ARG_N_TEST
+# """
+# function basic_test(
+#     art::CommonARTModule,
+#     data::DataSplit,
+#     # n_test::Integer=IInf,
+# )
+#     # Get the number of testing samples
+#     # l_n_test = get_n(n_test, data.test)
+
+#     # Get the estimates on the test data
+#     y_hats = Vector{Int}()
+
+
+#     test_loader = Flux.DataLoader(data.test, batchsize=1)
+
+#     if art.opts.gpu
+#         test_loader = test_loader |> gpu
+#     end
+
+#     pr = Progress(
+#         # l_n_test;
+#         length(test_loader);
+#         desc="Task-Homogenous Testing",
+#         enabled = Sys.iswindows(),
+#     )
+
+#     # for ix = 1:l_n_test
+#     for (xf, _) in test_loader
+#         # xf = data.test.x[:, ix]
+#         # xf = get_sample(data.test, ix)
+#         # y_hat = DeepART.classify(art, xf, get_bmu=true)
+#         y_hat = incremental_classify(art, xf)
+#         push!(y_hats, y_hat)
+#         next!(pr)
+#     end
+
+#     # # Calculate the performance and log
+#     # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
+#     # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+
+#     # Return the estimates
+#     return y_hats
+# end
 
 """
 Task-incremental training/testing loop.
@@ -232,60 +214,74 @@ $ARG_N_TRAIN
 function train_inc!(
     # art::DeepARTModule,
     art::CommonARTModule,
-    tidata::ClassIncrementalDataSplit,
-    n_train::Integer=IInf,
+    tidata::ClassIncrementalDataSplit;
+    display::Bool=false,
+    desc::AbstractString="Task-Incremental Train",
+    # n_train::Integer=IInf,
 )
     # Infer the number of tasks to train over
     n_tasks = length(tidata.train)
 
     # Iterate over the tasks
+    y_hats = Vector{Vector{Int}}()
     for ix = 1:n_tasks
-        # Get the local batch of training data
-        task_x = tidata.train[ix].x
-        task_y = tidata.train[ix].y
-
-        # l_n_train = min(n_train, length(task_y))
-        l_n_train = get_n(n_train, tidata.train[ix])
-
-        # Incrementally train over the current task's training data
-        pr = Progress(
-            l_n_train;
-            desc="Task-Incremental Training: Task $(ix)",
-            enabled = Sys.iswindows(),
+        # Run a single task-homogenous training loop
+        local_desc = "$desc: Task $(ix)"
+        local_y_hats = basic_train!(
+            art,
+            tidata.train[ix],
+            display=display,
+            desc=local_desc,
         )
-        for jx = 1:l_n_train
-            # Get the current sample and label
-            # xf = task_x[:, jx]
-            xf = get_sample(task_x, jx)
-            label = task_y[jx]
+        push!(y_hats, local_y_hats)
+        # # Get the local batch of training data
+        # task_x = tidata.train[ix].x
+        # task_y = tidata.train[ix].y
 
-            # Train the module
-            # DeepART.train!(art, xf, y=label)
-            incremental_supervised_train!(art, xf, label)
+        # # l_n_train = min(n_train, length(task_y))
+        # l_n_train = get_n(n_train, tidata.train[ix])
 
-            # Update the progress bar
-            # next!(pr)
-            # Loop logging
-            next!(pr; showvalues=[
-                (:NCat, art.n_categories),
-            ])
-        end
+        # # Incrementally train over the current task's training data
+        # pr = Progress(
+        #     l_n_train;
+        #     desc="Task-Incremental Training: Task $(ix)",
+        #     enabled = Sys.iswindows(),
+        # )
+
+        # for jx = 1:l_n_train
+        #     # Get the current sample and label
+        #     # xf = task_x[:, jx]
+        #     xf = get_sample(task_x, jx)
+        #     label = task_y[jx]
+
+        #     # Train the module
+        #     # DeepART.train!(art, xf, y=label)
+        #     incremental_supervised_train!(art, xf, label)
+
+        #     # Update the progress bar
+        #     next!(pr; showvalues=[
+        #         (:NCat, art.n_categories),
+        #     ])
+        # end
     end
+    return y_hats
 end
 
 """
 Computes the performance of the ART module given some estimates.
 """
 function get_perf(
-    art::CommonARTModule,
-    data::DataSplit,
+    # art::CommonARTModule,
+    # data::DataSplit,
+    data::SupervisedDataset,
     y_hats::Vector{Int},
-    n_test::Integer=IInf,
+    # n_test::Integer=IInf,
 )
     # Get the number of testing samples
-    l_n_test = min(n_test, length(data.test.y))
+    # l_n_test = min(n_test, length(data.test.y))
 
-    perf = ART.performance(y_hats, data.test.y[1:l_n_test])
+    # perf = ART.performance(y_hats, data.test.y[1:l_n_test])
+    perf = ART.performance(y_hats, data.y)
     # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     return perf
@@ -318,38 +314,29 @@ $ARG_N_TRAIN
 $ARG_N_TEST
 """
 function tt_basic!(
-    # art::DeepARTModule,
     art::CommonARTModule,
-    data::DataSplit,
-    n_train::Integer=IInf,
-    n_test::Integer=IInf,
+    data::DataSplit;
+    display::Bool=false,
 )
     # Train
-    basic_train!(art, data, n_train)
+    # y_hats_train = basic_train!(art, data.train, display=display)
+    _ = basic_train!(art, data.train, display=display)
 
     # Test
-    y_hats = basic_test(art, data, n_test)
+    y_hats = basic_test(art, data.test, display=display)
 
     # Compute the performance fromt the test results
-    perf = get_perf(art, data, y_hats, n_test)
+    perf = get_perf(data.test, y_hats)
 
     # Compile the experiment results
     out_dict = Dict(
         "y_hats" => y_hats,
         "perf" => perf,
+        "n_cat" => art.n_categories,
     )
 
+    # Return the experiment results
     return out_dict
-
-    # # Confusion matrix
-    # p = DeepART.create_confusion_heatmap(
-    #     string.(collect(0:9)),
-    #     data.test.y[1:n_test],
-    #     y_hats,
-    # )
-
-    # # Return the plot
-    # return p
 end
 
 """
@@ -366,24 +353,21 @@ function tt_inc!(
     # art::DeepARTModule,
     art::CommonARTModule,
     tidata::ClassIncrementalDataSplit,
-    data::DataSplit,
-    n_train::Integer=IInf,
-    n_test::Integer=IInf,
+    data::DataSplit;
+    display::Bool=false,
 )
     # Task-incremental training
-    train_inc!(art, tidata, n_train)
-
-    # # Get the number of testing samples
-    # l_n_test = min(n_test, length(data.test.y))
+    _ = train_inc!(art, tidata, display=display)
 
     # Test
-    y_hats = basic_test(art, data, n_test)
+    y_hats = basic_test(art, data.test, display=display)
 
     # Compute the performance fromt the test results
-    perf = get_perf(art, data, y_hats, n_test)
+    perf = get_perf(data.test, y_hats)
 
     # Compile the experiment results
     out_dict = Dict(
+        "n_cats" => art.n_categories,
         "y_hats" => y_hats,
         "perf" => perf,
     )

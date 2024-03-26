@@ -21,19 +21,6 @@ function get_rep_dense(n_input::Integer, head_dim::Integer)
 end
 
 function get_rep_conv(size_tuple, head_dim::Integer)
-    # model = Flux.@autosize size_tuple Chain(
-    #     DeepART.CCConv(),
-    #     Conv((3, 3), 1=>32, relu),
-    #     MaxPool((2, 2)),
-    #     Conv((3, 3), 32=>64, relu),
-    #     MaxPool((2, 2)),
-    #     Conv((3, 3), 64=>128, relu),
-    #     MaxPool((2, 2)),
-    #     Conv((3, 3), 128=>256, relu),
-    #     MaxPool((2, 2)),
-    #     Dense(256, head_dim, sigmoid_fast),
-    # )
-
     conv_model = Flux.@autosize (size_tuple,) Chain(
         DeepART.CCConv(),
         Chain(

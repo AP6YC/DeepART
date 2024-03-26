@@ -173,20 +173,20 @@ function train!(
     # Compute the activations
     # acts = Flux.activations(art.model, x)
     acts = learn_model(art, x, y=y)
-
+    out = vec(cpu(acts[end]))
     # Train the head
     if art.opts.leader
         # y_hat = ART.train!(art.head, acts[end], y)
-        y_hat = argmax(acts[end])
+        y_hat = Int(argmax(out))
     else
         # head_input = if art.opts.gpu
         #     vec(cpu(acts[end]))
         # else
         #     vec(acts[end])
         # end
-        head_input = vec(cpu(acts[end]))
+        # head_input = vec(cpu(acts[end]))
         # y_hat = ART.train!(art.head, vec(cpu(acts[end])), y)
-        y_hat = ART.train!(art.head, head_input, y)
+        y_hat = ART.train!(art.head, out, y)
     end
 
     copy_stats!(art)
@@ -203,11 +203,10 @@ function classify(
 )
 
     # acts = Flux.activations(art.model, x)
-    out = art.model(x)
+    out = vec(cpu(art.model(x)))
 
     if art.opts.leader
-        # @info size(acts[end])
-        y_hat = argmax(acts[end])
+        y_hat = Int(argmax(out))
     else
         # head_input = if art.opts.gpu
         #     vec(cpu(acts[end]))
@@ -215,9 +214,9 @@ function classify(
         #     acts[end]
         # end
         # head_input = vec(cpu(acts[end]))
-        head_input = vec(cpu(out))
+        # head_input = vec(cpu(out))
         # y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)
-        y_hat = ART.classify(art.head, head_input, get_bmu=get_bmu)
+        y_hat = ART.classify(art.head, out, get_bmu=get_bmu)
     end
 
     copy_stats!(art)

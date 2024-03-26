@@ -209,8 +209,11 @@ function learn_model(
 
     # Leader neuron modification
     if !iszero(y) && art.opts.leader
-        outs[end][:] .= zero(eltype(xf))
-        outs[end][y] = one(el_type(xf))
+        # outs[end][:] .= zero(eltype(xf))
+        # outs[end][y] = one(eltype(xf))
+        outs[end][:] .= -one(Float32)
+        outs[end][y] = one(Float32)
+        # @info outs[end]
     end
 
     for ix = 1:n_layers

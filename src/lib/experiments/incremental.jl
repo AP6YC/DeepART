@@ -23,7 +23,6 @@ function incremental_supervised_train!(
     y::Integer,
 )
     # return ART.train!(art, x, y=y)
-
     y_hat = ART.train!(art, x, y=y)
     # bmu = art.labels[art.stats["bmu"]]
     # bmu = isempty(art.labels) ? 0 : art.labels[art.stats["bmu"]]

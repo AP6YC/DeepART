@@ -29,15 +29,17 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 # Fix plotting on headless
 ENV["GKSwstype"] = "100"
 
-# N_TRAIN = 10000
-# N_TRAIN = 4000
-N_TRAIN = 1000
-N_TEST = 1000
-N_BATCH = 128
+# N_BATCH = 128
 # N_BATCH = 1
-N_EPOCH = 1
-ACC_ITER = 10
-GPU = true
+# N_EPOCH = 1
+# ACC_ITER = 10
+DISPLAY = true
+
+# Separate development and cluster settings
+DEV = Sys.iswindows()
+N_TRAIN = DEV ? 500 : 10000
+N_TEST = DEV ? 500 : 4000
+GPU = !DEV
 
 EXP_TOP = ["singles"]
 
@@ -49,20 +51,20 @@ EXP_TOP = ["singles"]
 
 # all_data = DeepART.load_all_datasets()
 # data = all_data["moon"]
-# data = DeepART.get_mnist()
-data = DeepART.get_cifar10(gray=true)
-# fdata = DeepART.flatty_hotty(data)
+data = DeepART.get_mnist(
+    n_train=N_TRAIN,
+    n_test=N_TEST,
+)
+# data = DeepART.get_cifar10(
+#     # gray=true
+#     n_train=N_TRAIN,
+#     n_test=N_TEST,
+# )
 fdata = DeepART.flatty(data)
 
 n_classes = length(unique(data.train.y))
-n_train = min(N_TRAIN, length(data.train.y))
-n_test = min(N_TEST, length(data.test.y))
 
 n_input = size(fdata.train.x)[1]
-
-# Move to the GPU if the flag is high
-# GPU && data |> gpu
-# GPU && fdata |> gpu
 
 # -----------------------------------------------------------------------------
 # BASELINE WITHOUT TRAINING THE EXTRACTOR
@@ -76,7 +78,7 @@ head_dim = 256
 # Model definition
 model = DeepART.get_rep_dense(n_input, head_dim)
 
-art = DeepART.INSTART(
+art = DeepART.ARTINSTART(
 # art = DeepART.ARTINSTART(
     model;
     head_dim=head_dim,
@@ -88,11 +90,15 @@ art = DeepART.INSTART(
 )
 
 # Train/test
-results = DeepART.tt_basic!(art, fdata, n_train, n_test)
+results = DeepART.tt_basic!(
+    art,
+    fdata,
+    display=DISPLAY,
+)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "baseline_confusion",
@@ -106,7 +112,6 @@ DeepART.plot_confusion_matrix(
 @info "----------------- DENSE -----------------"
 
 # F2 layer size
-# head_dim = 256
 head_dim = 1024
 
 # Model definition
@@ -129,11 +134,15 @@ prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
 # Train/test
-results = DeepART.tt_basic!(art, fdata, n_train, n_test)
+results = DeepART.tt_basic!(
+    art,
+    fdata,
+    display=DISPLAY,
+)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "dense_basic_confusion",
@@ -161,12 +170,15 @@ art = DeepART.ARTINSTART(
     gpu=GPU,
 )
 
-results = DeepART.tt_basic!(art, data, n_train, n_test)
-# results = DeepART.tt_basic!(art, data, 4000, n_test)
+results = DeepART.tt_basic!(
+    art,
+    data,
+    display=DISPLAY
+)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "conv_basic_confusion",
@@ -187,7 +199,7 @@ model = DeepART.get_rep_dense(n_input, head_dim)
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
-    # beta=0.1,
+    # beta=1.0,
     beta=0.1,
     rho=0.65,
     update="art",
@@ -198,15 +210,24 @@ art = DeepART.ARTINSTART(
 
 dev_xf = fdata.train.x[:, 1]
 prs = Flux.params(art.model)
-acts = Flux.activations(model, dev_xf)
+acts = Flux.activations(art.model, dev_xf)
+out = art.model(dev_xf)
+local_data = DeepART.get_mnist(
+    flatten=true,
+    n_train=2000,
+    n_test=1000,
+)
 
 # Train/test
-results = DeepART.tt_basic!(art, fdata, n_train, n_test)
-# results = DeepART.tt_basic!(art, fdata, 1000, 1000)
+results = DeepART.tt_basic!(
+    art,
+    local_data,
+    display=DISPLAY,
+)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    local_data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "leader_basic_confusion",
@@ -247,7 +268,12 @@ dev_xf = fdata.train.x[:, 1]
 prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
-results = DeepART.tt_inc!(art, tidata, fdata, n_train, n_test)
+results = DeepART.tt_inc!(
+    art,
+    tidata,
+    fdata,
+    display=DISPLAY,
+)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -277,7 +303,6 @@ cidata = DeepART.ClassIncrementalDataSplit(data)
 groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
-GPU && tidata |> gpu
 
 head_dim = 1024
 size_tuple = (size(data.train.x)[1:3]..., 1)
@@ -287,14 +312,20 @@ art = DeepART.ARTINSTART(
     conv_model,
     head_dim=head_dim,
     beta=0.01,
-    rho=0.6,
+    # rho=0.6,
+    rho=0.3,
     update="art",
     softwta=true,
     gpu=GPU,
 )
 
 # results = DeepART.tt_basic!(art, data, n_train, n_test)
-results = DeepART.tt_inc!(art, tidata, data, n_train, n_test)
+results = DeepART.tt_inc!(
+    art,
+    tidata,
+    data,
+    display=DISPLAY,
+)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
