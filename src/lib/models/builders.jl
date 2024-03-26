@@ -1,4 +1,9 @@
+"""
+    builders.jl
 
+# Description
+Builders for ART modules from options.
+"""
 
 function get_module_from_options(
     d::AbstractDict,
@@ -32,7 +37,8 @@ function get_module_from_options(
         local_art = DeepART.ARTINSTART(
             model,
             head_dim=head_dim,
-            beta=d["beta"],
+            beta=d["beta_d"],
+            beta_s=d["beta_s"],
             rho=d["rho"],
             update="art",
             softwta=true,
@@ -49,7 +55,8 @@ function get_module_from_options(
         local_art = DeepART.ARTINSTART(
             conv_model,
             head_dim=head_dim,
-            beta=d["beta"],
+            beta=d["beta_d"],
+            beta_s=d["beta_s"],
             rho=d["rho"],
             update="art",
             softwta=true,

@@ -30,7 +30,8 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 ENV["GKSwstype"] = "100"
 
 # Dataset selection
-DATASET = "mnist"
+# DATASET = "mnist"
+DATASET = "omniglot"
 DISPLAY = true
 
 # Separate development and cluster settings
@@ -39,16 +40,17 @@ N_TRAIN = DEV ? 500 : 10000
 N_TEST = DEV ? 500 : 4000
 GPU = !DEV
 
-BETA_S = 0.5
+# BETA_S = 0.5
+BETA_S = 1.0
 BETA_D = 0.01
 
 EXP_TOP = ["singles"]
 
-opts = Dict(
-    "beta_s" => 0.5,
-    "beta_d" => 0.01,
-    "rho" => 0.3,
-)
+# opts = Dict(
+#     "beta_s" => 0.5,
+#     "beta_d" => 0.01,
+#     "rho" => 0.3,
+# )
 
 # -----------------------------------------------------------------------------
 # DATA

@@ -51,7 +51,21 @@ end
 Generates a data loader for a [`CommonARTModule`](@ref) training/testing loop.
 """
 function get_loader(
-    art::CommonARTModule,
+    art::ART.ARTModule,
+    data::SupervisedDataset,
+)
+    # Create the data loader
+    loader = Flux.DataLoader(data, batchsize=1)
+
+    return loader
+end
+
+"""
+Generates a data loader for a [`CommonARTModule`](@ref) training/testing loop.
+"""
+function get_loader(
+    # art::CommonARTModule,
+    art::DeepARTModule,
     data::SupervisedDataset,
 )
     # Create the data loader
