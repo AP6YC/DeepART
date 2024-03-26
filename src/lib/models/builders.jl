@@ -11,15 +11,16 @@ function get_module_from_options(
 )
     return get_module_from_options(
         d,
-        data[1],
+        data.train[1],
     )
 end
 
 function get_module_from_options(
     d::AbstractDict,
-    data::DataSplit,
+    # data::DataSplit,
+    data::SupervisedDataset,
 )
-    n_input = size(data.train.x, 1)
+    n_input = size(data.x, 1)
 
     # Initialize the ART module
     art = if d["m"] == "SFAM"
@@ -50,7 +51,7 @@ function get_module_from_options(
         head_dim = d["head_dim"]
 
         # Get the size tuple instead of the input size for convolutions
-        size_tuple = (size(data.train.x)[1:3]..., 1)
+        size_tuple = (size(data.x)[1:3]..., 1)
         conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
         local_art = DeepART.ARTINSTART(
             conv_model,

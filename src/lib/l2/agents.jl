@@ -262,6 +262,7 @@ function run_scenario(
     # block_log_string = "Block 1"
     p = Progress(n_exp; showspeed=true)
     # @info agent.scenario.queue
+    agent_name = typeof(agent.agent).name
     # Iterate while the agent's scenario is incomplete
     while !is_complete(agent)
         # Get the next experience
@@ -274,6 +275,7 @@ function run_scenario(
         # Logging
         next!(p; showvalues = [
             # (:Block, cur_seq.block_num),
+            (:Alg, agent_name),
             (:Block, exp.seq_nums.block_num),
             (:Type, exp.block_type),
             (:NCat, agent.agent.n_categories),
@@ -343,27 +345,6 @@ function full_scenario(
         config["COLS"],     # This one right here, officer
         scenario_info,
     )
-
-    # # Create the DDVFA options for both initialization and logging
-    # opts = opts_DDVFA(
-    #     # DDVFA options
-    #     gamma = 5.0,
-    #     gamma_ref = 1.0,
-    #     # rho=0.45,
-    #     rho_lb = 0.45,
-    #     rho_ub = 0.7,
-    #     similarity = :single,
-    #     display = false,
-    # )
-
-    # # Instantiate the art module
-    # local_art = DDVFA(opts)
-
-    # # Infer the data dimension
-    # dim = size(data.train.x[1])[1]
-
-    # # Specify the input data configuration
-    # local_art.config = DataConfig(0, 1, dim)
 
     # Construct the agent from the scenario
     agent = DeepART.Agent(

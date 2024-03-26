@@ -31,7 +31,8 @@ ENV["GKSwstype"] = "100"
 
 # Dataset selection
 # DATASET = "mnist"
-DATASET = "omniglot"
+DATASET = "fashionmnist"
+# DATASET = "omniglot"
 DISPLAY = true
 
 # Separate development and cluster settings

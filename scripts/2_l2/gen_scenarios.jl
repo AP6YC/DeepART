@@ -17,42 +17,45 @@ using DeepART
 # -----------------------------------------------------------------------------
 
 # Define which scenarios to generate and how
+N_TRAIN = 1000
+N_TEST = 1000
+N_MAX = 1
 GROUPINGS = Dict(
     "mnist" => Dict(
         "random" => true,
         "group_size" => 2,
-        "n_train" => 1000,
-        "n_test" => 1000,
+        "n_train" => N_TRAIN,
+        "n_test" => N_TEST,
     ),
     "fashionmnist" => Dict(
         "random" => true,
         "group_size" => 2,
-        "n_train" => 1000,
-        "n_test" => 1000,
+        "n_train" => N_TRAIN,
+        "n_test" => N_TEST,
     ),
     "cifar10" => Dict(
         "random" => true,
         "group_size" => 2,
-        "n_train" => 1000,
-        "n_test" => 1000,
+        "n_train" => N_TRAIN,
+        "n_test" => N_TEST,
     ),
     "cifar100_fine" => Dict(
         "random" => true,
         "group_size" => 20,
-        "n_train" => 1000,
-        "n_test" => 1000,
+        "n_train" => N_TRAIN,
+        "n_test" => N_TEST,
     ),
     "cifar100_coarse" => Dict(
         "random" => true,
         "group_size" => 4,
-        "n_train" => 1000,
-        "n_test" => 1000,
+        "n_train" => N_TRAIN,
+        "n_test" => N_TEST,
     ),
     "usps" => Dict(
         "random" => true,
         "group_size" => 2,
-        "n_train" => 1000,
-        "n_test" => 1000,
+        "n_train" => N_TRAIN,
+        "n_test" => N_TEST,
     ),
     # "omniglot" => Dict("random" => true, "group_size" => 6),
     # "CBB-R15" => Dict(
@@ -67,42 +70,15 @@ GROUPINGS = Dict(
 # LOAD DATA
 # -----------------------------------------------------------------------------
 
-# DeepART.gen_all_scenarios()
-all_data = DeepART.load_all_datasets()
-
-all_data["mnist"] = DeepART.get_mnist(
-    flatten=true,
-    n_train=GROUPINGS["mnist"]["n_train"],
-    n_test=GROUPINGS["mnist"]["n_test"],
-)
-all_data["fashionmnist"] = DeepART.get_fashionmnist(
-    flatten=true,
-    n_train=GROUPINGS["fashionmnist"]["n_train"],
-    n_test=GROUPINGS["fashionmnist"]["n_test"],
-)
-all_data["cifar10"] = DeepART.get_cifar10(
-    flatten=true,
-    n_train=GROUPINGS["cifar10"]["n_train"],
-    n_test=GROUPINGS["cifar10"]["n_test"],
-)
-all_data["cifar100_fine"] = DeepART.get_cifar100_fine(
-    flatten=true,
-    n_train=GROUPINGS["cifar100_fine"]["n_train"],
-    n_test=GROUPINGS["cifar100_fine"]["n_test"],
-)
-all_data["cifar100_coarse"] = DeepART.get_cifar100_coarse(
-    flatten=true,
-    n_train=GROUPINGS["cifar100_coarse"]["n_train"],
-    n_test=GROUPINGS["cifar100_coarse"]["n_test"],
-)
-# all_data["omniglot"] = DeepART.get_omniglot(
-#     flatten=true,
-# )
-all_data["usps"] = DeepART.get_usps(
-    flatten=true,
-    n_train=GROUPINGS["usps"]["n_train"],
-    n_test=GROUPINGS["usps"]["n_test"],
-)
+# all_data = DeepART.load_all_datasets()
+all_data = Dict{String, DeepART.DataSplit}()
+for (key, group) in GROUPINGS
+    all_data[key] = DeepART.load_one_dataset(
+        key,
+        n_train=group["n_train"],
+        n_test=group["n_test"],
+    )
+end
 
 # Inspect the number of unique labels in each dataset
 ["$key => $(length(unique(data.train.y)))" for (key, data) in all_data]
@@ -112,4 +88,4 @@ all_data["usps"] = DeepART.get_usps(
 # -----------------------------------------------------------------------------
 
 # Generate all scenario files
-DeepART.gen_all_scenarios(all_data, GROUPINGS, 1)
+DeepART.gen_all_scenarios(all_data, GROUPINGS, N_MAX)

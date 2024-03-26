@@ -242,11 +242,17 @@ Generates all permutations of groupings in the dataset.
 """
 function gen_permutation_groupings(
     data::DataSplit,
+    n_max::Int=10,
 )
     # Infer the unique classes
     classes = unique(data.train.y)
+
     # Get all permutations of the classes, one class per task
     orders = collect(permutations(classes))
+
+    # Limit the number of permutations to n_max
+    orders = orders[1:min(n_max, length(orders))]
+
     # Return the permutations orders
     return [[[suborder] for suborder in order] for order in orders]
 end
@@ -444,7 +450,7 @@ function gen_scenarios(
         groupings = gen_random_groupings(datasplit, group_size, n_max)
         # Otherwise, generate all of the permutations, assuming one class per task
     else
-        groupings = gen_permutation_groupings(datasplit)
+        groupings = gen_permutation_groupings(datasplit, n_max)
     end
 
     cidata = DeepART.ClassIncrementalDataSplit(datasplit)

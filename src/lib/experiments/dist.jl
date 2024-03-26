@@ -65,7 +65,7 @@ function tt_dist(
     # n_input = size(data.train.x, 1)
 
     # Construct the module from the options
-    art = get_module_from_options(d, data)
+    art = get_module_from_options(d, data.train)
 
     # Process the statements
     @info "Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
