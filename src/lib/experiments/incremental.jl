@@ -75,8 +75,8 @@ function incremental_supervised_train!(
     # return art.labels[art.stats["bmu"]]
     # bmu = art.labels[art.stats["bmu"]]
     # bmu = isempty(art.labels) ? 0 : art.labels[art.stats["bmu"]]
-    bmu = art.stats["bmu"]
-    return iszero(bmu) ? y_hat : art.labels[bmu]
+    bmu = art.head.stats["bmu"]
+    return iszero(bmu) ? y_hat : art.head.labels[bmu]
     # return isempty(art.labels) ? y_hat : art.labels[art.stats["bmu"]]
 end
 

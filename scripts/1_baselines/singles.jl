@@ -49,7 +49,8 @@ EXP_TOP = ["singles"]
 
 # all_data = DeepART.load_all_datasets()
 # data = all_data["moon"]
-data = DeepART.get_mnist()
+# data = DeepART.get_mnist()
+data = DeepART.get_cifar10(gray=true)
 # fdata = DeepART.flatty_hotty(data)
 fdata = DeepART.flatty(data)
 
@@ -161,6 +162,7 @@ art = DeepART.ARTINSTART(
 )
 
 results = DeepART.tt_basic!(art, data, n_train, n_test)
+# results = DeepART.tt_basic!(art, data, 4000, n_test)
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
