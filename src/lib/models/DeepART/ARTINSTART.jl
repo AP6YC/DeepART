@@ -119,7 +119,9 @@ function ARTINSTART(
     )
     head.config = ART.DataConfig(0.0, 1.0, opts.head_dim)
 
-    opts.gpu && model |> gpu
+    if opts.gpu
+        model = gpu(model)
+    end
 
     # Construct and return the field
     return ARTINSTART(
@@ -177,7 +179,14 @@ function train!(
         # y_hat = ART.train!(art.head, acts[end], y)
         y_hat = argmax(acts[end])
     else
-        y_hat = ART.train!(art.head, acts[end], y)
+        # head_input = if art.opts.gpu
+        #     vec(cpu(acts[end]))
+        # else
+        #     vec(acts[end])
+        # end
+        head_input = vec(cpu(acts[end]))
+        # y_hat = ART.train!(art.head, vec(cpu(acts[end])), y)
+        y_hat = ART.train!(art.head, head_input, y)
     end
 
     copy_stats!(art)
@@ -193,13 +202,22 @@ function classify(
     get_bmu::Bool=true,
 )
 
-    acts = Flux.activations(art.model, x)
+    # acts = Flux.activations(art.model, x)
+    out = art.model(x)
 
     if art.opts.leader
         # @info size(acts[end])
         y_hat = argmax(acts[end])
     else
-        y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)
+        # head_input = if art.opts.gpu
+        #     vec(cpu(acts[end]))
+        # else
+        #     acts[end]
+        # end
+        # head_input = vec(cpu(acts[end]))
+        head_input = vec(cpu(out))
+        # y_hat = ART.classify(art.head, acts[end], get_bmu=get_bmu)
+        y_hat = ART.classify(art.head, head_input, get_bmu=get_bmu)
     end
 
     copy_stats!(art)

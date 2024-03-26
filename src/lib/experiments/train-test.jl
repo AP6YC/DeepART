@@ -9,6 +9,60 @@ Implements the variety of training/testing start-to-finish experiments.
 # TRAIN/TEST FUNCTIONS
 # -----------------------------------------------------------------------------
 
+# function MLUtils.getobs(
+#     data::SupervisedDataset,
+#     ix::Integer
+# )
+#     return get_sample(data, ix), data.y[ix]
+# end
+
+function Base.getindex(
+    data::SupervisedDataset,
+    ix::Integer
+)
+    return get_sample(data, ix), data.y[ix]
+end
+
+function Base.getindex(
+    data::SupervisedDataset,
+    ix::UnitRange,
+)
+    # ixs = collect(ix)
+    # # data_dim = size(data.x)[1:end-1]
+    # dim_cat = size(data.x)
+    # # return get_sample(data, ix), data.y[ix]
+    # return cat([get_sample(data, lix) for lix in ixs], dims=dim_cat), vcat(data.y[ix])
+
+    dims_x = size(data.x)
+    n_dims_x = ndims(data.x)
+
+    samples = if n_dims_x == 4
+        reshape(data.x[:, :, :, ix], dims_x[1:3]..., 1)
+    else
+        data.x[:, ix]
+    end
+
+    return samples, data.y[ix]
+end
+
+# function MLUtils.numobs(
+#     data::SupervisedDataset,
+# )
+#     return length(data.y)
+# end
+
+function Base.length(
+    data::SupervisedDataset,
+)
+    return length(data.y)
+end
+
+function get_loader(
+    data::SupervisedDataset,
+)
+    return Flux.DataLoader(data, batchsize=1) |> gpu
+end
+
 """
 Task-homogenous training loop for a DeepART model.
 
@@ -26,20 +80,32 @@ function basic_train!(
     l_n_train = get_n(n_train, data.train)
     # @info "TRAINING $l_n_train samples"
 
+
+    train_loader = Flux.DataLoader(data.train, batchsize=1)
+
+    if art.opts.gpu
+        train_loader = train_loader |> gpu
+    end
+
     # Iterate over the training samples
     pr = Progress(
-        l_n_train;
+        # l_n_train;
+        length(train_loader);
         desc="Task-Homogenous Training",
         enabled = Sys.iswindows()
     )
-    for ix = 1:l_n_train
+
+    # for ix = 1:l_n_train
+    for (xf, label) in train_loader
         # Get the current sample and label
         # xf = data.train.x[:, ix]
-        xf = get_sample(data.train, ix)
-        label = data.train.y[ix]
+        # xf = get_sample(data.train, ix)
+        # label = data.train.y[ix]
 
         # Train on the individual sample and label
-        incremental_supervised_train!(art, xf, label)
+        # local_label = art.opts.gpu ? cpu(label)[1] : label[1]
+
+        incremental_supervised_train!(art, xf, cpu(label)[1])
 
         # Loop logging
         next!(pr; showvalues=[
@@ -66,14 +132,25 @@ function basic_test(
 
     # Get the estimates on the test data
     y_hats = Vector{Int}()
+
+
+    test_loader = Flux.DataLoader(data.test, batchsize=1)
+
+    if art.opts.gpu
+        test_loader = test_loader |> gpu
+    end
+
     pr = Progress(
-        l_n_test;
+        # l_n_test;
+        length(test_loader);
         desc="Task-Homogenous Testing",
         enabled = Sys.iswindows(),
     )
-    for ix = 1:l_n_test
+
+    # for ix = 1:l_n_test
+    for (xf, _) in test_loader
         # xf = data.test.x[:, ix]
-        xf = get_sample(data, ix)
+        # xf = get_sample(data, ix)
         # y_hat = DeepART.classify(art, xf, get_bmu=true)
         y_hat = incremental_classify(art, xf)
         push!(y_hats, y_hat)
@@ -106,14 +183,30 @@ function basic_test(
 
     # Get the estimates on the test data
     y_hats = Vector{Int}()
+
+    # pr = Progress(
+    #     l_n_test;
+    #     desc="Task-Homogenous Testing",
+    #     enabled = Sys.iswindows(),
+    # )
+
+    test_loader = Flux.DataLoader(data.test, batchsize=1)
+
+    if art.opts.gpu
+        test_loader = test_loader |> gpu
+    end
+
     pr = Progress(
-        l_n_test;
+        # l_n_test;
+        length(test_loader);
         desc="Task-Homogenous Testing",
         enabled = Sys.iswindows(),
     )
-    for ix = 1:l_n_test
+
+    # for ix = 1:l_n_test
+    for (xf, _) in test_loader
         # xf = data.test.x[:, ix]
-        xf = get_sample(data.test, ix)
+        # xf = get_sample(data.test, ix)
         # y_hat = DeepART.classify(art, xf, get_bmu=true)
         y_hat = incremental_classify(art, xf)
         push!(y_hats, y_hat)

@@ -155,13 +155,13 @@ function get_cifar10(;
 
     if flatten
         dataset = flatty(dataset)
-    else
-        dataset = DataSplit(
-            reshape(dataset.train.x, 32, 32, 1, :),
-            dataset.train.y,
-            reshape(dataset.test.x, 32, 32, 1, :),
-            dataset.test.y,
-        )
+    # else
+    #     dataset = DataSplit(
+    #         reshape(dataset.train.x, 32, 32, 1, :),
+    #         dataset.train.y,
+    #         reshape(dataset.test.x, 32, 32, 1, :),
+    #         dataset.test.y,
+    #     )
     end
 
     return dataset
@@ -185,6 +185,8 @@ function get_cifar100_fine(;
     y_train = y_train.fine
     y_test = y_test.fine
 
+    # original_size = size(X_train)[1:end-1]
+
     if gray
         X_train = mean(X_train, dims=3)
         X_test = mean(X_test, dims=3)
@@ -206,13 +208,14 @@ function get_cifar100_fine(;
 
     if flatten
         dataset = flatty(dataset)
-    else
-        dataset = DataSplit(
-            reshape(dataset.train.x, 32, 32, 1, :),
-            dataset.train.y,
-            reshape(dataset.test.x, 32, 32, 1, :),
-            dataset.test.y,
-        )
+    # else
+    #     dataset = DataSplit(
+    #         reshape(dataset.train.x, 32, 32, 1, :),
+    #         # reshape(dataset)
+    #         dataset.train.y,
+    #         reshape(dataset.test.x, 32, 32, 1, :),
+    #         dataset.test.y,
+    #     )
     end
 
     return dataset
@@ -257,13 +260,13 @@ function get_cifar100_coarse(;
 
     if flatten
         dataset = flatty(dataset)
-    else
-        dataset = DataSplit(
-            reshape(dataset.train.x, 32, 32, 1, :),
-            dataset.train.y,
-            reshape(dataset.test.x, 32, 32, 1, :),
-            dataset.test.y,
-        )
+    # else
+    #     dataset = DataSplit(
+    #         reshape(dataset.train.x, 32, 32, 1, :),
+    #         dataset.train.y,
+    #         reshape(dataset.test.x, 32, 32, 1, :),
+    #         dataset.test.y,
+    #     )
     end
 
     return dataset

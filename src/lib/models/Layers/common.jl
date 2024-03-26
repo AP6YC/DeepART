@@ -29,5 +29,6 @@ function complement_code(
     # x::AbstractVecOrMat{Float32}
 )
     # vcat(x, 1.0 .- x)
-    vcat(x, one(Float32) .- x)
+    # vcat(x, one(Float32) .- x)
+    vcat(x, one(eltype(x)) .- x)
 end

@@ -61,8 +61,8 @@ n_test = min(N_TEST, length(data.test.y))
 n_input = size(fdata.train.x)[1]
 
 # Move to the GPU if the flag is high
-GPU && data |> gpu
-GPU && fdata |> gpu
+# GPU && data |> gpu
+# GPU && fdata |> gpu
 
 # -----------------------------------------------------------------------------
 # BASELINE WITHOUT TRAINING THE EXTRACTOR
@@ -242,6 +242,10 @@ art = DeepART.ARTINSTART(
     # uncommitted=true,
     gpu=GPU,
 )
+
+dev_xf = fdata.train.x[:, 1]
+prs = Flux.params(art.model)
+acts = Flux.activations(model, dev_xf)
 
 results = DeepART.tt_inc!(art, tidata, fdata, n_train, n_test)
 
