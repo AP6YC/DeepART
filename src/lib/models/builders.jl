@@ -42,7 +42,7 @@ function get_module_from_options(
             rho=d["rho"],
             update="art",
             softwta=true,
-            gpu=true,
+            gpu=d["gpu"],
         )
         local_art
     elseif d["m"] == "DeepARTConv"
@@ -60,7 +60,7 @@ function get_module_from_options(
             rho=d["rho"],
             update="art",
             softwta=true,
-            gpu=true,
+            gpu=d["gpu"],
         )
 
         local_art

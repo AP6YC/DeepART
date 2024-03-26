@@ -107,6 +107,11 @@ function basic_train!(
     # Get the estimates on the training data
     y_hats = Vector{Int}()
     for (xf, label) in train_loader
+        # Correction for ART modules
+        if art isa ART.ARTModule
+            xf = vec(xf)
+        end
+        # Train
         y_hat = incremental_supervised_train!(art, xf, cpu(label)[1])
         # Push the estimate
         push!(y_hats, y_hat)
@@ -146,6 +151,10 @@ function basic_test(
     # Get the estimates on the test data
     y_hats = Vector{Int}()
     for (xf, _) in test_loader
+        # Correction for ART modules
+        if art isa ART.ARTModule
+            xf = vec(xf)
+        end
         # Classify the sample
         y_hat = incremental_classify(art, xf)
         # Push the estimate

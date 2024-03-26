@@ -20,7 +20,7 @@ function complement_code_conv(
     # x::AbstractVecOrMat{Float32}
 )
     # cat(x, Float32(1.0) .- x, dims=3)
-    cat(x, one(Float32) .- x, dims=3)
+    cat(x, one(eltype(x)) .- x, dims=3)
 end
 
 function CCConv()

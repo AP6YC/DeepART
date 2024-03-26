@@ -63,16 +63,80 @@ function get_y_subset(
     return local_labels
 end
 
+function assign_sample!(
+    data::SupervisedDataset,
+    new_x::AbstractArray,
+    new_y::Integer,
+    index::Integer,
+)
+    l_n_dim = ndims(new_x)
+    if l_n_dim == 3
+        data.x[:, :, :, index] .= new_x
+    elseif l_n_dim == 2
+        data.x[:, :, index] .= new_x
+    elseif l_n_dim == 1
+        data.x[:, index] .= new_x
+    end
+
+    data.y[index] = new_y
+
+    return
+end
+
+function get_supervised_subset(
+    data::SupervisedDataset,
+    n_samples::Integer=IInf,
+    # n_train::Integer=IInf,
+    # n_test::Integer=IInf,
+)
+    original_classes = unique(data.y)
+    n_original_classes = length(original_classes)
+
+    # Create a new dataset with some
+    new_data = SupervisedDataset(
+        get_x_subset(data.x, n_samples),
+        get_y_subset(data.y, n_samples),
+    )
+
+    new_classes = unique(new_data.y)
+    n_new_classes = length(new_classes)
+    # If there is a missing class
+    if n_new_classes != n_original_classes
+        # Get the ids that are in the original but not new
+        problem_ids = setdiff(original_classes, new_classes)
+        # For each id
+        for pid in problem_ids
+            # Get all of the counts of the labels
+            dest_ids = MLUtils.group_counts(new_data.y)
+            # Get a destination id that is represented at least 2 times otherwise
+            open_spot = findfirst(x -> dest_ids[new_data.y[x]] > 1, 1:length(new_data.y))
+            # Get the first sample belonging to the problem ID from the old data
+            old_data_id = findfirst(x -> data.y[x] == pid, 1:length(data.y))
+            new_x = get_sample(data, old_data_id)
+            new_y = data.y[old_data_id]
+
+            # Assign the sample in place to the new data
+            assign_sample!(new_data, new_x, new_y, open_spot)
+        end
+    end
+
+    return new_data
+end
+
 function get_data_subset(
     data::DataSplit;
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
+    # return DataSplit(
+    #     get_x_subset(data.train.x, n_train),
+    #     get_y_subset(data.train.y, n_train),
+    #     get_x_subset(data.test.x, n_test),
+    #     get_y_subset(data.test.y, n_test),
+    # )
     return DataSplit(
-        get_x_subset(data.train.x, n_train),
-        get_y_subset(data.train.y, n_train),
-        get_x_subset(data.test.x, n_test),
-        get_y_subset(data.test.y, n_test),
+        get_supervised_subset(data.train, n_train),
+        get_supervised_subset(data.test, n_test),
     )
 end
 
@@ -167,6 +231,20 @@ function get_cifar10(;
     return dataset
 end
 
+function fix_missing_els(new_dataset::SupervisedDataset, old_dataset::SupervisedDataset, n_classes::Integer)
+    if length(unique(new_dataset.train.y)) < n_classes
+        @warn "CIFAR100 fine dataset has less than 100 classes."
+        missing_els = setdiff(1:100, unique(new_dataset.train.y))
+        for el in missing_els
+            new_dataset.train.y[new_dataset.train.y .> el] .-= 1
+            new_dataset.test.y[new_dataset.test.y .> el] .-= 1
+        end
+        dataset = new_dataset
+    end
+
+    return new_dataset
+end
+
 """
 Loads the fine CIFAR100 dataset using MLDatasets.
 """
@@ -204,6 +282,11 @@ function get_cifar100_fine(;
             n_train=l_n_train,
             n_test=l_n_test,
         )
+        # dataset = DataSplit(
+        #     fix_missing_els(new_dataset.train, dataset.train, 100),
+        #     fix_missing_els(new_dataset.test, dataset.test, 100),
+        # )
+
     end
 
     if flatten

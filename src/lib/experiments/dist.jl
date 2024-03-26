@@ -20,10 +20,11 @@ function save_sim(
         d,
         "jld2";
         # digits=4,
-        # ignores=[
+        ignores=[
+            "display",
         #     "rng_seed",
         #     "m",
-        # ],
+        ],
     ))
 
     # Log completion of the simulation
@@ -68,7 +69,7 @@ function tt_dist(
 
     # Process the statements
     @info "Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
-    results = tt_basic!(art, data)
+    results = tt_basic!(art, data, display=d["display"])
 
     # Compute the confusion while we have the true y for this dataset shuffle
     n_classes = length(unique(data.test.y))

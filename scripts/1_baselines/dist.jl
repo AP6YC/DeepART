@@ -27,24 +27,29 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 # Fix plotting on headless
 ENV["GKSwstype"] = "100"
 
+# Separate development and cluster settings
+DEV = Sys.iswindows()
+
 # -----------------------------------------------------------------------------
 # VARIABLES
 # -----------------------------------------------------------------------------
 
 EXP_TOP = "1_baselines"
 EXP_NAME = "dist"
-N_PROCS = Sys.iswindows() ? 0 : 31
 
-N_SIMS = Sys.iswindows() ? 1 : 5
-N_TRAIN = 2000
-N_TEST = 1000
+N_PROCS = DEV ? 0 : 31
+N_SIMS = DEV ? 1 : 5
+N_TRAIN = DEV ? 1000 : 2000
+N_TEST = DEV ? 500 : 1000
+DISPLAY = DEV
+GPU = DEV
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        "SFAM",
         "DeepARTDense",
         "DeepARTConv",
+        "SFAM",
     ],
     "rho" => [
         @onlyif("m" == "SFAM", 0.6),
@@ -65,6 +70,8 @@ sim_params = Dict{String, Any}(
         "cifar100_coarse",
         "usps",
     ],
+    "display" => DISPLAY,
+    "gpu" => GPU,
 )
 
 # -----------------------------------------------------------------------------

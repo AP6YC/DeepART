@@ -26,17 +26,9 @@ experiment_top = "l2metrics"
 # EXPERIMENT
 # -----------------------------------------------------------------------------
 
-# Get the batch script location
-# exp_dir(args...) = DeepART.projectdir(
-#     "scripts",
-#     experiment_top,
-#     args...
-# )
-
 # Point to the batch script
 full_l2m_script = DeepART.projectdir(
     "scripts",
-    # experiment_top,
     "2_l2",
     "l2metrics.bat",
 )
