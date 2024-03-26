@@ -36,8 +36,8 @@ DISPLAY = true
 
 # Separate development and cluster settings
 DEV = Sys.iswindows()
-N_TRAIN = DEV ? 500 : 10000
-N_TEST = DEV ? 500 : 4000
+N_TRAIN = DEV ? 500 : 1000
+N_TEST = DEV ? 500 : 1000
 GPU = !DEV
 
 # BETA_S = 0.5
@@ -66,6 +66,12 @@ data = DeepART.load_one_dataset(
 fdata = DeepART.flatty(data)
 
 n_classes = length(unique(data.train.y))
+
+names_range = collect(1:n_classes)
+if DATASET == "mnist"
+    names_range .-= 1
+end
+names = string.(names_range)
 
 n_input = size(fdata.train.x)[1]
 
@@ -105,7 +111,7 @@ results = DeepART.tt_basic!(
 DeepART.plot_confusion_matrix(
     data.test.y,
     results["y_hats"],
-    string.(collect(0:9)),
+    names,
     "baseline_confusion",
     EXP_TOP,
 )
@@ -151,7 +157,7 @@ results = DeepART.tt_basic!(
 DeepART.plot_confusion_matrix(
     data.test.y,
     results["y_hats"],
-    string.(collect(0:9)),
+    names,
     "dense_basic_confusion",
     EXP_TOP,
 )
@@ -189,7 +195,7 @@ results = DeepART.tt_basic!(
 DeepART.plot_confusion_matrix(
     data.test.y,
     results["y_hats"],
-    string.(collect(0:9)),
+    names,
     "conv_basic_confusion",
     EXP_TOP,
 )
@@ -241,7 +247,7 @@ results = DeepART.tt_inc!(
 DeepART.plot_confusion_matrix(
     data.test.y,
     results["y_hats"],
-    string.(collect(0:9)),
+    names,
     "dense_ti_confusion",
     EXP_TOP,
 )
@@ -295,7 +301,7 @@ results = DeepART.tt_inc!(
 DeepART.plot_confusion_matrix(
     data.test.y,
     results["y_hats"],
-    string.(collect(0:9)),
+    names,
     "conv_ti_confusion",
     EXP_TOP,
 )
