@@ -92,7 +92,7 @@ for scenario_top_dir in readdir(top_dir)
     # Iterate over every each model and parameter combination
     for d in dicts
 
-        isconv = !(d["m"] == "DeepARTConv")
+        isconv = (d["m"] == "DeepARTConv")
 
         # Load the dataset associated with the top scenario name
         data = DeepART.load_one_dataset(

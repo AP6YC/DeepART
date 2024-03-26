@@ -172,6 +172,10 @@ groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:1
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
 
+# tigpudata = DeepART.gputize(tidata)
+# sample, label = tigpudata.train[1][2]
+# y_hat = DeepART.incremental_supervised_train!(art, sample, label)
+
 # Model definition
 head_dim = 1024
 model = DeepART.get_rep_dense(n_input, head_dim)
@@ -207,6 +211,58 @@ DeepART.plot_confusion_matrix(
     "dense_ti_confusion",
     EXP_TOP,
 )
+
+
+# -----------------------------------------------------------------------------
+# L2M CONV
+# -----------------------------------------------------------------------------
+
+@info "----------------- L2M CONVOLUTIONAL -----------------"
+
+cidata = DeepART.ClassIncrementalDataSplit(data)
+groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
+tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
+n_tasks = length(tidata.train)
+
+tigpudata = DeepART.gputize(tidata)
+sample, label = tigpudata.train[1][2]
+y_hat = DeepART.incremental_supervised_train!(art, sample, label)
+
+
+head_dim = 1024
+size_tuple = (size(data.train.x)[1:3]..., 1)
+conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
+
+art = DeepART.ARTINSTART(
+    conv_model,
+    head_dim=head_dim,
+    beta=BETA_D,
+    beta_s=BETA_S,
+    # rho=0.6,
+    rho=0.3,
+    update="art",
+    softwta=true,
+    gpu=GPU,
+)
+
+# results = DeepART.tt_basic!(art, data, n_train, n_test)
+results = DeepART.tt_inc!(
+    art,
+    tidata,
+    data,
+    display=DISPLAY,
+)
+@info "Results: " results["perf"] results["n_cat"]
+
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y,
+    results["y_hats"],
+    names,
+    "conv_ti_confusion",
+    EXP_TOP,
+)
+
 
 # # -----------------------------------------------------------------------------
 # # LEADER NEURON
