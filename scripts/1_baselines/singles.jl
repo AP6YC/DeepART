@@ -282,7 +282,7 @@ results = DeepART.tt_inc!(
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "dense_ti_confusion",
@@ -335,7 +335,7 @@ results = DeepART.tt_inc!(
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "conv_ti_confusion",

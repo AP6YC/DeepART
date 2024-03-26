@@ -45,22 +45,24 @@ EXP_TOP = ["singles", "gpus"]
 
 # all_data = DeepART.load_all_datasets()
 # data = all_data["moon"]
-data = DeepART.get_mnist(
-    n_train=N_TRAIN,
-    n_test=N_TEST,
-)
-# data = DeepART.get_cifar10(
-#     gray=false,
+# data = DeepART.get_mnist(
 #     n_train=N_TRAIN,
 #     n_test=N_TEST,
 # )
+data = DeepART.get_cifar10(
+    gray=false,
+    n_train=N_TRAIN,
+    n_test=N_TEST,
+)
 
 # fdata = DeepART.flatty_hotty(data)
 fdata = DeepART.flatty(data)
 
 n_classes = length(unique(data.train.y))
-n_train = min(N_TRAIN, length(data.train.y))
-n_test = min(N_TEST, length(data.test.y))
+
+# -----------------------------------------------------------------------------
+# DENSE
+# -----------------------------------------------------------------------------
 
 @info "----------------- DENSE -----------------"
 
@@ -101,6 +103,9 @@ DeepART.plot_confusion_matrix(
     EXP_TOP,
 )
 
+# -----------------------------------------------------------------------------
+# CONVOLUTION
+# -----------------------------------------------------------------------------
 
 @info "----------------- CONVOLUTIONAL -----------------"
 
@@ -150,6 +155,10 @@ DeepART.plot_confusion_matrix(
 # prs = Flux.params(art.model)
 # acts = Flux.activations(art.model, dev_xf)
 
+# -----------------------------------------------------------------------------
+# L2M DENSE
+# -----------------------------------------------------------------------------
+
 @info "----------------- L2M DENSE -----------------"
 
 cidata = DeepART.ClassIncrementalDataSplit(fdata)
@@ -181,10 +190,11 @@ results = DeepART.tt_inc!(
     fdata,
     display=true,
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "dense_ti_confusion",
