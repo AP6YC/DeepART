@@ -38,12 +38,14 @@ sim_params = Dict{String, Any}(
     ],
     "rho" => [
         @onlyif("m" == "SFAM", 0.6),
-        @onlyif("m" == "DeepARTDense", 0.2),
-        @onlyif("m" == "DeepARTConv", 0.2),
+        @onlyif("m" == "DeepARTDense", 0.3),
+        @onlyif("m" == "DeepARTConv", 0.3),
     ],
+    "beta" => 0.01,
     "rng_seed" => collect(1:N_SIMS),
     "n_train" => N_TRAIN,
     "n_test" => N_TEST,
+    "head_dim" => 1024
     "dataset" => [
         "mnist",
         "fashionmnist",

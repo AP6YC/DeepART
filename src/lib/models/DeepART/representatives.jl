@@ -53,8 +53,8 @@ function get_rep_conv(size_tuple, head_dim::Integer)
             Flux.flatten,
             DeepART.CC(),
         ),
-        # Dense(_, 128, sigmoid, bias=false),
-        # DeepART.CC(),
+        Dense(_, 256, sigmoid_fast, bias=false),
+        DeepART.CC(),
         Chain(
             Dense(_, head_dim, sigmoid_fast, bias=false),
             vec,
@@ -69,37 +69,37 @@ function get_rep_conv(size_tuple, head_dim::Integer)
     return conv_model
 end
 
-conv_model = Flux.@autosize (size_tuple,) Chain(
-    DeepART.CCConv(),
-    Chain(
-        Conv((5,5), _ => 6, sigmoid, bias=false),
-    ),
-    # Chain(
-    #     MaxPool((2,2)),
-    #     DeepART.CCConv(),
-    # ),
-    # Chain(
-    #     Conv((5,5), _ => 6, sigmoid, bias=false),
-    # ),
-    # BatchNorm(_),
-    Chain(
-        # MaxPool((2,2)),
-        MaxPool((2,2)),
-        Flux.flatten,
-        DeepART.CC(),
-    ),
-    # Dense(_, 128, sigmoid, bias=false),
-    # DeepART.CC(),
-    Chain(
-        Dense(_, head_dim, sigmoid, bias=false),
-        vec,
-    ),
-    # Dense(15=>10, sigmoid),
-    # Flux.flatten,
-    # Dense(_=>15,relu),
-    # Dense(15=>10,sigmoid),
-    # softmax
-)
+# conv_model = Flux.@autosize (size_tuple,) Chain(
+#     DeepART.CCConv(),
+#     Chain(
+#         Conv((5,5), _ => 6, sigmoid, bias=false),
+#     ),
+#     # Chain(
+#     #     MaxPool((2,2)),
+#     #     DeepART.CCConv(),
+#     # ),
+#     # Chain(
+#     #     Conv((5,5), _ => 6, sigmoid, bias=false),
+#     # ),
+#     # BatchNorm(_),
+#     Chain(
+#         # MaxPool((2,2)),
+#         MaxPool((2,2)),
+#         Flux.flatten,
+#         DeepART.CC(),
+#     ),
+#     # Dense(_, 128, sigmoid, bias=false),
+#     # DeepART.CC(),
+#     Chain(
+#         Dense(_, head_dim, sigmoid, bias=false),
+#         vec,
+#     ),
+#     # Dense(15=>10, sigmoid),
+#     # Flux.flatten,
+#     # Dense(_=>15,relu),
+#     # Dense(15=>10,sigmoid),
+#     # softmax
+# )
 
 # # Model definition
 # model = Flux.@autosize (n_input,) Chain(

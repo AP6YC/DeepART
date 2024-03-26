@@ -112,4 +112,4 @@ all_data["usps"] = DeepART.get_usps(
 # -----------------------------------------------------------------------------
 
 # Generate all scenario files
-DeepART.gen_all_scenarios(all_data, GROUPINGS, 10)
+DeepART.gen_all_scenarios(all_data, GROUPINGS, 1)

@@ -24,7 +24,7 @@ function basic_train!(
 )
     # Get the number of training samples
     l_n_train = get_n(n_train, data.train)
-    @info "TRAINING $l_n_train samples"
+    # @info "TRAINING $l_n_train samples"
 
     # Iterate over the training samples
     pr = Progress(
