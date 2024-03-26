@@ -125,7 +125,7 @@ function tt_dist(
     fulld = deepcopy(d)
 
     # Add entries for the results
-    fulld["n_cat"] = local_art.n_cat
+    fulld["n_cat"] = art.n_categories
     fulld["perf"] = results["perf"]
     fulld["conf"] = conf
 
