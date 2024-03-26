@@ -95,6 +95,7 @@ results = DeepART.tt_basic!(
     fdata,
     display=DISPLAY,
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -139,6 +140,7 @@ results = DeepART.tt_basic!(
     fdata,
     display=DISPLAY,
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -175,6 +177,7 @@ results = DeepART.tt_basic!(
     data,
     display=DISPLAY
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -224,6 +227,7 @@ results = DeepART.tt_basic!(
     local_data,
     display=DISPLAY,
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -274,6 +278,7 @@ results = DeepART.tt_inc!(
     fdata,
     display=DISPLAY,
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
@@ -326,6 +331,7 @@ results = DeepART.tt_inc!(
     data,
     display=DISPLAY,
 )
+@info "Results: " results["perf"] results["n_cat"]
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
