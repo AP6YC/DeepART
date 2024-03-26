@@ -39,7 +39,16 @@ N_TRAIN = DEV ? 500 : 10000
 N_TEST = DEV ? 500 : 4000
 GPU = !DEV
 
+BETA_S = 0.5
+BETA_D = 0.01
+
 EXP_TOP = ["singles"]
+
+opts = Dict(
+    "beta_s" => 0.5,
+    "beta_d" => 0.01,
+    "rho" => 0.3,
+)
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -75,6 +84,7 @@ art = DeepART.ARTINSTART(
     model;
     head_dim=head_dim,
     beta=0.0,
+    beta_s=BETA_S,
     rho=0.6,
     update="art",
     softwta=true,
@@ -114,7 +124,8 @@ model = DeepART.get_rep_dense(n_input, head_dim)
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
-    beta=0.01,
+    beta=BETA_D,
+    beta_s=BETA_S,
     # rho=0.6,
     rho=0.3,
     update="art",
@@ -156,7 +167,8 @@ conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
 art = DeepART.ARTINSTART(
     conv_model,
     head_dim=head_dim,
-    beta=0.01,
+    beta=BETA_D,
+    beta_s=BETA_S,
     # rho=0.6,
     rho=0.3,
     update="art",
@@ -202,7 +214,8 @@ model = DeepART.get_rep_dense(n_input, head_dim)
 art = DeepART.ARTINSTART(
     model,
     head_dim = head_dim,
-    beta = 0.01,
+    beta = BETA_D,
+    beta_s=BETA_S,
     rho=0.3,
     update="art",
     softwta=true,
@@ -258,7 +271,8 @@ conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
 art = DeepART.ARTINSTART(
     conv_model,
     head_dim=head_dim,
-    beta=0.01,
+    beta=BETA_D,
+    beta_s=BETA_S,
     # rho=0.6,
     rho=0.3,
     update="art",

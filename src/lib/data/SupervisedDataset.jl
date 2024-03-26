@@ -24,6 +24,24 @@ struct SupervisedDataset{T <: AbstractFeatures, U <: AbstractLabels}
     y::U
 end
 
+
+function SupervisedDataset(
+    x::AbstractFeatures,
+    y::AbstractLabels,
+    shuffle::Bool,
+    # shuffle::Bool=DEFAULT_SHUFFLE,
+)
+    # Get the features and labels
+    x_s, y_s = if shuffle
+        # ls, ll = shuffleobs((features, labels))
+        ls, ll = shuffle_pairs(x, y)
+        (copy(ls), copy(ll))
+    else
+        (x, y)
+    end
+
+    return SupervisedDataset(x_s, y_s)
+end
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------

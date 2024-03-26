@@ -11,7 +11,7 @@ using DeepART
 using Flux
 # using CUDA
 # using ProgressMeter
-using AdaptiveResonance
+# using AdaptiveResonance
 using Plots
 
 # theme(:dark)
@@ -38,6 +38,11 @@ DEV = Sys.iswindows()
 N_TRAIN = DEV ? 500 : 4000
 N_TEST = DEV ? 500 : 4000
 GPU = !DEV
+
+BETA_S = 0.5
+BETA_D = 0.01
+
+GPU = true
 
 EXP_TOP = ["singles", "gpus"]
 
@@ -75,7 +80,8 @@ model = DeepART.get_rep_dense(n_input, head_dim)
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
-    beta=0.1,
+    beta=BETA_D,
+    beta_s=BETA_S,
     # rho=0.6,
     rho=0.3,
     update="art",
@@ -115,7 +121,8 @@ conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
 art = DeepART.ARTINSTART(
     conv_model,
     head_dim=head_dim,
-    beta=0.1,
+    beta=BETA_D,
+    beta_s=BETA_S,
     rho=0.3,
     update="art",
     softwta=true,
@@ -171,7 +178,8 @@ model = DeepART.get_rep_dense(n_input, head_dim)
 art = DeepART.ARTINSTART(
     model,
     head_dim = head_dim,
-    beta = 0.01,
+    beta=BETA_D,
+    beta_s=BETA_S,
     rho=0.3,
     update="art",
     softwta=true,

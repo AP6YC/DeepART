@@ -29,9 +29,14 @@ Options container for a [`ARTINSTART`](@ref) module.
     alpha = 1e-3; @assert alpha > 0.0
 
     """
-    Learning parameter: beta ∈ (0, 1].
+    Deep model learning parameter: beta ∈ (0, 1].
     """
     beta = 1.0
+
+    """
+    Head learning parameter: beta ∈ (0, 1].
+    """
+    beta_s = 0.01
     # beta = 1.0; @assert beta > 0.0 && beta <= 1.0
 
     """
@@ -116,6 +121,7 @@ function ARTINSTART(
     head = ART.SFAM(
         rho=opts.rho,
         epsilon=1e-4,
+        beta=opts.beta_s,
     )
     head.config = ART.DataConfig(0.0, 1.0, opts.head_dim)
 

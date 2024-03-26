@@ -338,6 +338,7 @@ function get_omniglot(;
         y_train,
         X_test,
         y_test,
+        shuffle=true,
     )
 
     # dataset = tensorize_datasplit(dataset)

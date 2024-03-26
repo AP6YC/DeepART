@@ -37,16 +37,19 @@ function DataSplit(
     X_train::AbstractFeatures,
     y_train::AbstractLabels,
     X_test::AbstractFeatures,
-    y_test::AbstractLabels,
+    y_test::AbstractLabels;
+    shuffle::Bool=DEFAULT_SHUFFLE,
 )
     return DataSplit(
         SupervisedDataset(
             X_train,
             y_train,
+            shuffle,
         ),
         SupervisedDataset(
             X_test,
             y_test,
+            shuffle,
         ),
     )
 end

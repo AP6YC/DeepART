@@ -9,13 +9,9 @@ Implements the variety of training/testing start-to-finish experiments.
 # TRAIN/TEST FUNCTIONS
 # -----------------------------------------------------------------------------
 
-# function MLUtils.getobs(
-#     data::SupervisedDataset,
-#     ix::Integer
-# )
-#     return get_sample(data, ix), data.y[ix]
-# end
-
+"""
+Overload for getting a UnitRange of a [`SupervisedDataset`](@ref).
+"""
 function Base.getindex(
     data::SupervisedDataset,
     ix::Integer
@@ -23,16 +19,13 @@ function Base.getindex(
     return get_sample(data, ix), data.y[ix]
 end
 
+"""
+Overload for getting a UnitRange of a [`SupervisedDataset`](@ref).
+"""
 function Base.getindex(
     data::SupervisedDataset,
     ix::UnitRange,
 )
-    # ixs = collect(ix)
-    # # data_dim = size(data.x)[1:end-1]
-    # dim_cat = size(data.x)
-    # # return get_sample(data, ix), data.y[ix]
-    # return cat([get_sample(data, lix) for lix in ixs], dims=dim_cat), vcat(data.y[ix])
-
     dims_x = size(data.x)
     n_dims_x = ndims(data.x)
 
@@ -45,22 +38,31 @@ function Base.getindex(
     return samples, data.y[ix]
 end
 
-# function MLUtils.numobs(
-#     data::SupervisedDataset,
-# )
-#     return length(data.y)
-# end
-
+"""
+Overload for the length of a [`SupervisedDataset`](@ref).
+"""
 function Base.length(
     data::SupervisedDataset,
 )
     return length(data.y)
 end
 
+"""
+Generates a data loader for a [`CommonARTModule`](@ref) training/testing loop.
+"""
 function get_loader(
+    art::CommonARTModule,
     data::SupervisedDataset,
 )
-    return Flux.DataLoader(data, batchsize=1) |> gpu
+    # Create the data loader
+    loader = Flux.DataLoader(data, batchsize=1)
+
+    # If using the gpu, push the data onto it
+    if art.opts.gpu
+        loader = loader |> gpu
+    end
+
+    return loader
 end
 
 """
@@ -79,12 +81,7 @@ function basic_train!(
     desc::AbstractString="Task-Homogenous Train",
 )
     # Create the data loader
-    train_loader = Flux.DataLoader(data, batchsize=1)
-
-    # If using the gpu, push the data onto it
-    if art.opts.gpu
-        train_loader = train_loader |> gpu
-    end
+    train_loader = get_loader(art, data)
 
     # Iterate over the training samples
     pr = Progress(
@@ -123,12 +120,7 @@ function basic_test(
     desc::AbstractString="Task-Homogenous Test",
 )
     # Create the data loader
-    test_loader = Flux.DataLoader(data, batchsize=1)
-
-    # If using the gpu, push the data onto it
-    if art.opts.gpu
-        test_loader = test_loader |> gpu
-    end
+    test_loader = get_loader(art, data)
 
     # Create a display iterator
     pr = Progress(
@@ -234,35 +226,6 @@ function train_inc!(
             desc=local_desc,
         )
         push!(y_hats, local_y_hats)
-        # # Get the local batch of training data
-        # task_x = tidata.train[ix].x
-        # task_y = tidata.train[ix].y
-
-        # # l_n_train = min(n_train, length(task_y))
-        # l_n_train = get_n(n_train, tidata.train[ix])
-
-        # # Incrementally train over the current task's training data
-        # pr = Progress(
-        #     l_n_train;
-        #     desc="Task-Incremental Training: Task $(ix)",
-        #     enabled = Sys.iswindows(),
-        # )
-
-        # for jx = 1:l_n_train
-        #     # Get the current sample and label
-        #     # xf = task_x[:, jx]
-        #     xf = get_sample(task_x, jx)
-        #     label = task_y[jx]
-
-        #     # Train the module
-        #     # DeepART.train!(art, xf, y=label)
-        #     incremental_supervised_train!(art, xf, label)
-
-        #     # Update the progress bar
-        #     next!(pr; showvalues=[
-        #         (:NCat, art.n_categories),
-        #     ])
-        # end
     end
     return y_hats
 end
@@ -271,22 +234,15 @@ end
 Computes the performance of the ART module given some estimates.
 """
 function get_perf(
-    # art::CommonARTModule,
-    # data::DataSplit,
     data::SupervisedDataset,
     y_hats::Vector{Int},
-    # n_test::Integer=IInf,
 )
-    # Get the number of testing samples
-    # l_n_test = min(n_test, length(data.test.y))
-
     # perf = ART.performance(y_hats, data.test.y[1:l_n_test])
     perf = ART.performance(y_hats, data.y)
     # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
 
     return perf
 end
-
 
 """
 Wrapper for loading simulation results with arbitrarily many fields.
@@ -330,9 +286,9 @@ function tt_basic!(
 
     # Compile the experiment results
     out_dict = Dict(
+        "n_cat" => art.n_categories,
         "y_hats" => y_hats,
         "perf" => perf,
-        "n_cat" => art.n_categories,
     )
 
     # Return the experiment results
@@ -367,7 +323,7 @@ function tt_inc!(
 
     # Compile the experiment results
     out_dict = Dict(
-        "n_cats" => art.n_categories,
+        "n_cat" => art.n_categories,
         "y_hats" => y_hats,
         "perf" => perf,
     )
@@ -393,6 +349,50 @@ function get_accuracies(y::IntegerVector, y_hat::IntegerVector, n_classes::Integ
     return accuracies
 end
 
+# -----------------------------------------------------------------------------
+# MULTI EXPERIMENT WRAPPERS
+# -----------------------------------------------------------------------------
+
+# function train_test_plot(
+#     data::DataSplit,
+#     opts::Dict,
+# )
+
+#     head_dim = 1024
+#     size_tuple = (size(data.train.x)[1:3]..., 1)
+#     conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
+
+#     art = DeepART.ARTINSTART(
+#         conv_model,
+#         head_dim=head_dim,
+#         beta=BETA_D,
+#         beta_s=BETA_S,
+#         # rho=0.6,
+#         rho=0.3,
+#         update="art",
+#         softwta=true,
+#         gpu=GPU,
+#     )
+
+#     results = DeepART.tt_basic!(
+#         art,
+#         data,
+#         display=DISPLAY
+#     )
+#     @info "Results: " results["perf"] results["n_cat"]
+
+#     # Create the confusion matrix from this experiment
+#     DeepART.plot_confusion_matrix(
+#         data.test.y,
+#         results["y_hats"],
+#         string.(collect(0:9)),
+#         "conv_basic_confusion",
+#         EXP_TOP,
+#     )
+
+#     return results
+
+# end
 
 # -----------------------------------------------------------------------------
 # OLD EXPERIMENTS

@@ -23,3 +23,6 @@ include("SimpleDeepART/lib.jl")
 
 # Fully deep
 include("DeepART/lib.jl")
+
+# Utilities for constructing default modules
+include("builders.jl")
