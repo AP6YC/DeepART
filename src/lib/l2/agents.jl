@@ -57,10 +57,6 @@ function Agent(
     opts,
     name,
 )
-# function DDVFAAgent(ddvfa_opts::opts_DDVFA)
-    # Create the DDVFA object from the opts
-    # ddvfa = DDVFA(ddvfa_opts)
-
     # Create the experience dequeue
     # exp_container = ExperienceQueueContainer(scenario_dict)
     exp_container = ExperienceQueueContainer()

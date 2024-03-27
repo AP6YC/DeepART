@@ -72,6 +72,18 @@ sim_params = Dict{String, Any}(
     ],
     "display" => DISPLAY,
     "gpu" => GPU,
+    "scenario" => [
+        "task-incremental",
+        "task-homogenous"
+    ],
+    "group_size" => [
+        @onlyif("dataset" == "mnist", 2),
+        @onlyif("dataset" == "fashionmnist", 2),
+        @onlyif("dataset" == "cifar10", 2),
+        @onlyif("dataset" == "cifar100_fine", 20),
+        @onlyif("dataset" == "cifar100_coarse", 4),
+        @onlyif("dataset" == "usps", 2),
+    ],
 )
 
 # -----------------------------------------------------------------------------

@@ -38,4 +38,14 @@ df = collect_results!(sweep_dir)
 
 # perf_df = DataFrame( = n_F2, Total = n_categories)
 perf_df = df[:, [:m, :dataset, :perf]]
+
+n_datasets = length(unique(perf_df.dataset))
+n_models = length(unique(perf_df.m))
+
+# out_mat =
+for ix = 1:n_datasets
+    for jx = 1:n_models
+    end
+end
+
 table = latexify(perf_df, env=:table)

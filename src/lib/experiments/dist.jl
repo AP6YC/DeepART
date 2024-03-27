@@ -39,6 +39,31 @@ function save_sim(
 end
 
 """
+Generates a new grouping from the classes vector and the group size, assuming that the length of the classes is evenly divisible by `group_size`.
+"""
+function get_dist_grouping(
+    classes::Vector{Int},
+    group_size::Int,
+)
+    n_classes = length(classes)
+    return [classes[ix : ix + group_size - 1] for ix = 1:group_size:n_classes]
+end
+
+"""
+Generates a random grouping from the provided dataset and selected group size.
+"""
+function random_dist_grouping(
+    data::DataSplit,
+    group_size::Int,
+)
+    classes = unique(data.train.y)
+    groupings = shuffle(classes)
+
+    return get_grouping(groupings, group_size)
+end
+
+
+"""
 Trains and classifies a START module on the provided statements.
 
 # Arguments
@@ -68,8 +93,15 @@ function tt_dist(
     art = get_module_from_options(d, data.train)
 
     # Process the statements
-    @info "Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
-    results = tt_basic!(art, data, display=d["display"])
+    results = if d["scenario"] == "task-homogenous"
+        @info "Task-Homogenous: Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
+        tt_basic!(art, data, display=d["display"])
+    else
+        @info "Task-Incremental: Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
+        grouping = random_dist_grouping(data.train, d["group_size"])
+        tidata = ClassIncrementalDataSplit(data, grouping)
+        tt_inc!(art, tidata)
+    end
 
     # Compute the confusion while we have the true y for this dataset shuffle
     n_classes = length(unique(data.test.y))
