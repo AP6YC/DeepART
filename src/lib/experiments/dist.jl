@@ -99,8 +99,9 @@ function tt_dist(
     else
         @info "Task-Incremental: Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
         grouping = random_dist_grouping(data, d["group_size"])
-        tidata = ClassIncrementalDataSplit(data, grouping)
-        tt_inc!(art, tidata)
+        tidata = ClassIncrementalDataSplit(data)
+        tidata = TaskIncrementalDataSplit(tidata, grouping)
+        tt_inc!(art, tidata, data, display=d["display"])
     end
 
     # Compute the confusion while we have the true y for this dataset shuffle
