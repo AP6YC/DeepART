@@ -57,7 +57,11 @@ sim_params = Dict{String, Any}(
     "beta_s" => 1.0,
     "head_dim" => 1024,
     "display" => DISPLAY,
-    "gpu" => GPU,
+    "gpu" => [
+        @onlyif("m" == "SFAM", false),
+        @onlyif("m" == "DeepARTDense", true),
+        @onlyif("m" == "DeepARTConv", true),
+    ],
 )
 
 # Log the simulation scale
