@@ -98,7 +98,7 @@ function tt_dist(
         tt_basic!(art, data, display=d["display"])
     else
         @info "Task-Incremental: Training $(d["m"]) on $(d["dataset"]) with seed $(d["rng_seed"])"
-        grouping = random_dist_grouping(data.train, d["group_size"])
+        grouping = random_dist_grouping(data, d["group_size"])
         tidata = ClassIncrementalDataSplit(data, grouping)
         tt_inc!(art, tidata)
     end
