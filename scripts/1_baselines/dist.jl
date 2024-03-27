@@ -59,7 +59,12 @@ sim_params = Dict{String, Any}(
     "beta_d" => 0.01,
     "beta_s" => 1.0,
     "rng_seed" => collect(1:N_SIMS),
-    "n_train" => N_TRAIN,
+    # "n_train" => N_TRAIN,
+    "n_train" => [
+        @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 4000),
+        @onlyif("m" == "DeepARTDense", 2000),
+        @onlyif("m" == "DeepARTConv", 2000),
+    ],
     "n_test" => N_TEST,
     "head_dim" => 1024,
     "dataset" => [

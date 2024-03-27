@@ -16,7 +16,8 @@ Options container for a [`ARTINSTART`](@ref) module.
     """
     The vigilance parameter of the [`ARTINSTART`](@ref) module, rho ∈ (0.0, 1.0].
     """
-    rho::Float = 0.6; @assert rho > 0.0 && rho <= 1.0
+    rho::Float = 0.6; @assert rho >= 0.0 && rho <= 1.0
+    # rho::Float = 0.6; @assert rho > 0.0 && rho <= 1.0
 
     """
     Instar learning rate.

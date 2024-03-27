@@ -30,8 +30,8 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 ENV["GKSwstype"] = "100"
 
 # Train/test config
-N_TRAIN = 1000
-N_TEST = 1000
+N_TRAIN = 60000
+N_TEST = 10000
 
 # Print to the paper dir only if on Windows, assuming that unix means the cluster
 PAPER = Sys.iswindows()
@@ -41,20 +41,24 @@ PAPER = Sys.iswindows()
 # -----------------------------------------------------------------------------
 
 # Load the dataset
-data = DeepART.get_mnist()
+data = DeepART.get_mnist(
+    flatten=true,
+    n_train=N_TRAIN,
+    n_test=N_TEST,
+)
 
 # Flatten the dataset
-fdata = DeepART.flatty(data)
+# fdata = DeepART.flatty(data)
 
 # Get the dimension
-dim = size(fdata.train.x)[1]
+dim = size(data.train.x)[1]
 
 # Infer other aspects of the data
 n_classes = length(unique(data.train.y))
 
 # Get the number of samples to use for training and testing based
-n_train = min(N_TRAIN, length(data.train.y))
-n_test = min(N_TEST, length(data.test.y))
+# n_train = min(N_TRAIN, length(data.train.y))
+# n_test = min(N_TEST, length(data.test.y))
 
 # -----------------------------------------------------------------------------
 # TASK-HOMOGENOUS TRAIN/TEST
@@ -62,8 +66,10 @@ n_test = min(N_TEST, length(data.test.y))
 
 # Init the SFAM module
 art = ART.SFAM(
-    rho=0.6,
+    # rho=0.6,
+    rho = 0.0,
     display=true,
+    # epsilon=1e-4,
 )
 
 # Set the data config
@@ -72,14 +78,13 @@ art.config = ART.DataConfig(0, 1, dim)
 # Train the FuzzyART model in simple supervised mode
 results = DeepART.tt_basic!(
     art,
-    fdata,
-    n_train,
-    n_test,
+    data,
+    display=true,
 )
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "th_conf",
