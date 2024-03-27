@@ -20,7 +20,6 @@ using DrWatson
 
 top_dir = DeepART.results_dir("l2metrics", "scenarios")
 
-
 EXP_TOP = "2_l2"
 EXP_NAME = "l2logs"
 
@@ -158,19 +157,19 @@ end
 # global tidata, name_map = DeepART.L2TaskIncrementalDataSplit(data, groupings)
 
 
-# configs = []
-# scenarios = []
-# # Iterate over every scenario top directory
-# for scenario_top_dir in readdir(top_dir)
-#     # Get the full path to the scenario directory
-#     scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)
-#     for scenario_dir in readdir(scenario_top_dir_full, join=true)
-#         config = DeepART.json_load(joinpath(scenario_dir, "config.json"))
-#         scenario = DeepART.json_load(joinpath(scenario_dir, "scenario.json"))
-#         push!(configs, config)
-#         push!(scenarios, scenario)
-#     end
-# end
+configs = []
+scenarios = []
+# Iterate over every scenario top directory
+for scenario_top_dir in readdir(top_dir)
+    # Get the full path to the scenario directory
+    scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)
+    for scenario_dir in readdir(scenario_top_dir_full, join=true)
+        config = DeepART.json_load(joinpath(scenario_dir, "config.json"))
+        scenario = DeepART.json_load(joinpath(scenario_dir, "scenario.json"))
+        push!(configs, config)
+        push!(scenarios, scenario)
+    end
+end
 
 # using JSON
 # function show_json(dict, index)

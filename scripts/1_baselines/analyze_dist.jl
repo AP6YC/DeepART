@@ -188,7 +188,7 @@ for ix in eachindex(datasets_list)
 
             DeepART.saveplot(
                 h,
-                paper_out_dir("$(local_dataset)_$(local_model)_$(local_scenario)_conf"),
+                "$(local_dataset)_$(local_model)_$(local_scenario)_conf",
                 [EXP_TOP, "confusions"],
                 paper=true,
                 extension=".png",
@@ -209,14 +209,21 @@ end
 
 vec_h[1]
 
-# Create the confusion matrix from this experiment
-DeepART.plot_confusion_matrix(
-    data.test.y,
-    results["y_hats"],
-    names,
-    "conv_ti_confusion",
-    EXP_TOP,
-)
+# # Create the confusion matrix from this experiment
+# DeepART.plot_confusion_matrix(
+#     data.test.y,
+#     results["y_hats"],
+#     names,
+#     "conv_ti_confusion",
+#     EXP_TOP,
+# )
+
+function check_parts(parts::Vector{String})
+    results_out_dir(args...) = DeepART.results_dir(parts..., args...)
+    @info results_out_dir()
+end
+
+check_parts(["asdf", "qwer"])
 
 # norm_cm_df = df[:, :conf]
 # norm_cm = mean(norm_cm_df)
