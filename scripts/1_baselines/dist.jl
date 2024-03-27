@@ -74,7 +74,7 @@ sim_params = Dict{String, Any}(
     "gpu" => GPU,
     "scenario" => [
         "task-incremental",
-        "task-homogenous"
+        "task-homogenous",
     ],
     "group_size" => [
         @onlyif("dataset" == "mnist", 2),

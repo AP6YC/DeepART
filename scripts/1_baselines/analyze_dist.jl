@@ -37,25 +37,37 @@ sweep_dir = DeepART.results_dir(
 df = collect_results!(sweep_dir)
 
 # perf_df = DataFrame( = n_F2, Total = n_categories)
-perf_df = df[:, [:m, :dataset, :perf]]
+# perf_df = df[:, [:m, :dataset, :perf]]
 
 # Get the sizes of the relevant elements in the dataframe
-n_datasets = length(unique(perf_df.dataset))
-n_models = length(unique(perf_df.m))
-scenarios = ["task-incremental", "task-homogeneous"]
+datasets = unique(df.dataset)
+n_datasets = length(unique(datasets))
+# models = ["DeepARTDense", "DeepARTConv", "SFAM"]
+models = unique(df.m)
+n_models = length(models)
+# n_models = length(unique(perf_df.m))
+# scenarios = ["task-incremental", "task-homogeneous"]
+scenarios = unique(df.scenario)
 n_scenarios = length(scenarios)
 
 # Compute the means and standard deviations of the final testing performances
-out_mat = zeros(n_models, n_datasets, n_scenarios)
-for ix = 1:n_datasets
-    for jx = 1:n_models
+out_mat = zeros(n_models, n_datasets, n_scenarios, 2)
+# for ix = 1:n_datasets
+for ix in eachindex(datasets)
+    # for jx = 1:n_models
+    for jx in eachindex(models)
         for kx in eachindex(scenarios)
+            local_dataset = datasets[ix]
+            local_model = models[jx]
             local_scenario = scenarios[kx]
-            out_mat[jx, ix, kx] = mean(df[(df.dataset .== ix) .& (df.m .== jx) .& (df.scenario .== local_scenario), :perf])
-            out_mat[jx+n_models, ix] = std(df[(df.dataset .== ix) .& (df.m .== jx) .& (df.scenario .== local_scenario), :perf])
+                # for mx = 1:2
+            out_mat[jx, ix, kx, 1] = mean(df[(df.dataset .== local_dataset) .& (df.m .== local_model) .& (df.scenario .== local_scenario), :perf])
+            out_mat[jx, ix, kx, 2] = std(df[(df.dataset .== local_dataset) .& (df.m .== local_model) .& (df.scenario .== local_scenario), :perf])
         end
     end
 end
+
+out_mat
 
 # table = latexify(perf_df, env=:table)
 
