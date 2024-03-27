@@ -36,7 +36,6 @@ sweep_dir = DeepART.results_dir(
 # Collect the results into a single dataframe
 df = collect_results!(sweep_dir)
 
-
 # perf_df = DataFrame( = n_F2, Total = n_categories)
 perf_df = df[:, [:m, :dataset, :perf]]
 table = latexify(perf_df, env=:table)

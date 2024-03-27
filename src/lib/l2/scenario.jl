@@ -350,6 +350,7 @@ function gen_scenario_from_group(
     DIR = DeepART.results_dir(
         "l2metrics",
         "logs",
+        key,
         file_dir,
     )
     NAME = "l2metrics_logger"

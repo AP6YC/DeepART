@@ -89,6 +89,8 @@ l2l = PythonCall.pyimport("l2logger.l2logger")
 
 # Iterate over every scenario top directory
 for scenario_top_dir in readdir(top_dir)
+    # Logging the current dataset used
+    @info "----------------- DATASET: $scenario_top_dir -----------------"
 
     # Get the full path to the scenario directory
     scenario_top_dir_full = joinpath(top_dir, scenario_top_dir)
