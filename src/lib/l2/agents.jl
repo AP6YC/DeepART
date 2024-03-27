@@ -50,7 +50,7 @@ Creates an agent with an empty experience queue.
 
 # Arguments
 - `agent::T`: the agent module.
-- `ddvfa_opts::opts_DDVFA`: the options struct used to initialize the DDVFA module and set the logging params.
+- `opts`: the options struct used to initialize the module and set the logging params.
 """
 function Agent(
     agent,
@@ -366,7 +366,7 @@ function full_scenario(
     tidata, name_map = L2TaskIncrementalDataSplit(data, groupings)
 
     # Put the x data onto the GPU if required
-    if agent.agent.opts.gpu
+    if d["gpu"]
         tidata = gputize(tidata)
     end
 
