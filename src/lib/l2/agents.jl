@@ -55,6 +55,7 @@ Creates an agent with an empty experience queue.
 function Agent(
     agent,
     opts,
+    name,
 )
 # function DDVFAAgent(ddvfa_opts::opts_DDVFA)
     # Create the DDVFA object from the opts
@@ -67,6 +68,7 @@ function Agent(
     # Create the params object for Logging
     params = StatsDict()
     fields_to_dict!(params, opts)
+    params["m"] = name
 
     # Construct and return the DDVFAAgent
     return Agent(
@@ -86,9 +88,10 @@ function Agent(
     agent,
     opts,
     scenario_dict::AbstractDict,
+    name,
 )
     # Create an agent with an empty queue
-    agent = Agent(agent, opts)
+    agent = Agent(agent, opts, name)
     # Initialize the agent's scenario container with the dictionary
     initialize_exp_queue!(agent.scenario, scenario_dict)
     # Return the agent with an initialized queue
@@ -356,6 +359,7 @@ function full_scenario(
         art,
         opts,
         scenario,
+        d["m"],
     )
 
     # Extract the groupings order from the config file
