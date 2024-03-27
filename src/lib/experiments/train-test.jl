@@ -167,57 +167,6 @@ function basic_test(
     return y_hats
 end
 
-# """
-# Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
-
-# # Arguments
-# $ARG_COMMONARTMODULE
-# $ARG_DATASPLIT
-# $ARG_N_TEST
-# """
-# function basic_test(
-#     art::CommonARTModule,
-#     data::DataSplit,
-#     # n_test::Integer=IInf,
-# )
-#     # Get the number of testing samples
-#     # l_n_test = get_n(n_test, data.test)
-
-#     # Get the estimates on the test data
-#     y_hats = Vector{Int}()
-
-
-#     test_loader = Flux.DataLoader(data.test, batchsize=1)
-
-#     if art.opts.gpu
-#         test_loader = test_loader |> gpu
-#     end
-
-#     pr = Progress(
-#         # l_n_test;
-#         length(test_loader);
-#         desc="Task-Homogenous Testing",
-#         enabled = Sys.iswindows(),
-#     )
-
-#     # for ix = 1:l_n_test
-#     for (xf, _) in test_loader
-#         # xf = data.test.x[:, ix]
-#         # xf = get_sample(data.test, ix)
-#         # y_hat = DeepART.classify(art, xf, get_bmu=true)
-#         y_hat = incremental_classify(art, xf)
-#         push!(y_hats, y_hat)
-#         next!(pr)
-#     end
-
-#     # # Calculate the performance and log
-#     # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
-#     # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
-
-#     # Return the estimates
-#     return y_hats
-# end
-
 """
 Task-incremental training/testing loop.
 
@@ -472,7 +421,7 @@ function flux_accuracy(
 end
 
 """
-Simple train/test split experiment.
+Simple train/test split experiment using an MLP with gradient descent on the datset.
 """
 function train_test!(
     # model::T,
@@ -512,9 +461,7 @@ function train_test!(
     # )
 
     # model = DeepART.get_dense([n_input, 200, 100, 10, n_classes])
-
     # model |> gpu
-
     # model = DeepART.get_dense([n_input, 128, n_classes])
 
     # optim = Flux.setup(DeepART.EWC(), model)  # will store optimiser momentum, etc.
@@ -618,3 +565,55 @@ function train_test!(
     #     group=data.train.y,
     # )
 end
+
+
+# """
+# Task-homogenous testing loop for a [`DeepARTModule`](@ref) model.
+
+# # Arguments
+# $ARG_COMMONARTMODULE
+# $ARG_DATASPLIT
+# $ARG_N_TEST
+# """
+# function basic_test(
+#     art::CommonARTModule,
+#     data::DataSplit,
+#     # n_test::Integer=IInf,
+# )
+#     # Get the number of testing samples
+#     # l_n_test = get_n(n_test, data.test)
+
+#     # Get the estimates on the test data
+#     y_hats = Vector{Int}()
+
+
+#     test_loader = Flux.DataLoader(data.test, batchsize=1)
+
+#     if art.opts.gpu
+#         test_loader = test_loader |> gpu
+#     end
+
+#     pr = Progress(
+#         # l_n_test;
+#         length(test_loader);
+#         desc="Task-Homogenous Testing",
+#         enabled = Sys.iswindows(),
+#     )
+
+#     # for ix = 1:l_n_test
+#     for (xf, _) in test_loader
+#         # xf = data.test.x[:, ix]
+#         # xf = get_sample(data.test, ix)
+#         # y_hat = DeepART.classify(art, xf, get_bmu=true)
+#         y_hat = incremental_classify(art, xf)
+#         push!(y_hats, y_hat)
+#         next!(pr)
+#     end
+
+#     # # Calculate the performance and log
+#     # perf = DeepART.ART.performance(y_hats, data.test.y[1:l_n_test])
+#     # @info "Perf: $perf, n_cats: $(art.n_categories), uniques: $(unique(y_hats))"
+
+#     # Return the estimates
+#     return y_hats
+# end

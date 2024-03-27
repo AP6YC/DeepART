@@ -32,6 +32,7 @@ ENV["GKSwstype"] = "100"
 # Train/test config
 N_TRAIN = 60000
 N_TEST = 10000
+RHO = 0.0
 
 # Print to the paper dir only if on Windows, assuming that unix means the cluster
 PAPER = Sys.iswindows()
@@ -47,18 +48,11 @@ data = DeepART.get_mnist(
     n_test=N_TEST,
 )
 
-# Flatten the dataset
-# fdata = DeepART.flatty(data)
-
 # Get the dimension
 dim = size(data.train.x)[1]
 
 # Infer other aspects of the data
 n_classes = length(unique(data.train.y))
-
-# Get the number of samples to use for training and testing based
-# n_train = min(N_TRAIN, length(data.train.y))
-# n_test = min(N_TEST, length(data.test.y))
 
 # -----------------------------------------------------------------------------
 # TASK-HOMOGENOUS TRAIN/TEST
@@ -67,7 +61,7 @@ n_classes = length(unique(data.train.y))
 # Init the SFAM module
 art = ART.SFAM(
     # rho=0.6,
-    rho = 0.0,
+    rho = RHO,
     display=true,
     # epsilon=1e-4,
 )
@@ -107,7 +101,7 @@ n_tasks = length(tidata.train)
 
 # Init a new FuzzyART module
 tiart = ART.SFAM(
-    rho=0.6,
+    rho=RHO,
     display=true,
 )
 
@@ -125,7 +119,7 @@ DeepART.tt_inc!(
 
 # Create the confusion matrix from this experiment
 DeepART.plot_confusion_matrix(
-    data.test.y[1:n_test],
+    data.test.y,
     results["y_hats"],
     string.(collect(0:9)),
     "ti_conf",
@@ -135,7 +129,6 @@ DeepART.plot_confusion_matrix(
 # -----------------------------------------------------------------------------
 # COMPLEX TASK-INCREMENTAL TRAIN/TEST
 # -----------------------------------------------------------------------------
-
 
 # # Train over each task
 # for ix = 1:n_tasks
@@ -149,8 +142,6 @@ DeepART.plot_confusion_matrix(
 #         y=task_y,
 #     )
 # end
-
-
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST

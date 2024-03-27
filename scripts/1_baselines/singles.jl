@@ -127,6 +127,14 @@ n_input = size(fdata.train.x)[1]
 
 @info "----------------- DENSE -----------------"
 
+# Cluster:
+# perf = 0.5794
+# n_cat  = 228
+
+# PC:
+# perf = 0.5607
+# n_cat=242
+
 # Model definition
 model = DeepART.get_rep_dense(n_input, head_dim)
 
@@ -169,6 +177,9 @@ DeepART.plot_confusion_matrix(
 # -----------------------------------------------------------------------------
 
 @info "----------------- CONVOLUTIONAL -----------------"
+
+# perf = 0.7581
+# n_cat  = 228
 
 size_tuple = (size(data.train.x)[1:3]..., 1)
 conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
