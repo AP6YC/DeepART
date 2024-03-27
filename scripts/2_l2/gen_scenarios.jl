@@ -19,7 +19,7 @@ using DeepART
 # Define which scenarios to generate and how
 N_TRAIN = 1000
 N_TEST = 1000
-N_MAX = 1
+N_MAX = 5
 GROUPINGS = Dict(
     "mnist" => Dict(
         "random" => true,
