@@ -47,7 +47,7 @@ p, training_vals, x_training_vals = DeepART.create_complex_condensed_plot_alt(
     perfs, vals, class_labels
 )
 # DeepART.handle_display(p, pargs)
-
+p
 # Save the plot
 DeepART.saveplot(
     p,

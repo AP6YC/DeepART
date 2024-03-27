@@ -382,8 +382,6 @@ function create_complex_condensed_plot_alt(
     class_labels,
     percentages::Bool=true
 )
-    # @info class_labels
-
     # Reshape the labels string vector for plotting
     local_labels = reshape(class_labels, 1, length(class_labels))
     # Determine if plotting percentages or [0, 1]

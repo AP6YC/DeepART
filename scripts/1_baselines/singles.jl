@@ -89,7 +89,6 @@ head_dim = 256
 model = DeepART.get_rep_dense(n_input, head_dim)
 
 art = DeepART.ARTINSTART(
-# art = DeepART.ARTINSTART(
     model;
     head_dim=head_dim,
     beta=0.0,
@@ -129,7 +128,6 @@ head_dim = 1024
 # Model definition
 model = DeepART.get_rep_dense(n_input, head_dim)
 
-# art = DeepART.INSTART(
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,

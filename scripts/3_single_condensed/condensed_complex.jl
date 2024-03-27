@@ -115,14 +115,14 @@ art = DeepART.ARTINSTART(
     gpu=GPU,
 )
 
-art = DeepART.ARTINSTART(
-    model,
-    head_dim=head_dim,
-    beta=0.01,
-    softwta=true,
-    gpu=true,
-    rho=0.6,
-)
+# art = DeepART.ARTINSTART(
+#     model,
+#     head_dim=head_dim,
+#     beta=0.01,
+#     softwta=true,
+#     gpu=true,
+#     rho=0.6,
+# )
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST
@@ -142,7 +142,8 @@ for j = 1:n_tasks
 end
 
 vals = []
-test_interval = 20
+# test_interval = 20
+test_interval = 10
 
 # Iterate over each class
 # for ix = 1:n_classes
@@ -173,8 +174,12 @@ for ix = 1:n_tasks
 
             # local_y_hat = DeepART.basic_test(art, tidata.train[ix], N_TEST)
             # local_val = DeepART.get_accuracies(tidata.train[ix].y, local_y_hat, n_classes)
-            local_y_hat = DeepART.basic_test(art, data.train, N_TEST)
-            local_val = DeepART.get_accuracies(data.train.y, local_y_hat, n_classes)
+
+            # local_y_hat = DeepART.basic_test(art, data.train, N_TEST)
+            # local_val = DeepART.get_accuracies(data.train.y, local_y_hat, n_classes)
+            local_y_hat = DeepART.basic_test(art, tidata.train[ix])
+            local_val = DeepART.get_accuracies(tidata.train[ix].y, local_y_hat, n_classes)
+            @info local_val
             local_vals = hcat(local_vals, local_val')
         end
     end
@@ -185,7 +190,8 @@ for ix = 1:n_tasks
     # for jx = 1:n_classes
     for jx = 1:n_tasks
         # local_y_hat = AdaptiveResonance.classify(ddvfa, data_indexed.test.x[j], get_bmu=true)
-        local_y_hat = DeepART.basic_test(art, tidata.test[jx], N_TEST)
+        # local_y_hat = DeepART.basic_test(art, tidata.test[jx], N_TEST)
+        local_y_hat = DeepART.basic_test(art, tidata.test[jx])
         push!(perfs[jx], performance(local_y_hat, tidata.test[jx].y))
     end
 end
