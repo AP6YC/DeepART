@@ -343,13 +343,9 @@ function full_scenario(
 
     # Instantiate the data logger
     # data_logger = l2logger[].DataLogger(
-    # real_log_dir = DeepART.results_dir("l2metrics", "logs", splitpath(config["DIR"]))
     old_dir_parts = splitpath(config["DIR"])
     real_log_dir = joinpath(old_dir_parts[1:end-1]..., d["m"], old_dir_parts[end])
-    # real_log_dir = joinpath(
-    #     DeepART.results_dir("l2metrics", "logs"),
-    #     old_dir_parts[end-1:end]...
-    # )
+
     data_logger = l2logger.DataLogger(
         # config["DIR"],
         real_log_dir,

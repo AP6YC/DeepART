@@ -40,8 +40,17 @@ experiment_top = "3_single_condensed"
 mkpath(DeepART.results_dir(experiment_top))
 data_file = DeepART.results_dir(experiment_top, "condensed_complex_data.jld2")
 
-# Simulation options
-# opts_file = "default.yml"
+DATASET = "mnist"
+
+DISPLAY = true
+DEV = Sys.iswindows()
+N_TRAIN = DEV ? 500 : 1000
+N_TEST = DEV ? 500 : 1000
+GPU = !DEV
+
+BETA_S = 1.0
+BETA_D = 0.01
+
 
 # -----------------------------------------------------------------------------
 # EXPERIMENT SETUP
@@ -58,9 +67,6 @@ n_classes = length(cidata.train)
 groupings = [collect(1:2), collect(3:4), collect(5:6), collect(7:8), collect(9:10)]
 tidata = DeepART.TaskIncrementalDataSplit(cidata, groupings)
 n_tasks = length(tidata.train)
-
-GPU && data |> gpu
-GPU && tidata |> gpu
 
 # # Load the default simulation options
 # opts = DeepART.load_sim_opts(opts_file)
@@ -79,19 +85,36 @@ GPU && tidata |> gpu
 
 n_input = size(data.train.x, 1)
 
+# # Model definition
+# head_dim = 2048
+# model = Flux.@autosize (n_input,) Chain(
+#     DeepART.CC(),
+#     Dense(_, 256, sigmoid, bias=false),
+#     # Dense(_, 128, sigmoid, bias=false),
+#     DeepART.CC(),
+#     # Dense(_, 128, sigmoid, bias=false),
+#     # DeepART.CC(),
+#     # Dense(_, 64, sigmoid, bias=false),
+#     # DeepART.CC(),
+#     Dense(_, head_dim, sigmoid, bias=false),
+# )
+
 # Model definition
-head_dim = 2048
-model = Flux.@autosize (n_input,) Chain(
-    DeepART.CC(),
-    Dense(_, 256, sigmoid, bias=false),
-    # Dense(_, 128, sigmoid, bias=false),
-    DeepART.CC(),
-    # Dense(_, 128, sigmoid, bias=false),
-    # DeepART.CC(),
-    # Dense(_, 64, sigmoid, bias=false),
-    # DeepART.CC(),
-    Dense(_, head_dim, sigmoid, bias=false),
+head_dim = 1024
+model = DeepART.get_rep_dense(n_input, head_dim)
+
+art = DeepART.ARTINSTART(
+    model,
+    head_dim = head_dim,
+    beta = BETA_D,
+    beta_s=BETA_S,
+    rho=0.3,
+    update="art",
+    softwta=true,
+    # uncommitted=true,
+    gpu=GPU,
 )
+
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
