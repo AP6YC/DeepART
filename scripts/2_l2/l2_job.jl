@@ -135,6 +135,8 @@ for scenario_top_dir in readdir(top_dir)
 
 end
 
+@info "-------------- ALL'S QUIET ON THE WESTERN FRONT --------------"
+
 # # Construct the agent from the scenario
 # global scenario = DeepART.json_load(joinpath(scenario_dir, "scenario.json"))
 # global agent = DeepART.Agent(

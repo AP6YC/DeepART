@@ -267,6 +267,85 @@ function plot_confusion_matrix(
     return
 end
 
+
+"""
+Returns a handle to a labeled and annotated heatmap plot of the confusion matrix.
+
+# Arguments
+- `norm_cm::RealMatrix`: the normalized confuction matrix to plot as a heatmap.
+"""
+function create_custom_confusion_heatmap(
+    class_labels::Vector{String},
+    norm_cm::RealMatrix,
+    fontsize::Real=10,
+)
+    # Number of classes from the class labels
+    # n_classes = length(class_labels)
+    # Normalized confusion
+    # norm_cm = get_normalized_confusion(y, y_hat, n_classes)
+    # Transpose reflect
+    plot_cm = reverse(norm_cm', dims=1)
+    # Convert to percentages
+    plot_cm *= 100.0
+    # Transpose the y labels
+    x_labels = class_labels
+    y_labels = reverse(class_labels)
+
+    # Create the heatmap
+    h = Plots.heatmap(
+        x_labels,
+        y_labels,
+        plot_cm,
+        fill_z = norm_cm,
+        aspect_ratio=:equal,
+        color = cgrad(GRADIENTSCHEME),
+        clims = (0, 100),
+        fontfamily=FONTFAMILY,
+        annotationfontfamily=FONTFAMILY,
+        size=SQUARE_SIZE,
+        dpi=DPI
+    )
+
+    # Create the annotations
+    # fontsize = 8
+    nrow, ncol = size(norm_cm)
+    ann = [
+        (
+            i-.5,
+            j-.5,
+            text(
+                # round(plot_cm[j,i], digits=2),
+                string(round(plot_cm[j,i], digits=2)) * "%",
+                fontsize,
+                FONTFAMILY,
+                :white,
+                :center,
+            )
+        )
+        for i in 1:nrow for j in 1:ncol
+    ]
+
+    # Add the cell annotations
+    Plots.annotate!(
+        ann,
+        linecolor=:white,
+        # linecolor=:black,
+        fontfamily=FONTFAMILY,
+    )
+
+    plot!(
+        bottom_margin = -8Plots.mm,
+    )
+
+    # Label truth and predicted axes
+    Plots.xlabel!("Predicted")
+    Plots.ylabel!("Truth")
+
+    # Return the plot handle for display or saving
+    return h
+end
+
+
 """
 Wrapper for saving results plots.
 """
@@ -293,7 +372,6 @@ function saveplot(
 
     return
 end
-
 
 """
 Create and return an alternate complex condensed scenario plot.
