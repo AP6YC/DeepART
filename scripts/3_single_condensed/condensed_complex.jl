@@ -152,7 +152,8 @@ for ix = 1:n_tasks
     _, n_samples_local = size(tidata.train[ix].x)
     # local_vals = zeros(n_classes, n_samples_local)
     # local_vals = zeros(n_classes, 0)
-    local_vals = Array{Float64}(undef, n_classes, 0)
+    # local_vals = Array{Float64}(undef, n_classes, 0)
+    local_vals = Array{Float64}(undef, n_tasks, 0)
 
     # Iterate over all samples
     @showprogress for jx = 1:n_samples_local
@@ -179,8 +180,11 @@ for ix = 1:n_tasks
             # local_val = DeepART.get_accuracies(data.train.y, local_y_hat, n_classes)
             local_y_hat = DeepART.basic_test(art, tidata.train[ix])
             local_val = DeepART.get_accuracies(tidata.train[ix].y, local_y_hat, n_classes)
-            @info local_val
-            local_vals = hcat(local_vals, local_val')
+            # @info local_val
+            # local_val = [local_val[i]*local_val[i+1] for i in groupings[ix]]
+            # local_vals = hcat(local_vals, local_val')
+            local_val = [prod([local_val[i] for i in groupings[j]]) for j in eachindex(groupings)]
+            local_vals = hcat(local_vals, local_val)
         end
     end
 
