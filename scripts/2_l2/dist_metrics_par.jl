@@ -9,17 +9,25 @@ Runs the l2metrics on the latest logs from within Julia.
 """
 
 # -----------------------------------------------------------------------------
-# SETUP
+# DEPENDENCIES
 # -----------------------------------------------------------------------------
 
 using Revise
 using DeepART
 using Distributed
 
-# N_SIMS = DEV ? 1 : 5
-N_PROCS = 4
+# -----------------------------------------------------------------------------
+# CONFIG
+# -----------------------------------------------------------------------------
+
+DEV = Sys.iswindows()
+N_PROCS = DEV ? 15 : 31
 
 experiment_top = "l2metrics"
+
+# -----------------------------------------------------------------------------
+# GET LOG DIRECTORIES
+# -----------------------------------------------------------------------------
 
 exp_dicts = Vector{Dict{String, Any}}()
 log_top = DeepART.results_dir(experiment_top, "logs")
@@ -38,10 +46,10 @@ for data_dir in readdir(log_top)
 end
 
 # -----------------------------------------------------------------------------
-# DEPENDENT VARIABLES
+# DISTRIBUTED L2METRICS GEN
 # -----------------------------------------------------------------------------
 
-# addprocs(N_PROCS, exeflags="--project=.")
+addprocs(N_PROCS, exeflags="--project=.")
 
 @everywhere begin
     using Revise
@@ -82,41 +90,49 @@ end
     end
 end
 
+# -----------------------------------------------------------------------------
+# RUN PARALLEL
+# -----------------------------------------------------------------------------
+
 # Parallel map the sims
-# pmap(run_l2metrics, exp_dicts)
+pmap(run_l2metrics, exp_dicts)
 
 println("--- Simulation complete ---")
+
+# -----------------------------------------------------------------------------
+# CLEANUP
+# -----------------------------------------------------------------------------
 
 # Close the workers after simulation
 rmprocs(workers())
 
-run_l2metrics(exp_dicts[1])
+# run_l2metrics(exp_dicts[1])
 
 
-   # # Iterate over every one of the order folders
-    # # for order in orders
-    # # function local_sim(order::Vector{Int64})
-    # function local_sim(datadir::String)
-    #     # String of the permutation order
-    #     # text_order = String(join(order))
+# # Iterate over every one of the order folders
+# # for order in orders
+# # function local_sim(order::Vector{Int64})
+# function local_sim(datadir::String)
+#     # String of the permutation order
+#     # text_order = String(join(order))
 
-    #     # Get the most recent log directory name
-    #     # last_log = readdir(results_dir(log_dir_name, text_order))[end]
+#     # Get the most recent log directory name
+#     # last_log = readdir(results_dir(log_dir_name, text_order))[end]
 
-    #     # Set the full source directory
-    #     src_dir = results_dir(log_dir_name, text_order, last_log)
+#     # Set the full source directory
+#     src_dir = results_dir(log_dir_name, text_order, last_log)
 
-    #     # Iterate over every metric
-    #     for metric in metrics
-    #         # Point to the output directory for this metric
-    #         out_dir = results_dir(metrics_dir_name, text_order, last_log, metric)
-    #         mkpath(out_dir)
-    #         # Set the common python l2metrics command
-    #         l2metrics_command = `python -m l2metrics --no-plot -p $metric -o $metric -O $out_dir -l $src_dir`
-    #         if Sys.iswindows()
-    #             run(`cmd /c activate $conda_env_name \&\& $l2metrics_command`)
-    #         elseif Sys.isunix()
-    #             run(`$l2metrics_command`)
-    #         end
-    #     end
-    # end
+#     # Iterate over every metric
+#     for metric in metrics
+#         # Point to the output directory for this metric
+#         out_dir = results_dir(metrics_dir_name, text_order, last_log, metric)
+#         mkpath(out_dir)
+#         # Set the common python l2metrics command
+#         l2metrics_command = `python -m l2metrics --no-plot -p $metric -o $metric -O $out_dir -l $src_dir`
+#         if Sys.iswindows()
+#             run(`cmd /c activate $conda_env_name \&\& $l2metrics_command`)
+#         elseif Sys.isunix()
+#             run(`$l2metrics_command`)
+#         end
+#     end
+# end
