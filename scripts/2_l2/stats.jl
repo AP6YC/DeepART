@@ -60,6 +60,7 @@ for (metric, df) in dfs
     push!(new_entry, pretty_rows[metric])
     # Iterate over every l2metric symbol
     for sym in syms
+        # push!(new_entry, "$(mean(df[:, sym])) ± $(var(df[:, sym]))")
         push!(new_entry, "$(mean(df[:, sym])) ± $(var(df[:, sym]))")
     end
     # for ix = 1:length(syms)
@@ -75,3 +76,30 @@ table_file = paper_results_dir("perm_stats.tex")
 open(table_file, "w") do f
     write(f, new_df_tex)
 end
+
+# # Point to each l2metric symbol that we want to use here
+# syms = [:pm, :ftr, :btr]
+# # Iterate over every metric
+# for (metric, df) in dfs
+#     # Create an empty new entry for the stats df
+#     new_entry = String[]
+#     # First entry is the pretty name of the metric
+#     push!(new_entry, pretty_rows[metric])
+#     # Iterate over every l2metric symbol
+#     for sym in syms
+#         # push!(new_entry, "$(mean(df[:, sym])) ± $(var(df[:, sym]))")
+#         push!(new_entry, "$(mean(df[:, sym])) ± $(var(df[:, sym]))")
+#     end
+#     # for ix = 1:length(syms)
+#     #     push!(new_entry, "$(mean(df[:, syms[ix]])) ± $(var(df[:, syms[ix]]))")
+#     # end
+#     # Add the entry to the output stats df
+#     push!(out_df, new_entry)
+# end
+
+# # Make a latex version of the stats dataframe and save
+# new_df_tex = latexify(out_df, env=:table, fmt="%.3f")
+# table_file = paper_results_dir("perm_stats.tex")
+# open(table_file, "w") do f
+#     write(f, new_df_tex)
+# end
