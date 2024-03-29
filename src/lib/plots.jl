@@ -481,13 +481,17 @@ function create_complex_condensed_plot_alt(
     )
 
     # Format the plot
+    common_fontsize = 12
     plot!(
         size=DOUBLE_WIDE,
         yformatter=y_formatter,
         fontfamily=FONTFAMILY,
         legend=:outerright,
-        legendfontsize=25,
+        # legendfontsize=25,
+        legendfontsize=common_fontsize,
         thickness_scaling=1,
+        guidefontsize=common_fontsize,
+        tickfontsize=common_fontsize,
         dpi=DPI,
         xticks=(tick_locations, class_labels),
         left_margin = 10Plots.mm,

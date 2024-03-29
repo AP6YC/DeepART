@@ -46,8 +46,8 @@ perfs, vals, class_labels = DeepART.load_sim_results(data_file, "perfs", "vals",
 p, training_vals, x_training_vals = DeepART.create_complex_condensed_plot_alt(
     perfs, vals, class_labels
 )
-# DeepART.handle_display(p, pargs)
-p
+display(p)
+
 # Save the plot
 DeepART.saveplot(
     p,

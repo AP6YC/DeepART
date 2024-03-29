@@ -58,10 +58,10 @@ for metric_file in readdir(savedir())
 end
 
 # Names for the rows of the latex table
-pretty_rows = Dict(
+pretty_rows = OrderedDict(
+    "performance" => "Performance",
     "art_activation" => "Activation",
     "art_match" => "Match",
-    "performance" => "Performance",
 )
 
 # Initialize the output statistics dataframe
@@ -255,6 +255,8 @@ end
 # ONE BIG COMBINED TABLE
 # -----------------------------------------------------------------------------
 
+metric_order = ["performance", "art_activation", "art_match"]
+
 begin
     function add_line_spacing!(table_str)
         return table_str *= "\\addlinespace\n\\midrule\n\\addlinespace\n"
@@ -274,7 +276,9 @@ begin
     # table_str *= " \\\\\n\\addlinespace\n"
     # add_line_spacing!(table_str)
 
-    for (metric, df) in stats_dfs
+    # for (metric, df) in stats_dfs
+    for metric in metric_order
+        df = stats_dfs[metric]
 
         table_str = add_line_spacing!(table_str)
         table_str *= """\\multicolumn{8}{c@{}}{$(pretty_rows[metric])} \\\\\n"""

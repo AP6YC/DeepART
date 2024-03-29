@@ -13,7 +13,7 @@ A repository containing implementations and experiments for the upcoming paper _
 
 ## Usage
 
-TODO
+The current version of the `DeepART` project does not yet have full usage instructions.
 
 ## Attribution
 
@@ -24,4 +24,5 @@ TODO
 ### Quotes
 
 > To achieve great things, two things are needed: a plan and not quite enough time
-- Leonard Bernstein
+>
+> --<cite> Leonard Bernstein </cite>
