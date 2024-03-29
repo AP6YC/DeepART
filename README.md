@@ -2,6 +2,13 @@
 
 A repository containing implementations and experiments for the upcoming paper _Deep Adaptive Resonance Theory_.
 
+| **Zenodo DOI** |
+|:--------------:|
+| [![DOI][zenodo-img]][zenodo-url] |
+
+[zenodo-img]: https://zenodo.org/badge/DOI/10.5281/zenodo.10896042.svg
+[zenodo-url]: https://zenodo.org/doi/10.5281/zenodo.10896042
+
 ## Table of Contents
 
 - [DeepART](#deepart)
