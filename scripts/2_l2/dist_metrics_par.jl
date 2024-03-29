@@ -22,6 +22,7 @@ using Distributed
 
 DEV = Sys.iswindows()
 N_PROCS = DEV ? 15 : 31
+# N_PROCS = 0
 
 experiment_top = "l2metrics"
 
@@ -35,13 +36,21 @@ for data_dir in readdir(log_top)
     data_dir_full = joinpath(log_top, data_dir)
     for method_dir in readdir(data_dir_full)
         method_dir_full = joinpath(data_dir_full, method_dir)
-        local_dict = Dict{String, Any}(
-            "data" => data_dir,
-            "method" => method_dir,
-            "log_dir" => readdir(method_dir_full, join=true)[end],
-            # "last_log" => joinpath(method_dir_full, readdir(method_dir_full)[end]),
-        )
-        push!(exp_dicts, local_dict)
+        for perm in readdir(method_dir_full)
+            perm_dir_full = joinpath(method_dir_full, perm)
+            # last_log = joinpath(perm_dir_full, readdir(perm_dir_full)[end])
+            # last_log = readdir(perm_dir_full, join=true)[end]
+            # @info readdir(perm_dir_full)[end]
+            # last_log_name = readdir(perm_dir_full)[end]
+            last_log = joinpath(perm_dir_full, readdir(perm_dir_full)[end])
+            local_dict = Dict{String, Any}(
+                "data" => data_dir,
+                "method" => method_dir,
+                "log_dir" => last_log,
+                # "last_log" => joinpath(method_dir_full, readdir(method_dir_full)[end]),
+            )
+            push!(exp_dicts, local_dict)
+        end
     end
 end
 
@@ -66,27 +75,33 @@ addprocs(N_PROCS, exeflags="--project=.")
             "art_activation",
         ]
 
+        perm_name = splitpath(exp_dict["log_dir"])[end-1]
+
         top_out_dir = DeepART.results_dir(experiment_top, "metrics", exp_dict["data"], exp_dict["method"])
         mkpath(top_out_dir)
-
-        for log_dir in readdir(exp_dict["log_dir"])
-            log_dir_full = joinpath(exp_dict["log_dir"], log_dir)
+        log_dir_full = exp_dict["log_dir"]
+        # @info exp_dict["log_dir"]
+        # for log_dir in readdir(exp_dict["log_dir"])
+        #     log_dir_full = joinpath(exp_dict["log_dir"], log_dir)
             # @info "Dir: $(isdir(log_dir_full)), $(log_dir_full)"
             # Iterate over every metric
             for metric in metrics
-                # Point to the output directory for this metric
-                # out_dir = results_dir(metrics_dir_name, text_order, last_log, metric)
-                out_dir = joinpath(top_out_dir, log_dir, metric)
-                mkpath(out_dir)
-                # Set the common python l2metrics command
-                l2metrics_command = `python -m l2metrics --no-plot -p $metric -o $metric -O $out_dir -l $log_dir_full`
-                if Sys.iswindows()
-                    run(`cmd /c activate $conda_env_name \&\& $l2metrics_command`)
-                elseif Sys.isunix()
-                    run(`$l2metrics_command`)
-                end
+                # metric_full = joinpath(log_dir_full, metric)
+                # for perm in readdir(metric_full)
+                    # Point to the output directory for this metric
+                    # out_dir = results_dir(metrics_dir_name, text_order, last_log, metric)
+                    out_dir = joinpath(top_out_dir, metric, perm_name)
+                    mkpath(out_dir)
+                    # Set the common python l2metrics command
+                    l2metrics_command = `python -m l2metrics --no-plot -p $metric -o $metric -O $out_dir -l $log_dir_full`
+                    if Sys.iswindows()
+                        run(`cmd /c activate $conda_env_name \&\& $l2metrics_command`)
+                    elseif Sys.isunix()
+                        run(`$l2metrics_command`)
+                    end
+                # end
             end
-        end
+        # end
     end
 end
 
