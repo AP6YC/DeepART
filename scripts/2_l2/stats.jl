@@ -137,6 +137,12 @@ pretty_datasets = OrderedDict(
     "cifar100_fine" => "CIFAR-100 (Fine)",
 )
 
+pretty_methods = OrderedDict(
+    "SFAM" => "FuzzyART",
+    "DeepARTDense" => "MLP DeepART",
+    "DeepARTConv" => "CNN DeepART",
+)
+
 l2metrics_names = Dict(
     :pm => Dict(
         "mean" => :ftrm,
@@ -151,43 +157,6 @@ l2metrics_names = Dict(
         "std" => :btrs,
     ),
 )
-
-pretty_methods = OrderedDict(
-    "SFAM" => "FuzzyART",
-    "DeepARTDense" => "MLP DeepART",
-    "DeepARTConv" => "CNN DeepART",
-)
-
-# \toprule
-# \headercell{L2 Metric} & \headercell{Method} & \multicolumn{6}{c@{}}{Dataset} \\
-#     \cmidrule(l){3-8} & & MNIST & Fashion MNIST & CIFAR-10 & CIFAR-100 (Fine) & CIFAR-100 (Coarse) & USPS \\
-#     \midrule
-#     \addlinespace
-#     % \multirow{3}{4em}{Performance Maintenance (PM)}
-#     PM & \multicolumn{7}{c@{}}{
-#         \begin{tabular}{@{} *{7}{c} @{}}
-#             \input{images/results/l2metrics/performance-pm}
-#         \end{tabular}
-#     }\\
-#     \addlinespace
-#     \hline
-#     \addlinespace
-#     FTR & \multicolumn{7}{c@{}}{
-#         \begin{tabular}{@{} *{7}{c} @{}}
-#             \input{images/results/l2metrics/performance-ftr}
-#         \end{tabular}
-#     } \\
-#     \addlinespace
-#     \hline
-#     \addlinespace
-#     BTR & \multicolumn{7}{c@{}}{
-#         \begin{tabular}{@{} *{7}{c} @{}}
-#             \input{images/results/l2metrics/performance-btr}
-#         \end{tabular}
-#     } \\
-#     \addlinespace
-#     \bottomrule
-
 
 # -----------------------------------------------------------------------------
 # COMBINED TABLES
