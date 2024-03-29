@@ -119,12 +119,6 @@ end
 # GENERATE TABLES
 # -----------------------------------------------------------------------------
 
-# out_strs = Dict{String, String}()
-# pretty_rows = Dict(
-#     "art_activation" => "Activation",
-#     "art_match" => "Match",
-#     "performance" => "Performance",
-# )
 pretty_l2metrics = OrderedDict(
     # :pm => "Performance Maintenance",
     # :ftr => "Forward Transfer Ratio",
@@ -195,7 +189,14 @@ pretty_methods = OrderedDict(
 #     \bottomrule
 
 
+# -----------------------------------------------------------------------------
+# COMBINED TABLES
+# -----------------------------------------------------------------------------
+
 for (metric, df) in stats_dfs
+    # Point to the output file
+    filename = "$(metric)-full.tex"
+
     # \\toprule
     table_str = """
     \\multirow{3}{*}{L2 Metric} & \\multirow{3}{*}{Method} & \\multicolumn{6}{c@{}}{Dataset} \\\\
@@ -205,13 +206,6 @@ for (metric, df) in stats_dfs
         table_str *= " & $(dataset)"
     end
     table_str *= " \\\\\n"
-    # \\cmidrule(l){3-8} & & MNIST & Fashion MNIST & CIFAR-10 & CIFAR-100 (Fine) & CIFAR-100 (Coarse) & USPS \\\\
-    # \\midrule
-    # \\addlinespace\n
-    # @info table_str
-    # table_str = ""
-
-    filename = "$(metric)-full.tex"
 
     for (l2metric, title) in pretty_l2metrics
         table_str *= """
@@ -221,15 +215,6 @@ for (metric, df) in stats_dfs
 
         # Construct the table contents string
         out_str = ""
-        # out_str *= "\n\\midrule\n\\addlinespace\n"
-        # if !COMBINED_TABLES
-        #     # for datatset in datasets
-        #     for (key, dataset) in pretty_datasets
-        #         out_str *= "& $(dataset) "
-        #     end
-        #     out_str *= "\\\\\n\\midrule\n\\addlinespace\n"
-        # end
-
         # for (method_key, method) in pretty_methods
         n_methods = length(pretty_methods)
         for ix = 1:n_methods
@@ -237,7 +222,6 @@ for (metric, df) in stats_dfs
             method = pretty_methods[method_key]
             # local_model = pretty_methods[methods[jx]]
             out_str *= "& $(method) "
-            # for ix in eachindex(datasets)
             # for (data_key, dataset) in pretty_datasets
             n_datasets = length(pretty_datasets)
             for jx = 1:n_datasets
@@ -249,26 +233,8 @@ for (metric, df) in stats_dfs
                 out_str *= Printf.format(f_str, local_mean, local_std)
             end
             out_str *= "\\\\\n"
-            # if !COMBINED_TABLES
-            #     out_str *= "\\\\\n"
-            # else
-            #     if ix != n_stats
-            #         out_str *= "\\\\\n"
-            #     end
-            # end
-            # if ix != n_stats && !COMBINED_TABLES
-            #     out_str *= "\\\\\n"
-            # end
-            # out_str *= "\\addlinespace\n\\hline\n\\addlinespace\n"
         end
-        # out_str *= "\\addlinespace\n\\hline\n\\addlinespace\n"
-        # out_str *= "\\addlinespace\n\\hline"
-        # out_str *= "\\addlinespace\n"
-        # out_str *= "\n"
-        # if !COMBINED_TABLES
         out_str *= "\\addlinespace\n"
-        # end
-
         table_str *= out_str
     end
     table_str *= "\\bottomrule"
@@ -285,7 +251,78 @@ for (metric, df) in stats_dfs
     @info table_str
 end
 
+# -----------------------------------------------------------------------------
+# ONE BIG COMBINED TABLE
+# -----------------------------------------------------------------------------
 
+begin
+    function add_line_spacing!(table_str)
+        return table_str *= "\\addlinespace\n\\midrule\n\\addlinespace\n"
+    end
+
+    filename = "l2metrics-big.tex"
+    # \\toprule
+    table_str = """
+    \\multirow{3}{*}{L2 Metric} & \\multirow{3}{*}{Method} & \\multicolumn{6}{c@{}}{Dataset} \\\\
+    \\cmidrule(l){3-8} &
+    """
+
+    for (_, dataset) in pretty_datasets
+        table_str *= " & $(dataset)"
+    end
+    table_str *= " \\\\\n"
+    # table_str *= " \\\\\n\\addlinespace\n"
+    # add_line_spacing!(table_str)
+
+    for (metric, df) in stats_dfs
+
+        table_str = add_line_spacing!(table_str)
+        table_str *= """\\multicolumn{8}{c@{}}{$(pretty_rows[metric])} \\\\\n"""
+
+        for (l2metric, title) in pretty_l2metrics
+            table_str = add_line_spacing!(table_str)
+            table_str *= """\\multirow{3}{*}{$(title)} """
+            # table_str *= """
+            # \\midrule
+            # \\addlinespace
+            # \\multirow{3}{*}{$(title)} """
+
+            # Construct the table contents string
+            out_str = ""
+            # for (method_key, method) in pretty_methods
+            n_methods = length(pretty_methods)
+            for ix = 1:n_methods
+                method_key = collect(keys(pretty_methods))[ix]
+                method = pretty_methods[method_key]
+                # local_model = pretty_methods[methods[jx]]
+                out_str *= "& $(method) "
+                # for (data_key, dataset) in pretty_datasets
+                n_datasets = length(pretty_datasets)
+                for jx = 1:n_datasets
+                    data_key = collect(keys(pretty_datasets))[jx]
+                    dataset = pretty_datasets[data_key]
+                    f_str = Printf.Format("& \$ %.$(ACC)f \\pm %.$(ACC)f \$ ")
+                    local_mean = df[(df.Dataset .== data_key) .& (df.Method .== method_key), l2metrics_names[l2metric]["mean"]][1]
+                    local_std = df[(df.Dataset .== data_key) .& (df.Method .== method_key), l2metrics_names[l2metric]["std"]][1]
+                    out_str *= Printf.format(f_str, local_mean, local_std)
+                end
+                out_str *= "\\\\\n"
+            end
+            # out_str *= "\\addlinespace\n"
+            table_str *= out_str
+        end
+    end
+    table_str *= "\\addlinespace\n\\bottomrule"
+    @info table_str
+    # Write to both
+    open(paper_out_dir(filename), "w") do file
+        write(file, table_str)
+    end
+
+    open(results_out_dir(filename), "w") do file
+        write(file, table_str)
+    end
+end
 
 
 # for (metric, df) in stats_dfs
