@@ -74,8 +74,8 @@ for dataset in readdir(top_dir)
                 # Create a new dataframe entry manually from the l2metrics in the file
                 new_entry = (
                     dataset,
-                    method,
                     perm,
+                    method,
                     md["perf_maintenance_mrlep"],
                     md["forward_transfer_ratio"],
                     md["backward_transfer_ratio"],

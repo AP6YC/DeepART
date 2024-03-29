@@ -9,6 +9,7 @@ A repository containing implementations and experiments for the upcoming paper _
   - [Usage](#usage)
   - [Attribution](#attribution)
     - [Authors](#authors)
+    - [Quotes](#quotes)
 
 ## Usage
 
@@ -19,3 +20,8 @@ TODO
 ### Authors
 
 - Sasha Petrenko - <sap625@mst.edu> - [@AP6YC](https://github.com/AP6YC)
+
+### Quotes
+
+> To achieve great things, two things are needed: a plan and not quite enough time
+- Leonard Bernstein
