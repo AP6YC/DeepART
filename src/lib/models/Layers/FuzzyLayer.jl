@@ -9,10 +9,19 @@ Definition of a FuzzyART-like layer for a Flux.jl model.
 # Single Fuzzy
 # -----------------------------------------------------------------------------
 
+"""
+A single FuzzyART-like layer for a Flux.jl model, implemented for use in a vector container.
+"""
 struct SingleFuzzy{M<:AbstractVector} <: CustomLayer
+    """
+    The weight vector for the layer.
+    """
     weight::M
 end
 
+"""
+Constructor for a [`SingleFuzzy`](@ref) layer taking the inut dimension and an optional weight initialization function.
+"""
 function SingleFuzzy(
     in::Integer;
     init = Flux.rand32
@@ -20,12 +29,16 @@ function SingleFuzzy(
     SingleFuzzy(init(in))
 end
 
+# Declares the layer as a Flux.jl layer
 Flux.@layer SingleFuzzy
 
 # function linear_normalization(x, W)
 #     return norm(min.(x, W), 1) / (1e-3 + norm(W, 1))
 # end
 
+"""
+Inference definition for a [`SingleFuzzy`](@ref) layer computing the activation and match values.
+"""
 function (a::SingleFuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => length(a.weight))
 #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
@@ -47,6 +60,9 @@ end
 #     reshape(a(reshape(x, size(x,1), :)), :, size(x)[2:end]...)
 # end
 
+"""
+Pretty print definition for a [`SingleFuzzy`](@ref) layer.
+"""
 function Base.show(io::IO, l::SingleFuzzy)
     print(io, "SingleFuzzy(", length(l.weight))
     # l.σ == identity || print(io, ", ", l.σ)
@@ -123,8 +139,6 @@ function Base.show(io::IO, l::Fuzzy)
     # l.bias == false && print(io, "; bias=false")
     print(io, ")")
 end
-
-# const BETA = 1.0
 
 # function art_learn(x, W)
 #     # return eval(art.opts.update)(art, x, get_sample(art.W, index))

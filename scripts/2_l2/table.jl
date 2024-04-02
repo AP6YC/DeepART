@@ -8,6 +8,10 @@ Collects the l2metrics into a table with statistics.
 - Sasha Petrenko <petrenkos@mst.edu>
 """
 
+# -----------------------------------------------------------------------------
+# DEPENDENCIES
+# -----------------------------------------------------------------------------
+
 using
     CSV,
     DrWatson,
@@ -16,6 +20,10 @@ using
     Revise,
     JSON,
     Latexify
+
+# -----------------------------------------------------------------------------
+# CONFIG
+# -----------------------------------------------------------------------------
 
 experiment_top = "l2metrics"
 
@@ -36,6 +44,10 @@ pretty_rows = [
 
 # Point to the results directory containing all of the permutations
 top_dir = DeepART.results_dir("l2metrics", "metrics")
+
+# -----------------------------------------------------------------------------
+# TABULATE
+# -----------------------------------------------------------------------------
 
 # Create an empty destination for each dataframe
 mets = Dict{String, DataFrame}()

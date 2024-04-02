@@ -5,6 +5,13 @@
 Representative models for the deep component of DeepART modules.
 """
 
+"""
+Constructs and returns the representative dense model for [`DeepARTModule`](@ref)s.
+
+# Arguments
+- `n_input::Integer`: the size of the input data.
+- `head_dim::Integer`: the dimension of the output head for the FuzzyARTMAP field.
+"""
 function get_rep_dense(n_input::Integer, head_dim::Integer)
     model = Flux.@autosize (n_input,) Chain(
         DeepART.CC(),
@@ -20,7 +27,14 @@ function get_rep_dense(n_input::Integer, head_dim::Integer)
     return model
 end
 
-function get_rep_conv(size_tuple, head_dim::Integer)
+"""
+Constructs and returns the representative convolutional model for [`DeepARTModule`](@ref)s.
+
+# Arguments
+- `size_tuple::Tuple`: the size of the input data for convolutions and batchs.
+- `head_dim::Integer`: the dimension of the output head for the FuzzyARTMAP field.
+"""
+function get_rep_conv(size_tuple::Tuple, head_dim::Integer)
     conv_model = Flux.@autosize (size_tuple,) Chain(
         DeepART.CCConv(),
         Chain(
