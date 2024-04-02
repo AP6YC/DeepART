@@ -39,8 +39,8 @@ EXP_NAME = "dist"
 
 N_PROCS = DEV ? 0 : 31
 N_SIMS = DEV ? 1 : 5
-N_TRAIN = DEV ? 1000 : 2000
-N_TEST = DEV ? 500 : 1000
+N_TRAIN = DEV ? 1000 : 50000
+N_TEST = DEV ? 500 : 10000
 DISPLAY = DEV
 GPU = DEV
 
@@ -62,11 +62,17 @@ sim_params = Dict{String, Any}(
     # "n_train" => N_TRAIN,
     "n_train" => [
         @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 4000),
-        @onlyif("m" == "DeepARTDense", 2000),
-        @onlyif("m" == "DeepARTConv", 2000),
+        @onlyif("m" == "DeepARTDense", N_TRAIN),
+        @onlyif("m" == "DeepARTConv", N_TRAIN),
     ],
-    "n_test" => N_TEST,
-    "head_dim" => 1024,
+    # "n_test" => N_TEST,
+    "n_test" =>[
+        @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 2000),
+        @onlyif("m" == "DeepARTDense", N_TEST),
+        @onlyif("m" == "DeepARTConv", N_TEST),
+    ],
+    # "head_dim" => 1024,
+    "head_dim" => 784,
     "dataset" => [
         "mnist",
         "fashionmnist",
