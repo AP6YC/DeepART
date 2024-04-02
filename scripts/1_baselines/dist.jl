@@ -62,12 +62,14 @@ sim_params = Dict{String, Any}(
     # "n_train" => N_TRAIN,
     "n_train" => [
         @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 4000),
+        @onlyif("m" == "SFAM" && !("dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"]), N_TRAIN),
         @onlyif("m" == "DeepARTDense", N_TRAIN),
         @onlyif("m" == "DeepARTConv", N_TRAIN),
     ],
     # "n_test" => N_TEST,
     "n_test" =>[
         @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 2000),
+        @onlyif("m" == "SFAM" && !("dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"]), N_TEST),
         @onlyif("m" == "DeepARTDense", N_TEST),
         @onlyif("m" == "DeepARTConv", N_TEST),
     ],
