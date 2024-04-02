@@ -218,12 +218,12 @@ vec_h[1]
 #     EXP_TOP,
 # )
 
-function check_parts(parts::Vector{String})
-    results_out_dir(args...) = DeepART.results_dir(parts..., args...)
-    @info results_out_dir()
-end
+# function check_parts(parts::Vector{String})
+#     results_out_dir(args...) = DeepART.results_dir(parts..., args...)
+#     @info results_out_dir()
+# end
 
-check_parts(["asdf", "qwer"])
+# check_parts(["asdf", "qwer"])
 
 # norm_cm_df = df[:, :conf]
 # norm_cm = mean(norm_cm_df)
