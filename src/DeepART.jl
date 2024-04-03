@@ -82,17 +82,27 @@ const FLUXONEHOT = true
 # Authorize downloads to prevent interactive download blocking
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 
+# Fix plotting on headless
+ENV["GKSwstype"] = "100"
+
 # -----------------------------------------------------------------------------
 # INCLUDES
 # -----------------------------------------------------------------------------
 
+# The full library
 include("lib/lib.jl")
+
+# Exported constant for the version of the package
+include("version.jl")
 
 # -----------------------------------------------------------------------------
 # EXPORTS
 # -----------------------------------------------------------------------------
 
 export
+    # Constants
+    DEEPART_VERSION,
+
     # Configs
     NumConfig,
     OptConfig,

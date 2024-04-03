@@ -12,14 +12,13 @@ Collects the l2metrics into a table with statistics.
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
-using
-    CSV,
-    DrWatson,
-    DataFrames,
-    DeepART,
-    Revise,
-    JSON,
-    Latexify
+using CSV
+using DrWatson
+using DataFrames
+using DeepART
+using Revise
+using JSON
+using Latexify
 
 # -----------------------------------------------------------------------------
 # CONFIG
