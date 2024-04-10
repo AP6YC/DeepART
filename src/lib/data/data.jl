@@ -280,7 +280,6 @@ function get_cifar100_fine(;
         #     fix_missing_els(new_dataset.train, dataset.train, 100),
         #     fix_missing_els(new_dataset.test, dataset.test, 100),
         # )
-
     end
 
     if flatten
@@ -539,6 +538,9 @@ function DataSplit(
     )
 end
 
+"""
+A map of dataset names to their loading functions.
+"""
 const DATA_DISPATCH = Dict(
     "mnist" => get_mnist,
     "fashionmnist" => get_fashionmnist,
@@ -547,9 +549,13 @@ const DATA_DISPATCH = Dict(
     "cifar100_coarse" => get_cifar100_coarse,
     "omniglot" => get_omniglot,
     "usps" => get_usps,
+    "isr" => get_isr,
     # "CBB-R15" => get_data_package_dataset,
 )
 
+"""
+A list of the data package names, mainly used as clustering benchmarks.
+"""
 const DATA_PACKAGE_NAMES = [
     "CBB-Aggregation",
     "CBB-Aggregation",
@@ -570,6 +576,9 @@ const DATA_PACKAGE_NAMES = [
     "wine",
 ]
 
+"""
+Loader function for the data package datasets.
+"""
 function load_data_package_dataset(
     name::AbstractString;
     shuffle::Bool=true,
@@ -634,4 +643,26 @@ function load_all_datasets(
     end
 
     return data_splits
+end
+
+function get_isr(
+    shuffle::Bool=true,
+    p::Float=0.8,
+    dir::AbstractString=joinpath("E:", "dev", "data", "indoorCVPR_09"),
+)
+    images_dir = joinapt(dir, "Images")
+    labels_dir = joinpath(dir, "Labels")
+    # Load the dataset from file
+    # local_data = load_dataset_file(
+    #     data_dir("indoorcpr_09.csv")
+    # )
+
+    # Construct and return a DataSplit
+    # return DataSplit(
+    #     local_data,
+    #     shuffle=shuffle,
+    #     p=p,
+    # )
+
+    return images_dir, labels_dir
 end
