@@ -16,6 +16,7 @@ A repository containing implementations and experiments for the upcoming paper _
   - [Usage](#usage)
   - [Attribution](#attribution)
     - [Authors](#authors)
+    - [Datasets](#datasets)
     - [Quotes](#quotes)
 
 ## Usage
@@ -27,6 +28,11 @@ The current version of the `DeepART` project does not yet have full usage instru
 ### Authors
 
 - Sasha Petrenko - <sap625@mst.edu> - [@AP6YC](https://github.com/AP6YC)
+
+### Datasets
+
+- [Indoor Scene Recognition](https://web.mit.edu/torralba/www/indoor.html)
+  - [Direct Link](http://groups.csail.mit.edu/vision/LabelMe/NewImages/indoorCVPR_09.tar)
 
 ### Quotes
 
