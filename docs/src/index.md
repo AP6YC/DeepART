@@ -6,7 +6,25 @@ end
 
 # DeepART.jl
 
-Documentation for DeepART.jl
+Documentation for the `DeepART.jl` project.
+
+See the [Index](@ref main-index) for the complete list of documented functions and types.
+
+## Manual Outline
+
+This documentation is split into the following sections:
+
+```@contents
+Pages = [
+    "man/guide.md",
+    "../examples/index.md",
+    "man/modules.md",
+    "man/contributing.md",
+    "man/full-index.md",
+    "man/dev-index.md",
+]
+Depth = 1
+```
 
 ## Documentation Build
 
