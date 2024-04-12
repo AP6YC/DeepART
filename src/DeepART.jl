@@ -42,6 +42,7 @@ using
     Flux,
     HypertextLiteral,
     ImageShow,
+    Images,
     JLD2,
     JSON,
     Markdown,

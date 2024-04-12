@@ -483,13 +483,14 @@ end
 """
 Loads the Indoor Scene Recognition dataset from a local directory.
 """
-function get_isr(
+function get_isr(;
     shuffle::Bool=true,
     p::Float=0.8,
     dir::AbstractString=joinpath("E:", "dev", "data", "indoorCVPR_09"),
 )
-    images_dir = joinapt(dir, "Images")
+    images_dir = joinpath(dir, "Images")
     labels_dir = joinpath(dir, "Labels")
+
     # Load the dataset from file
     # local_data = load_dataset_file(
     #     data_dir("indoorcpr_09.csv")
@@ -502,7 +503,20 @@ function get_isr(
     #     p=p,
     # )
 
-    return images_dir, labels_dir
+    local_image = nothing
+    for class in readdir(images_dir)
+        # println("$image")
+        for image in readdir(joinpath(images_dir, class), join=true)
+            # println("$image")
+            local_image = channelview(load(image))
+            original_size = size(local_image)
+            local_image = reshape(local_image, original_size[2], original_size[3], :, 1)
+            break
+        end
+        break
+    end
+
+    return images_dir, labels_dir, local_image
 end
 
 
