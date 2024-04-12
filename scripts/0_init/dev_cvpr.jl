@@ -29,3 +29,4 @@ data[3]
 
 model = DeepART.get_rep_conv((64, 64, 3, 1), 15)
 
+model(data[3])

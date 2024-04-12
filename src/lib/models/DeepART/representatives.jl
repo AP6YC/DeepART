@@ -50,7 +50,10 @@ function get_rep_conv(size_tuple::Tuple, head_dim::Integer)
         # BatchNorm(_),
         Chain(
             # MaxPool((2,2)),
-            MaxPool((2,2)),
+            # MaxPool((2,2)),
+            # Flux.flatten,
+            # Flux.GlobalMeanPool(),
+            Flux.AdaptiveMeanPool((3, 3)),
             Flux.flatten,
             DeepART.CC(),
         ),

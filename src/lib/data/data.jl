@@ -519,7 +519,6 @@ function get_isr(;
     return images_dir, labels_dir, local_image
 end
 
-
 # function get_sample(
 #     data::SupervisedDataset,
 #     index::Integer,

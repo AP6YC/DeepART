@@ -30,19 +30,21 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 ENV["GKSwstype"] = "100"
 
 # Dataset selection
-DATASET = "mnist"
+# DATASET = "mnist"
+DATASET = "cifar10"
 # DATASET = "fashionmnist"
 # DATASET = "omniglot"
 DISPLAY = true
 
 # Separate development and cluster settings
-# DEV = Sys.iswindows()
-DEV = false
+DEV = Sys.iswindows()
+# DEV = false
 # N_TRAIN = DEV ? 500 : 1000
 # N_TEST = DEV ? 500 : 1000
-N_TRAIN = DEV ? 500 : 60000
-N_TEST = DEV ? 500 : 10000
-GPU = !DEV
+N_TRAIN = DEV ? 1000 : 60000
+N_TEST = DEV ? 1000 : 10000
+# GPU = !DEV
+GPU = true
 
 # BETA_S = 0.5
 BETA_S = 1.0
