@@ -39,11 +39,10 @@ function get_rep_conv(size_tuple::Tuple, head_dim::Integer)
         DeepART.CCConv(),
         Chain(
             Conv((3, 3), _ => 8, sigmoid_fast, bias=false),
-            # LayerNorm(_),
         ),
         Chain(
             # BatchNorm(_),
-            # LayerNorm(_),
+            # LayerNorm(_, affine=false),
             MaxPool((2,2)),
             DeepART.CCConv(),
         ),
@@ -51,16 +50,22 @@ function get_rep_conv(size_tuple::Tuple, head_dim::Integer)
             Conv((5,5), _ => 16, sigmoid_fast, bias=false),
         ),
         # Chain(
-        #     Conv((5,5), _ => 6, sigmoid, bias=false),
+        #     # MaxPool((2,2)),
+        #     Flux.AdaptiveMaxPool((25,25)),
+        #     DeepART.CCConv(),
+        # ),
+        # Chain(
+        #     Conv((4,4), _ => 32, sigmoid_fast, bias=false),
         # ),
         Chain(
             # BatchNorm(_),
             Flux.AdaptiveMaxPool((4, 4)),
+            # Flux.AdaptiveMaxPool((7, 7)),
             Flux.flatten,
             DeepART.CC(),
         ),
-        Dense(_, 256, sigmoid_fast, bias=false),
-        DeepART.CC(),
+        # Dense(_, 256, sigmoid_fast, bias=false),
+        # DeepART.CC(),
         Chain(
             Dense(_, head_dim, sigmoid_fast, bias=false),
             vec,

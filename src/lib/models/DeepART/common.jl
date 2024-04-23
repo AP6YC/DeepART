@@ -243,30 +243,17 @@ function learn_model(
                 local_weight = reshape(weights[ix], :, n_kernels)'
                 # Get the local learning parameter beta
                 local_beta = get_beta(art, local_out)
-
-                local_weight .= DeepART.art_learn_cast(
-                    local_in,
-                    local_weight,
-                    local_beta,
-                )
             else
                 local_weight = weights[ix]
                 local_in = ins[ix]
                 local_out = outs[ix]
                 local_beta = get_beta(art, local_out)
-
-                local_weight .= DeepART.art_learn_cast(
-                    local_in,
-                    local_weight,
-                    local_beta,
-                )
             end
-
-            # weights[ix] .= DeepART.art_learn_cast(
-            #     ins[ix],
-            #     weights[ix],
-            #     local_beta,
-            # )
+            local_weight .= DeepART.art_learn_cast(
+                local_in,
+                local_weight,
+                local_beta,
+            )
         elseif art.opts.update == "instar"
             weights[ix] .+= DeepART.instar(
                 ins[ix],
