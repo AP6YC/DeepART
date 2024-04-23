@@ -38,22 +38,24 @@ function get_rep_conv(size_tuple::Tuple, head_dim::Integer)
     conv_model = Flux.@autosize (size_tuple,) Chain(
         DeepART.CCConv(),
         Chain(
-            Conv((5,5), _ => 6, sigmoid_fast, bias=false),
+            Conv((3, 3), _ => 8, sigmoid_fast, bias=false),
+            # LayerNorm(_),
         ),
-        # Chain(
-        #     MaxPool((2,2)),
-        #     DeepART.CCConv(),
-        # ),
+        Chain(
+            # BatchNorm(_),
+            # LayerNorm(_),
+            MaxPool((2,2)),
+            DeepART.CCConv(),
+        ),
+        Chain(
+            Conv((5,5), _ => 16, sigmoid_fast, bias=false),
+        ),
         # Chain(
         #     Conv((5,5), _ => 6, sigmoid, bias=false),
         # ),
-        # BatchNorm(_),
         Chain(
-            # MaxPool((2,2)),
-            # MaxPool((2,2)),
-            # Flux.flatten,
-            # Flux.GlobalMeanPool(),
-            Flux.AdaptiveMeanPool((3, 3)),
+            # BatchNorm(_),
+            Flux.AdaptiveMaxPool((4, 4)),
             Flux.flatten,
             DeepART.CC(),
         ),
@@ -69,6 +71,49 @@ function get_rep_conv(size_tuple::Tuple, head_dim::Integer)
         # Dense(15=>10,sigmoid),
         # softmax
     )
+    # OLD:
+    # conv_model = Flux.@autosize (size_tuple,) Chain(
+    #     DeepART.CCConv(),
+    #     Chain(
+    #         Conv((5,5), _ => 6, sigmoid_fast, bias=false),
+    #     ),
+    #     # Chain(
+    #     #     # Flux.AdaptiveMeanPool((28, 28)),
+    #     #     MaxPool((2,2)),
+    #     #     # Flux.flatten,
+    #     #     DeepART.CCConv(),
+    #     # ),
+    #     # Chain(
+    #     #     Conv((5,5), _ => 6, sigmoid_fast, bias=false),
+    #     # ),
+    #     # Chain(
+    #     #     MaxPool((2,2)),
+    #     #     DeepART.CCConv(),
+    #     # ),
+    #     # Chain(
+    #     #     Conv((5,5), _ => 6, sigmoid, bias=false),
+    #     # ),
+    #     # BatchNorm(_),
+    #     Chain(
+    #         # MaxPool((2,2)),
+    #         # Flux.flatten,
+    #         # Flux.GlobalMeanPool(),
+    #         Flux.AdaptiveMeanPool((3, 3)),
+    #         Flux.flatten,
+    #         DeepART.CC(),
+    #     ),
+    #     Dense(_, 256, sigmoid_fast, bias=false),
+    #     DeepART.CC(),
+    #     Chain(
+    #         Dense(_, head_dim, sigmoid_fast, bias=false),
+    #         vec,
+    #     ),
+    #     # Dense(15=>10, sigmoid),
+    #     # Flux.flatten,
+    #     # Dense(_=>15,relu),
+    #     # Dense(15=>10,sigmoid),
+    #     # softmax
+    # )
 
     return conv_model
 end
