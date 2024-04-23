@@ -1,5 +1,8 @@
 """
-Development script for deep instar learning.
+    setup.jl
+
+# Description
+Setup script for the single model experiments.
 """
 
 # -----------------------------------------------------------------------------
