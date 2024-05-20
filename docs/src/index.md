@@ -4,7 +4,9 @@ DocTestSetup = quote
 end
 ```
 
-# DeepART.jl
+![header](assets/downloads/header.png)
+
+---
 
 Documentation for the `DeepART.jl` project.
 
@@ -37,5 +39,16 @@ println("DeepART v$(DEEPART_VERSION) docs built $(Dates.now()) with Julia $(VERS
 
 ## Citation
 
-If you make use of this project, please generate your citation with the [CITATION.cff](../../CITATION.cff) file of the repository.
-Alternatively, you may use the following BibTeX entry for the JOSS paper associated with the repository:
+If you make use of this project, please generate your citation with the [CITATION.cff](https://github.com/AP6YC/DeepART/blob/main/CITATION.cff) file of the repository.
+Alternatively, you may use the following BibTeX entry:
+
+```bibtex
+@software{Petrenko_AP6YC_DeepART_2024,
+    author = {Petrenko, Sasha},
+    doi = {10.5281/zenodo.10896042},
+    month = jan,
+    title = {{AP6YC/DeepART}},
+    url = {https://github.com/AP6YC/DeepART},
+    year = {2024}
+}
+```

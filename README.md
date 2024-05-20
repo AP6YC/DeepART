@@ -17,6 +17,7 @@ A repository containing implementations and experiments for the upcoming paper _
   - [Attribution](#attribution)
     - [Authors](#authors)
     - [Datasets](#datasets)
+    - [Assets](#assets)
     - [Quotes](#quotes)
 
 ## Usage
@@ -33,6 +34,11 @@ The current version of the `DeepART` project does not yet have full usage instru
 
 - [Indoor Scene Recognition](https://web.mit.edu/torralba/www/indoor.html)
   - [Direct Link](http://groups.csail.mit.edu/vision/LabelMe/NewImages/indoorCVPR_09.tar)
+
+### Assets
+
+- [Deep-learning icons created by Freepik - Flaticon](https://www.flaticon.com/free-icons/deep-learning) ([deep-learning_2080961](https://www.flaticon.com/free-icon/deep-learning_2080961))
+- [Unlearned Font](https://www.1001fonts.com/unlearned-font.html)
 
 ### Quotes
 
