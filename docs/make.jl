@@ -68,7 +68,7 @@ files = [
     "header.png",
 ]
 
-# Make a destination for the files, accounting for when folder is AdaptiveResonance.jl
+# Make a destination for the files, accounting for when the current folder is the top directory
 assets_folder = joinpath("src", "assets")
 if basename(pwd()) == PROJECT_NAME || basename(pwd()) == PROJECT_NAME * ".jl"
     assets_folder = joinpath(DOCS_NAME, assets_folder)
