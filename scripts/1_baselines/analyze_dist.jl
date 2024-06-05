@@ -31,7 +31,6 @@ sweep_dir = DeepART.results_dir(
     "1_baselines",
 )
 
-
 EXP_TOP = "1_analyze"
 
 # Point to the destination directories
@@ -72,8 +71,8 @@ models = Dict(
 models_list = collect(keys(models))
 
 scenarios = Dict(
-    "task-homogenous" => "(TH)",
-    "task-incremental" => "(TI)",
+    "task-homogenous" => "(ST)",
+    "task-incremental" => "(MT)",
     # "task-homogenous" => "Task Homogeneous",
     # "task-incremental" => "Task Incremental",
 )
@@ -123,7 +122,6 @@ function gen_tex_table(symb, filename, acc)
     end
 
     @info out_str
-
 
     # Create those directories if they don't exist
     mkpath(paper_out_dir())
@@ -248,5 +246,3 @@ vec_h[1]
 #         end
 #     end
 # end
-
-
