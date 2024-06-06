@@ -34,17 +34,18 @@ DEV = Sys.iswindows()
 # VARIABLES
 # -----------------------------------------------------------------------------
 
-EXP_TOP = "1_baselines_gpu"
+EXP_TOP = "1_baselines_new"
 EXP_NAME = "dist"
 
 N_PROCS = DEV ? 0 : 31
-N_SIMS = DEV ? 1 : 5
+# N_SIMS = DEV ? 1 : 5
+N_SIMS = DEV ? 1 : 25
 N_TRAIN = DEV ? 1000 : 50000
 N_TEST = DEV ? 500 : 10000
 DISPLAY = DEV
 # GPU = DEV
-GPU = true
-# GPU = false
+# GPU = true
+GPU = false
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
@@ -81,8 +82,8 @@ sim_params = Dict{String, Any}(
         "mnist",
         "fashionmnist",
         "cifar10",
-        "cifar100_fine",
-        "cifar100_coarse",
+        # "cifar100_fine",
+        # "cifar100_coarse",
         "usps",
     ],
     "display" => DISPLAY,

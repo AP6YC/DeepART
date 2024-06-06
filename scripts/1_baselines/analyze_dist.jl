@@ -18,7 +18,6 @@ using DeepART
 using DrWatson
 using Plots
 using StatsBase
-# using Latexify
 using Printf
 using DataStructures
 
