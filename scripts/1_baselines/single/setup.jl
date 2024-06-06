@@ -33,8 +33,8 @@ ENV["DATADEPS_ALWAYS_ACCEPT"] = true
 ENV["GKSwstype"] = "100"
 
 # Dataset selection
-# DATASET = "mnist"
-DATASET = "cifar10"
+DATASET = "mnist"
+# DATASET = "cifar10"
 # DATASET = "fashionmnist"
 # DATASET = "omniglot"
 DISPLAY = true

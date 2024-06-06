@@ -1,8 +1,8 @@
 """
-    dist_sfam.jl
+    dist.jl
 
 # Description
-This script runs the distributed task-homogenous train/test experiment.
+This script runs the distributed single-task and multi-task train/test experiments for each model and dataset combination.
 
 # Authors
 - Sasha Petrenko <petrenkos@mst.edu> @AP6YC
@@ -42,7 +42,8 @@ N_SIMS = DEV ? 1 : 5
 N_TRAIN = DEV ? 1000 : 50000
 N_TEST = DEV ? 500 : 10000
 DISPLAY = DEV
-GPU = DEV
+# GPU = DEV
+GPU = true
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
