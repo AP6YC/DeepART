@@ -121,7 +121,7 @@ addprocs(N_PROCS, exeflags="--project=.")
 
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
-        "1_baselines_gpu",
+        "1_baselines_new",
         # "sfam",
         # "sweep",
         args...
