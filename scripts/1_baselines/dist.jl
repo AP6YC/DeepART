@@ -34,7 +34,7 @@ DEV = Sys.iswindows()
 # VARIABLES
 # -----------------------------------------------------------------------------
 
-EXP_TOP = "1_baselines"
+EXP_TOP = "1_baselines_gpu"
 EXP_NAME = "dist"
 
 N_PROCS = DEV ? 0 : 31
@@ -44,6 +44,7 @@ N_TEST = DEV ? 500 : 10000
 DISPLAY = DEV
 # GPU = DEV
 GPU = true
+# GPU = false
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
@@ -119,7 +120,7 @@ addprocs(N_PROCS, exeflags="--project=.")
 
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
-        "1_baselines",
+        "1_baselines_gpu",
         # "sfam",
         # "sweep",
         args...
