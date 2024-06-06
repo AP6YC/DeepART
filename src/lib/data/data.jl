@@ -441,6 +441,16 @@ function get_omniglot(;
     return dataset
 end
 
+function double_tensor(data::AbstractArray)
+    nx, ny, ns = size(data)
+    tnx, tny = nx*2, ny*2
+    dest = zeros(eltype(data), (tnx, tny, ns))
+    for ix = 1:ns
+        dest[:, :, ix] = imresize(data[:, :, ix], (tnx, tny))
+    end
+    return dest
+end
+
 function get_usps(;
     flatten::Bool=false,
     gray::Bool=false,       # USPS is already grayscale
@@ -459,8 +469,15 @@ function get_usps(;
 
     # Opposite of flatten operation since the dataset is already flat
     if !flatten
-        X_train = reshape(X_train, 16, 16, 1, :)
-        X_test = reshape(X_test, 16, 16, 1, :)
+        # Make arrays
+        X_train = double_tensor(reshape(X_train, 16, 16, :))
+        X_test = double_tensor(reshape(X_test, 16, 16, :))
+        # Interpolate
+
+        # X_train = reshape(X_train, 16, 16, 1, :)
+        # X_test = reshape(X_test, 16, 16, 1, :)
+        X_train = reshape(X_train, 32, 32, 1, :)
+        X_test = reshape(X_test, 32, 32, 1, :)
     end
 
     # Create a DataSplit
