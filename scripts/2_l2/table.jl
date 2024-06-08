@@ -12,11 +12,11 @@ Collects the l2metrics into a table with statistics.
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
+using Revise
 using CSV
 using DrWatson
 using DataFrames
 using DeepART
-using Revise
 using JSON
 using Latexify
 

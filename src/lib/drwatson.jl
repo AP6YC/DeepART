@@ -66,10 +66,18 @@ end
 $_ARG_DRWATSON
 """
 function paper_results_dir(args...)
+    local_hostname = gethostname()
+    homedir = if local_hostname == "SASHA-XPS"
+        "sap62"
+    elseif local_hostname == "SASHA-PC"
+        "Sasha"
+    end
+
     return joinpath(
         "C:\\",
         "Users",
-        "Sasha",
+        # "Sasha",
+        homedir,
         "Dropbox",
         "Apps",
         "Overleaf",

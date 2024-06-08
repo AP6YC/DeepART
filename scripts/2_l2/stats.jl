@@ -12,6 +12,8 @@ Generates the statistics for all permutations of the generated l2metrics.
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
+using Revise
+using DeepART
 using CSV
 using DrWatson
 using DataFrames
@@ -25,12 +27,16 @@ using Printf
 # OPTIONS
 # -----------------------------------------------------------------------------
 
+experiment_top = "l2metrics"
+
 EXP_TOP = "l2metrics"
 ACC = 4
 COMBINED_TABLES = true
 # EXP_TOP = "2_l2"
 
 metrics_dir = DeepART.results_dir(EXP_TOP, "processed")
+
+savedir(args...) = DeepART.results_dir(experiment_top, "processed", args...)
 
 # Point to the destination directories
 paper_out_dir(args...) = DeepART.paper_results_dir(EXP_TOP, args...)
@@ -133,8 +139,8 @@ pretty_datasets = OrderedDict(
     "fashionmnist" => "Fashion MNIST",
     "usps" => "USPS",
     "cifar10" => "CIFAR-10",
-    "cifar100_coarse" => "CIFAR-100 (Coarse)",
-    "cifar100_fine" => "CIFAR-100 (Fine)",
+    # "cifar100_coarse" => "CIFAR-100 (Coarse)",
+    # "cifar100_fine" => "CIFAR-100 (Fine)",
 )
 
 pretty_methods = OrderedDict(
@@ -145,8 +151,8 @@ pretty_methods = OrderedDict(
 
 l2metrics_names = Dict(
     :pm => Dict(
-        "mean" => :ftrm,
-        "std" => :ftrs,
+        "mean" => :pmm,
+        "std" => :pms,
     ),
     :ftr => Dict(
         "mean" => :ftrm,
@@ -162,80 +168,83 @@ l2metrics_names = Dict(
 # COMBINED TABLES
 # -----------------------------------------------------------------------------
 
-for (metric, df) in stats_dfs
-    # Point to the output file
-    filename = "$(metric)-full.tex"
+# begin
+#     for (metric, df) in stats_dfs
+#         # Point to the output file
+#         filename = "$(metric)-full.tex"
 
-    # \\toprule
-    table_str = """
-    \\multirow{3}{*}{L2 Metric} & \\multirow{3}{*}{Method} & \\multicolumn{6}{c@{}}{Dataset} \\\\
-    \\cmidrule(l){3-8} &
-    """
-    for (_, dataset) in pretty_datasets
-        table_str *= " & $(dataset)"
-    end
-    table_str *= " \\\\\n"
+#         # \\toprule
+#         table_str = """
+#         \\multirow{3}{*}{L2 Metric} & \\multirow{3}{*}{Method} & \\multicolumn{6}{c@{}}{Dataset} \\\\
+#         \\cmidrule(l){3-8} &
+#         """
+#         for (_, dataset) in pretty_datasets
+#             table_str *= " & $(dataset)"
+#         end
+#         table_str *= " \\\\\n"
 
-    for (l2metric, title) in pretty_l2metrics
-        table_str *= """
-        \\midrule
-        \\addlinespace
-        \\multirow{3}{*}{$(title)} """
+#         for (l2metric, title) in pretty_l2metrics
+#             table_str *= """
+#             \\midrule
+#             \\addlinespace
+#             \\multirow{3}{*}{$(title)} """
 
-        # Construct the table contents string
-        out_str = ""
-        # for (method_key, method) in pretty_methods
-        n_methods = length(pretty_methods)
-        for ix = 1:n_methods
-            method_key = collect(keys(pretty_methods))[ix]
-            method = pretty_methods[method_key]
-            # local_model = pretty_methods[methods[jx]]
-            out_str *= "& $(method) "
-            # for (data_key, dataset) in pretty_datasets
-            n_datasets = length(pretty_datasets)
-            for jx = 1:n_datasets
-                data_key = collect(keys(pretty_datasets))[jx]
-                dataset = pretty_datasets[data_key]
-                f_str = Printf.Format("& \$ %.$(ACC)f \\pm %.$(ACC)f \$ ")
-                local_mean = df[(df.Dataset .== data_key) .& (df.Method .== method_key), l2metrics_names[l2metric]["mean"]][1]
-                local_std = df[(df.Dataset .== data_key) .& (df.Method .== method_key), l2metrics_names[l2metric]["std"]][1]
-                out_str *= Printf.format(f_str, local_mean, local_std)
-            end
-            out_str *= "\\\\\n"
-        end
-        out_str *= "\\addlinespace\n"
-        table_str *= out_str
-    end
-    table_str *= "\\bottomrule"
+#             # Construct the table contents string
+#             out_str = ""
+#             # for (method_key, method) in pretty_methods
+#             n_methods = length(pretty_methods)
+#             for ix = 1:n_methods
+#                 method_key = collect(keys(pretty_methods))[ix]
+#                 method = pretty_methods[method_key]
+#                 # local_model = pretty_methods[methods[jx]]
+#                 out_str *= "& $(method) "
+#                 # for (data_key, dataset) in pretty_datasets
+#                 n_datasets = length(pretty_datasets)
+#                 for jx = 1:n_datasets
+#                     data_key = collect(keys(pretty_datasets))[jx]
+#                     dataset = pretty_datasets[data_key]
+#                     f_str = Printf.Format("& \$ %.$(ACC)f \\pm %.$(ACC)f \$ ")
+#                     local_mean = df[(df.Dataset .== data_key) .& (df.Method .== method_key), l2metrics_names[l2metric]["mean"]][1]
+#                     local_std = df[(df.Dataset .== data_key) .& (df.Method .== method_key), l2metrics_names[l2metric]["std"]][1]
+#                     out_str *= Printf.format(f_str, local_mean, local_std)
+#                 end
+#                 out_str *= "\\\\\n"
+#             end
+#             out_str *= "\\addlinespace\n"
+#             table_str *= out_str
+#         end
+#         table_str *= "\\bottomrule"
 
-    # Write to both
-    open(paper_out_dir(filename), "w") do file
-        write(file, table_str)
-    end
+#         # Write to both
+#         open(paper_out_dir(filename), "w") do file
+#             write(file, table_str)
+#         end
 
-    open(results_out_dir(filename), "w") do file
-        write(file, table_str)
-    end
+#         open(results_out_dir(filename), "w") do file
+#             write(file, table_str)
+#         end
 
-    @info table_str
-end
+#         @info table_str
+#     end
+# end
 
 # -----------------------------------------------------------------------------
 # ONE BIG COMBINED TABLE
 # -----------------------------------------------------------------------------
 
-metric_order = ["performance", "art_activation", "art_match"]
 
 begin
-    function add_line_spacing!(table_str)
-        return table_str *= "\\addlinespace\n\\midrule\n\\addlinespace\n"
+    metric_order = ["performance", "art_activation", "art_match"]
+    function add_line_spacing!(local_table_str)
+        return local_table_str *= "\\addlinespace\n\\midrule\n\\addlinespace\n"
     end
 
     filename = "l2metrics-big.tex"
     # \\toprule
+    n_datasets = length(pretty_datasets)
     table_str = """
-    \\multirow{3}{*}{L2 Metric} & \\multirow{3}{*}{Method} & \\multicolumn{6}{c@{}}{Dataset} \\\\
-    \\cmidrule(l){3-8} &
+    \\multirow{3}{*}{L2 Metric} & \\multirow{3}{*}{Method} & \\multicolumn{$(n_datasets)}{c@{}}{Dataset} \\\\
+    \\cmidrule(l){3-$(2+n_datasets)} &
     """
 
     for (_, dataset) in pretty_datasets
@@ -250,7 +259,7 @@ begin
         df = stats_dfs[metric]
 
         table_str = add_line_spacing!(table_str)
-        table_str *= """\\multicolumn{8}{c@{}}{$(pretty_rows[metric])} \\\\\n"""
+        table_str *= """\\multicolumn{$(2+n_datasets)}{c@{}}{$(pretty_rows[metric])} \\\\\n"""
 
         for (l2metric, title) in pretty_l2metrics
             table_str = add_line_spacing!(table_str)
