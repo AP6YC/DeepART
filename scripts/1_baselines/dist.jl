@@ -142,7 +142,7 @@ end
 # -----------------------------------------------------------------------------
 
 # Log the simulation scale
-@info "SFAM: $(dict_list_count(sim_params)) simulations across $(nprocs())."
+@info "1_baselines: $(dict_list_count(sim_params)) simulations across $(nprocs())."
 
 # Turn the dictionary of lists into a list of dictionaries
 dicts = dict_list(sim_params)

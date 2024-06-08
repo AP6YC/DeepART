@@ -1,5 +1,5 @@
 """
-    dist_metrics.jl
+    dist_metrics_par.jl
 
 # Description
 Runs the l2metrics on the latest logs from within Julia.

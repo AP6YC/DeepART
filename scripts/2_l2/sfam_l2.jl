@@ -1,5 +1,5 @@
 """
-    fuzzyart_l2.jl
+    sfam_l2.jl
 
 # Description
 The L2 logging and metrics generation for FuzzyART.

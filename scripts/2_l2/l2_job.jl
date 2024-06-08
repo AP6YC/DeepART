@@ -1,8 +1,8 @@
 """
-    fuzzyart_l2.jl
+    l2_job.jl
 
 # Description
-The L2 logging and metrics generation for FuzzyART.
+The main L2 logging and metrics generation script.
 """
 
 # -----------------------------------------------------------------------------

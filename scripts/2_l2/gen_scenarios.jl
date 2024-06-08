@@ -39,18 +39,18 @@ GROUPINGS = Dict(
         "n_train" => N_TRAIN,
         "n_test" => N_TEST,
     ),
-    "cifar100_fine" => Dict(
-        "random" => true,
-        "group_size" => 20,
-        "n_train" => N_TRAIN,
-        "n_test" => N_TEST,
-    ),
-    "cifar100_coarse" => Dict(
-        "random" => true,
-        "group_size" => 4,
-        "n_train" => N_TRAIN,
-        "n_test" => N_TEST,
-    ),
+    # "cifar100_fine" => Dict(
+    #     "random" => true,
+    #     "group_size" => 20,
+    #     "n_train" => N_TRAIN,
+    #     "n_test" => N_TEST,
+    # ),
+    # "cifar100_coarse" => Dict(
+    #     "random" => true,
+    #     "group_size" => 4,
+    #     "n_train" => N_TRAIN,
+    #     "n_test" => N_TEST,
+    # ),
     "usps" => Dict(
         "random" => true,
         "group_size" => 2,
