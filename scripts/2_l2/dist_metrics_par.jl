@@ -97,7 +97,8 @@ addprocs(N_PROCS, exeflags="--project=.")
                     if Sys.iswindows()
                         run(`cmd /c activate $conda_env_name \&\& $l2metrics_command`)
                     elseif Sys.isunix()
-                        run(`$l2metrics_command`)
+                        # run(`$l2metrics_command`)
+                        run(`activate $conda_env_name \&\& $l2metrics_command`)
                     end
                 # end
             end
