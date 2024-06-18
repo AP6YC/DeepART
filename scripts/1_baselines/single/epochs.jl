@@ -43,11 +43,11 @@ results = DeepART.tt_epochs!(
 )
 @info "Results: " results["perf"] results["n_cat"]
 
-# # Create the confusion matrix from this experiment
-# DeepART.plot_confusion_matrix(
-#     data.test.y,
-#     results["y_hats"],
-#     names,
-#     "conv_basic_confusion",
-#     EXP_TOP,
-# )
+# Create the confusion matrix from this experiment
+DeepART.plot_confusion_matrix(
+    data.test.y,
+    results["y_hats"],
+    names,
+    "conv_epochs_confusion",
+    EXP_TOP,
+)

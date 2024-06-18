@@ -12,6 +12,7 @@ Setup script for the single model experiments.
 using Revise
 using DeepART
 using Flux
+using Random
 # using CUDA
 # using ProgressMeter
 using AdaptiveResonance
@@ -25,6 +26,8 @@ theme(:dracula)
 # -----------------------------------------------------------------------------
 # CONFIG
 # -----------------------------------------------------------------------------
+
+Random.seed!(1234)
 
 # Accept data downloads
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
@@ -52,7 +55,7 @@ GPU = true
 # BETA_S = 0.5
 BETA_S = 1.0
 # BETA_D = 0.01
-BETA_D = 0.1
+BETA_D = 1.0
 
 EXP_TOP = ["singles"]
 
@@ -74,7 +77,8 @@ head_dim = 784
 @info "----------------- LOADING DATA -----------------"
 
 data = DeepART.load_one_dataset(
-    DATASET,
+    # DATASET,
+    "mnist",
     n_train=N_TRAIN,
     n_test=N_TEST,
 )
