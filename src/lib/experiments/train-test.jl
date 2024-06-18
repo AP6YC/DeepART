@@ -233,7 +233,7 @@ end
 # -----------------------------------------------------------------------------
 
 """
-Task-homogenous training/testing loop.
+Single-task training/testing loop.
 
 # Arguments
 $ARG_COMMONARTMODULE
@@ -268,7 +268,7 @@ function tt_basic!(
 end
 
 """
-Task-incremental training/testing loop for [`DeepARTModule`](@ref)s.
+Multi-task training/testing loop for [`DeepARTModule`](@ref)s.
 
 # Arguments
 $ARG_DEEPARTMODULE
@@ -319,6 +319,55 @@ function get_accuracies(y::IntegerVector, y_hat::IntegerVector, n_classes::Integ
     accuracies = correct'./total
 
     return accuracies
+end
+
+"""
+Single task training/testing loop with multiple epochs.
+
+# Arguments
+$ARG_COMMONARTMODULE
+$ARG_DATASPLIT
+$ARG_N_TRAIN
+$ARG_N_TEST
+"""
+function tt_epochs!(
+    art::CommonARTModule,
+    data::DataSplit;
+    display::Bool=false,
+    epochs::Int=1,
+)
+
+    perf = 0.0
+    y_hats = Vector{Int}()
+
+    for ep = 1:epochs
+        # Train
+        # y_hats_train = basic_train!(art, data.train, display=display)
+        _ = basic_train!(art, data.train, display=display)
+
+        # Test
+        y_hats = basic_test(art, data.test, display=display)
+
+        # Compute the performance fromt the test results
+        perf = get_perf(data.test, y_hats)
+        @info "Epoch: $ep, Perf: $perf"
+        out_dict = Dict(
+            "n_cat" => art.n_categories,
+            "y_hats" => y_hats,
+            "perf" => perf,
+        )
+        @info out_dict
+    end
+
+    # Compile the experiment results
+    out_dict = Dict(
+        "n_cat" => art.n_categories,
+        "y_hats" => y_hats,
+        "perf" => perf,
+    )
+
+    # Return the experiment results
+    return out_dict
 end
 
 # -----------------------------------------------------------------------------

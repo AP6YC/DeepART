@@ -7,6 +7,9 @@ Definition of a complement coding layer for a Flux.jl model.
 
 # Flux.@layer complement_code :ignore
 
+"""
+Constructs a complement coding layer as a simple complement coding function.
+"""
 function CC()
     complement_code
     # Parallel(vcat,
@@ -15,6 +18,9 @@ function CC()
     # )
 end
 
+"""
+Definition of the complement coding function for convolutional layers, which simply means that the channel layer (`dims=3`) is used for the complement coding.
+"""
 function complement_code_conv(
     x
     # x::AbstractVecOrMat{Float32}
@@ -23,6 +29,9 @@ function complement_code_conv(
     cat(x, one(eltype(x)) .- x, dims=3)
 end
 
+"""
+Constructs a complement coding layer as a simple function for convolutional layers.
+"""
 function CCConv()
     complement_code_conv
 end

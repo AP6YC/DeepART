@@ -42,7 +42,7 @@ DISPLAY = true
 # Separate development and cluster settings
 DEV = Sys.iswindows()
 # DEV = false
-N_TRAIN = DEV ? 500 : 10000
+N_TRAIN = DEV ? 1000 : 10000
 N_TEST = DEV ? 500 : 1000
 # N_TRAIN = DEV ? 1000 : 50000
 # N_TEST = DEV ? 1000 : 1000
@@ -51,7 +51,8 @@ GPU = true
 
 # BETA_S = 0.5
 BETA_S = 1.0
-BETA_D = 0.01
+# BETA_D = 0.01
+BETA_D = 0.1
 
 EXP_TOP = ["singles"]
 
@@ -88,3 +89,5 @@ end
 names = string.(names_range)
 
 n_input = size(fdata.train.x)[1]
+
+@info "Loaded dataset: " DATASET

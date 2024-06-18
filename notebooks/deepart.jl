@@ -28,7 +28,8 @@ begin
 	using PlutoUI
 	using DeepART
 	using DataStructures
-
+	include(joinpath("src", "pluto", "PlutoUtils.jl"))
+	using .PlutoUtils
 	@info "Dependencies loaded"
 end
 
@@ -50,15 +51,15 @@ md"## Experiments"
 
 # ╔═╡ 33ceb4c7-22fb-4ea9-9c05-7a37975e8e7f
 config_dict = OrderedDict(
-	"n_train" => NumConfig(1, 1000, 500),
-	"n_test" => NumConfig(1, 1000, 200),
-	"model_bools" => OptConfig(["dense", "second_conv"]),
-	"rho_lb" => NumConfig(0.01, 0.99, 0.2, 0.01),
-	"rho_ub" => NumConfig(0.01, 0.99, 0.99, 0.01),
+	"n_train" => PlutoUtils.NumConfig(1, 1000, 500),
+	"n_test" => PlutoUtils.NumConfig(1, 1000, 200),
+	"model_bools" => PlutoUtils.OptConfig(["dense", "second_conv"]),
+	"rho_lb" => PlutoUtils.NumConfig(0.01, 0.99, 0.2, 0.01),
+	"rho_ub" => PlutoUtils.NumConfig(0.01, 0.99, 0.99, 0.01),
 )
 
 # ╔═╡ b2ff33a2-f746-4228-8787-d0f52d4d9528
-@bind config confirm(DeepART.config_input(config_dict))
+@bind config confirm(PlutoUtils.config_input(config_dict))
 
 # ╔═╡ 6a536ecd-b256-4fc1-ae38-d0bf5a1dd6bd
 # DeepART.inspect_truth_errors(data.test, y_hat, selected, n_show)
@@ -113,21 +114,21 @@ $(@bind x Slider(1:42, default=31, show_value=true))
 
 # ╔═╡ b4ba95e9-06d2-40a2-985a-5540cfd6678a
 if x == 42
-	correct(md"YOU HAVE FOUND THE ANSWER")
+	PlutoUtils.correct(md"YOU HAVE FOUND THE ANSWER")
 elseif 30 < x < 42
-	almost(md"YOU HAVE ALMOST FOUND THE ANSWER")
+	PlutoUtils.almost(md"YOU HAVE ALMOST FOUND THE ANSWER")
 else
-	keep_working(md"THAT IS NOT THE ANSWER")
+	PlutoUtils.keep_working(md"THAT IS NOT THE ANSWER")
 end
 
 # ╔═╡ 621a4454-d76b-4d92-9c2d-7b88a513bb1a
-hint(md"Don't forget to bring a towel")
+PlutoUtils.hint(md"Don't forget to bring a towel")
 
 # ╔═╡ Cell order:
 # ╟─90927cb7-6d97-46a1-8e3b-37a3cce394b1
 # ╟─9e191ddb-6915-4d90-b214-340702bd3acd
-# ╟─4c9c839d-de70-44b8-b5e9-ec56dbde1918
-# ╟─6b2ec3f0-a4ef-11ee-198f-e7efe4d5ed49
+# ╠═4c9c839d-de70-44b8-b5e9-ec56dbde1918
+# ╠═6b2ec3f0-a4ef-11ee-198f-e7efe4d5ed49
 # ╠═8d637d62-d5c0-4de9-a876-0d0dcac4aaee
 # ╟─9354d864-7504-47ee-b5c0-e34a8fac75c3
 # ╟─33ceb4c7-22fb-4ea9-9c05-7a37975e8e7f
@@ -143,5 +144,5 @@ hint(md"Don't forget to bring a towel")
 # ╟─6234a9b7-a17a-412b-996f-7a70c4d3274c
 # ╟─166942a5-8943-4bda-b2d5-92deca39b70a
 # ╟─bfb45c94-752f-4c08-b096-9940bcbbd603
-# ╟─b4ba95e9-06d2-40a2-985a-5540cfd6678a
+# ╠═b4ba95e9-06d2-40a2-985a-5540cfd6678a
 # ╟─621a4454-d76b-4d92-9c2d-7b88a513bb1a

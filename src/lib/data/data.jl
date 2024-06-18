@@ -498,12 +498,56 @@ function get_usps(;
 end
 
 """
+Points to the directory containing the Indoor Scene Recognition dataset depending on the host machine.
+"""
+function get_isr_dir()
+    # Get the current machine's name for dispatch
+    HOSTNAME = gethostname()
+
+    # Laptop
+    data_dir = if HOSTNAME == "SASHA-XPS"
+        joinpath(
+            "C:",
+            "Users",
+            "sap62",
+            "Repos",
+            "github",
+            "DeepART",
+            "work",
+            "data",
+            "indoorCVPR_09",
+        )
+    # PC
+    elseif HOSTNAME == "Sasha-PC"
+        joinpath(
+            "E:",
+            "dev",
+            "data",
+            "indoorCVPR_09",
+        )
+    # Cluster
+    elseif Sys.islinux()
+        joinpath(
+            "lustre",
+            "scratch",
+            "sap625",
+            "data",
+            "indoorCVPR_09",
+        )
+    else
+        error("Unknown hostname: $HOSTNAME")
+    end
+
+    return data_dir
+end
+
+"""
 Loads the Indoor Scene Recognition dataset from a local directory.
 """
 function get_isr(;
     shuffle::Bool=true,
     p::Float=0.8,
-    dir::AbstractString=joinpath("E:", "dev", "data", "indoorCVPR_09"),
+    dir::AbstractString=get_isr_dir(),
 )
     images_dir = joinpath(dir, "Images")
     labels_dir = joinpath(dir, "Labels")
@@ -664,6 +708,7 @@ function load_one_dataset(name::AbstractString; kwargs...)
     # If the name is in the datasets function dispatch map
     if name in keys(DATA_DISPATCH)
         return DATA_DISPATCH[name](;kwargs...)
+    # If the name is in the data package names
     elseif name in DATA_PACKAGE_NAMES
         return load_data_package_dataset(name; kwargs...)
     else
