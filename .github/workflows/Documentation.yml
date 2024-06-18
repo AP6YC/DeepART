@@ -25,7 +25,6 @@ jobs:
       - uses: julia-actions/setup-julia@latest
         with:
           version: '1.10'
-          arch: 'ubuntu-latest'
 
       # Install the Julia dependencies
       - name: Install dependencies
