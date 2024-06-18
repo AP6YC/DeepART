@@ -53,8 +53,8 @@ datasets = OrderedDict(
     "fashionmnist" => "Fashion MNIST",
     "usps" => "USPS",
     "cifar10" => "CIFAR-10",
-    "cifar100_coarse" => "CIFAR-100 (Coarse)",
-    "cifar100_fine" => "CIFAR-100 (Fine)",
+    # "cifar100_coarse" => "CIFAR-100 (Coarse)",
+    # "cifar100_fine" => "CIFAR-100 (Fine)",
 )
 datasets_list = collect(keys(datasets))
 

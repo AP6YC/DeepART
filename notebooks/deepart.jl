@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.38
+# v0.19.42
 
 using Markdown
 using InteractiveUtils
@@ -78,7 +78,7 @@ data = DeepART.get_mnist()
 # DeepART.view_filts(convart.model)
 
 # ╔═╡ feef3708-184f-413c-a801-d02f2fa2f5fd
-DeepART.tryit()
+# DeepART.tryit()
 
 # ╔═╡ e376f339-ea0e-452f-8a86-ac2cb43f6a37
 md"### 1: Cats and Dogs"

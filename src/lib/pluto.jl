@@ -8,6 +8,8 @@ This is a set of extensions that are meant to be used in Pluto notebooks and wit
 - Sasha Petrenko <petrenkos@mst.edu>
 """
 
+import Base: show
+
 # -----------------------------------------------------------------------------
 # ALIASES
 # -----------------------------------------------------------------------------
@@ -228,8 +230,6 @@ Constructor for a grayscale image from a data matrix for viewing.
 function BWImage(data::Array{T, 2}; zoom::Int=1) where T <: Real
     BWImage(floor.(UInt8, clamp.(((data .- minimum(data)) / (maximum(data) .- minimum(data))) * 255, 0, 255)), zoom)
 end
-
-import Base: show
 
 # https://gist.github.com/pbouffard/3d48d3c47d9bd70e7c9f52f984d14245
 """
