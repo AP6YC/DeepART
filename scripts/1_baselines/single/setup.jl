@@ -86,12 +86,18 @@ fdata = DeepART.flatty(data)
 
 n_classes = length(unique(data.train.y))
 
+# Get the range of indices for the class names
 names_range = collect(1:n_classes)
+
+# Correction for digits being 0-9 while class labels are 1-10
 if DATASET == "mnist"
     names_range .-= 1
 end
+
+# Create class names directly from number of classes
 names = string.(names_range)
 
+# Get the number of input features from the flat dataset
 n_input = size(fdata.train.x)[1]
 
 @info "Loaded dataset: " DATASET
