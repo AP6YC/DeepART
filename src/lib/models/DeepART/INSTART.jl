@@ -238,30 +238,6 @@ end
 # -----------------------------------------------------------------------------
 
 """
-Basic FuzzyART learning rule.
-"""
-function art_learn_basic(x, W, beta)
-    return beta .* min.(x, W) + W .* (1.0 .- beta)
-end
-
-"""
-FuzzyART learning rule casting a vector input to a matrix of weights.
-"""
-function art_learn_cast(x, W, beta)
-    # Get the size of the weights
-    Wy, Wx = size(W)
-    # Repeat the input across the categories dimension of the weights
-    _x = repeat(x', Wy, 1)
-    # Do the same for the beta value, but across the outputs dimension
-    _beta = if !isempty(size(beta))
-        repeat(beta, 1, Wx)
-    else
-        beta
-    end
-    return art_learn_basic(_x, W, _beta)
-end
-
-"""
 FuzzyART learning modification for networks using custom CC-SimpleFuzzy head layers.
 """
 function art_learn_head(xf, head, beta)

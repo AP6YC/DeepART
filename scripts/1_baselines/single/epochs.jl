@@ -35,7 +35,8 @@ art = DeepART.ARTINSTART(
     gpu=GPU,
 )
 
-results = DeepART.tt_epochs!(
+# results = DeepART.tt_epochs!(
+    results = DeepART.tt_basic!(
     art,
     data,
     display=DISPLAY,

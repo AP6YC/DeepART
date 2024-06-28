@@ -18,14 +18,23 @@ art = DeepART.FIA(
     beta=BETA_D,
     rho=0.6,
     update="art",
+    # update="instar",
     softwta=true,
     # gpu=GPU,
     gpu=false,
 )
 
+# old_weights = deepcopy(Flux.params(art.model[end-1])[1])
+old_weights = deepcopy(Flux.params(art.model))
+
 # dev_xf = fdata.train.x[:, 1]
 # prs = Flux.params(art.model)
 # acts = Flux.activations(model, dev_xf)
+
+# dev_xf = data.train.x[:, :, :, 1]
+dev_xf, dev_y = data.train[1]
+prs = Flux.params(art.model)
+acts = Flux.activations(model, dev_xf)
 
 # Train/test
 results = DeepART.tt_basic!(
@@ -33,8 +42,19 @@ results = DeepART.tt_basic!(
     # fdata,
     data,
     display=DISPLAY,
+    epochs=1,
 )
-# @info "Results: " results["perf"] results["n_cat"]
+
+# acts = DeepART.learn_model(art, dev_xf, y=dev_y)
+y_hat_train = DeepART.train!(art, dev_xf, y=dev_y)
+@info weights = Flux.params(art.model)
+
+# new_weights = Flux.params(art.model[end-1])[1]
+new_weights = deepcopy(Flux.params(art.model))
+
+last_index = 3
+old_weights[last_index] - new_weights[last_index]
+
 @info "Results: " results["perf"]
 
 # # Create the confusion matrix from this experiment

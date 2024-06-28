@@ -203,14 +203,10 @@ function learn_model(
     # Set the target index high
     outs[end][y] = one(Float32)
     # Set the complement section high
-    outs[end][half_out + 1 : end] .= one(Float32)
-
+    # outs[end][half_out + 1 : end] .= one(Float32)
+    # @info outs[end]
     for ix = 1:n_layers
         if art.opts.update == "art"
-            # trainables[ix] .= DeepART.art_learn_cast(ins[ix], trainables[ix], art.opts.beta)
-            # Get the local learning parameter beta
-            # local_beta = get_beta(art, outs[ix])
-
             # If the layer is a convolution
             if ndims(weights[ix]) == 4
                 full_size = size(weights[ix])
@@ -232,17 +228,20 @@ function learn_model(
                 local_weight = reshape(weights[ix], :, n_kernels)'
                 # Get the local learning parameter beta
                 local_beta = get_beta(art, local_out)
+
+                local_weight .= DeepART.art_learn_cast(
+                    local_in,
+                    local_weight,
+                    local_beta,
+                )
             else
-                local_weight = weights[ix]
-                local_in = ins[ix]
-                local_out = outs[ix]
-                local_beta = get_beta(art, local_out)
+                weights[ix] .= DeepART.art_learn_cast(
+                    ins[ix],
+                    weights[ix],
+                    get_beta(art, outs[ix]),
+                )
+                # weights[ix] .= zeros(Float32, size(weights[ix]))
             end
-            local_weight .= DeepART.art_learn_cast(
-                local_in,
-                local_weight,
-                local_beta,
-            )
         elseif art.opts.update == "instar"
             weights[ix] .+= DeepART.instar(
                 ins[ix],
@@ -254,6 +253,8 @@ function learn_model(
             error("Invalid update method: $(art.opts.update)")
         end
     end
+
+    # @info weights
 
     # for ix in eachindex(trainables)
         # weights[ix] .+= DeepART.instar(inputs[ix], acts[ix], weights[ix], eta)

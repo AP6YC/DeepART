@@ -1,5 +1,5 @@
 """
-    DataSplit.jl
+    DataValSplit.jl
 
 # Description
 Definitions for a train/test split of supervised datasets.
@@ -8,7 +8,7 @@ Definitions for a train/test split of supervised datasets.
 """
 A train/test split of supervised datasets.
 """
-struct DataSplit
+struct DataValSplit
     """
     The training portion of the dataset.
     """
@@ -18,6 +18,11 @@ struct DataSplit
     The test portion of the dataset.
     """
     test::SupervisedDataset
+
+    """
+    The validation portion of the dataset.
+    """
+    val::SupervisedDataset
 end
 
 # -----------------------------------------------------------------------------
@@ -25,23 +30,27 @@ end
 # -----------------------------------------------------------------------------
 
 """
-Convenience constructor for a supervised [`DataSplit`](@ref) that takes each set of features `x` and labels `y`separately.
+Convenience constructor for a supervised [`DataValSplit`](@ref) that takes each set of features `x` and labels `y`separately.
 
 # Arguments
 - `X_train::AbstractFeatures`: the training features.
 - `y_train::AbstractLabels`: the training integer labels.
 - `X_test::AbstractFeatures`: the testing features.
 - `y_test::AbstractLabels`: the testing integer labels.
+- `X_val::AbstractFeatures`: the validation features.
+- `y_val::AbstractLabels`: the validation integer labels.
 $ARG_SHUFFLE
 """
-function DataSplit(
+function DataValSplit(
     X_train::AbstractFeatures,
     y_train::AbstractLabels,
     X_test::AbstractFeatures,
     y_test::AbstractLabels;
+    X_val::AbstractFeatures,
+    y_val::AbstractLabels,
     shuffle::Bool=DEFAULT_SHUFFLE,
 )
-    return DataSplit(
+    return DataValSplit(
         SupervisedDataset(
             X_train,
             y_train,
@@ -52,11 +61,16 @@ function DataSplit(
             y_test,
             shuffle,
         ),
+        SupervisedDataset(
+            X_val,
+            y_val,
+            shuffle,
+        ),
     )
 end
 
 """
-Constructor for a [`DataSplit`](@ref) taking a set of features and options for the split ratio and shuffle flag.
+Constructor for a [`DataValSplit`](@ref) taking a set of features and options for the split ratio and shuffle flag.
 
 # Arguments
 - `features::AbstractFeatures`: the input features as an array of samples.
@@ -64,7 +78,7 @@ Constructor for a [`DataSplit`](@ref) taking a set of features and options for t
 $ARG_P
 $ARG_SHUFFLE
 """
-function DataSplit(
+function DataValSplit(
     features::AbstractFeatures,
     labels::AbstractLabels;
     p::Float=DEFAULT_P,
@@ -79,10 +93,14 @@ function DataSplit(
     end
 
     # Create a train/test split
-    (X_train, y_train), (X_test, y_test) = MLUtils.splitobs((ls, ll); at=p)
+    splits = (p, 0.1)
+    (X_train, y_train), (X_test, y_test), (X_val, y_val) = MLUtils.splitobs(
+        (ls, ll);
+        at=splits
+    )
 
     # Create and return a single container for this train/test split
-    return DataSplit(
+    return DataValSplit(
         copy(X_train),
         copy(y_train),
         copy(X_test),
@@ -95,13 +113,13 @@ end
 # -----------------------------------------------------------------------------
 
 """
-Tensorizes both the training and testing components of a [`DataSplit`](@ref).
+Tensorizes both the training and testing components of a [`DataValSplit`](@ref).
 
 # Arguments
-$ARG_DATASPLIT
+$ARG_DataValSplit
 """
-function tensorize_datasplit(data::DataSplit)
-    new_dataset = DataSplit(
+function tensorize_DataValSplit(data::DataValSplit)
+    new_dataset = DataValSplit(
         tensorize_dataset(data.train),
         tensorize_dataset(data.test),
     )
@@ -109,36 +127,36 @@ function tensorize_datasplit(data::DataSplit)
 end
 
 """
-Flattens a [`DataSplit`](@ref).
+Flattens a [`DataValSplit`](@ref).
 
 # Arguments
-$ARG_DATASPLIT
+$ARG_DataValSplit
 $ARG_N_CLASS
 """
-function flatty(data::DataSplit)
+function flatty(data::DataValSplit)
     new_train = flatty(data.train)
     new_test = flatty(data.test)
 
-    # Construct and return the new DataSplit
-    return DataSplit(
+    # Construct and return the new DataValSplit
+    return DataValSplit(
         new_train,
         new_test,
     )
 end
 
 """
-Flattens and one-hot encodes a [`DataSplit`](@ref).
+Flattens and one-hot encodes a [`DataValSplit`](@ref).
 
 # Arguments
-$ARG_DATASPLIT
+$ARG_DataValSplit
 $ARG_N_CLASS
 """
-function flatty_hotty(data::DataSplit, n_class::Int=0)
+function flatty_hotty(data::DataValSplit, n_class::Int=0)
     new_train = flatty_hotty(data.train, n_class)
     new_test = flatty_hotty(data.test, n_class)
 
-    # Construct and return the new DataSplit
-    return DataSplit(
+    # Construct and return the new DataValSplit
+    return DataValSplit(
         new_train,
         new_test,
     )
@@ -149,15 +167,15 @@ end
 # -----------------------------------------------------------------------------
 
 """
-Overload of the show function for [`DataSplit`](@ref).
+Overload of the show function for [`DataValSplit`](@ref).
 
 # Arguments
 - `io::IO`: the current IO stream.
-- `field::DataSplit`: the [`DataSplit`](@ref) to print/display.
+- `field::DataValSplit`: the [`DataValSplit`](@ref) to print/display.
 """
 function Base.show(
     io::IO,
-    ds::DataSplit,
+    ds::DataValSplit,
 )
     # Compute all of the dimensions of the dataset
     s_train = size(ds.train.x)
@@ -169,6 +187,6 @@ function Base.show(
     n_train = s_train[end]
     n_test = s_test[end]
 
-    # print(io, "DataSplit(features: $(size(ds.train.x)), test: $(size(ds.test.x)))")
-    print(io, "DataSplit(features: $(n_features), train: $(n_train), test: $(n_test))")
+    # print(io, "DataValSplit(features: $(size(ds.train.x)), test: $(size(ds.test.x)))")
+    print(io, "DataValSplit(features: $(n_features), train: $(n_train), test: $(n_test))")
 end

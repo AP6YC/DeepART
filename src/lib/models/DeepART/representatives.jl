@@ -21,7 +21,7 @@ function get_rep_fia_dense(n_input::Integer, head_dim::Integer)
         Dense(_, 256, sigmoid_fast, bias=false),
         DeepART.CC(),
         Dense(_, head_dim, sigmoid_fast, bias=false),
-        DeepART.CC(),
+        # DeepART.CC(),
     )
     return model
 end
@@ -78,7 +78,7 @@ function get_rep_fia_conv(size_tuple::Tuple, head_dim::Integer)
             Dense(_, head_dim, sigmoid_fast, bias=false),
             vec,
         ),
-        DeepART.CC(),
+        # DeepART.CC(),
     )
     return conv_model
 end

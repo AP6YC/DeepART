@@ -3,8 +3,74 @@ Common code for DeepART modules.
 """
 
 # -----------------------------------------------------------------------------
+# ALIASES
+# -----------------------------------------------------------------------------
+
+const ARTStats = Dict{String, Any}
+
+"""
+Initializes an ARTStats dictionary with zero entries.
+"""
+function build_art_stats()
+    # Create the stats dictionary
+    stats = ARTStats()
+
+    # Initialize zero entries for each element
+    stats["M"] = 0.0
+    stats["T"] = 0.0
+    stats["bmu"] = 0
+    stats["mismatch"] = false
+
+    # Return the zero-initialized stats dictionary
+    return stats
+end
+
+"""
+Logs common statistics of an ART module after a training/classification iteration.
+
+# Arguments
+- `art::ARTModule`: the ART module that just underwent training/classification.
+- `bmu::Integer`: the best-matching unit integer index.
+- `mismatch::Bool`: flag of whether there was a mismatch in this iteration.
+"""
+function log_art_stats!(art::DeepARTModule, bmu::Integer, mismatch::Bool)
+    # Overwrite the stats entries
+    art.stats["M"] = art.M[bmu]
+    art.stats["T"] = art.T[bmu]
+    art.stats["bmu"] = bmu
+    art.stats["mismatch"] = mismatch
+
+    # Return empty
+    return
+end
+
+# -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
+
+"""
+Basic FuzzyART learning rule.
+"""
+function art_learn_basic(x, W, beta)
+    return beta .* min.(x, W) + W .* (1.0 .- beta)
+end
+
+"""
+FuzzyART learning rule casting a vector input to a matrix of weights.
+"""
+function art_learn_cast(x, W, beta)
+    # Get the size of the weights
+    Wy, Wx = size(W)
+    # Repeat the input across the categories dimension of the weights
+    _x = repeat(x', Wy, 1)
+    # Do the same for the beta value, but across the outputs dimension
+    _beta = if !isempty(size(beta))
+        repeat(beta, 1, Wx)
+    else
+        beta
+    end
+    return art_learn_basic(_x, W, _beta)
+end
 
 """
 Returns the element-wise minimum between sample x and weight W.
@@ -133,46 +199,6 @@ function instar(
     end
     return
 end
-
-
-const ARTStats = Dict{String, Any}
-
-"""
-Initializes an ARTStats dictionary with zero entries.
-"""
-function build_art_stats()
-    # Create the stats dictionary
-    stats = ARTStats()
-
-    # Initialize zero entries for each element
-    stats["M"] = 0.0
-    stats["T"] = 0.0
-    stats["bmu"] = 0
-    stats["mismatch"] = false
-
-    # Return the zero-initialized stats dictionary
-    return stats
-end
-
-"""
-Logs common statistics of an ART module after a training/classification iteration.
-
-# Arguments
-- `art::ARTModule`: the ART module that just underwent training/classification.
-- `bmu::Integer`: the best-matching unit integer index.
-- `mismatch::Bool`: flag of whether there was a mismatch in this iteration.
-"""
-function log_art_stats!(art::DeepARTModule, bmu::Integer, mismatch::Bool)
-    # Overwrite the stats entries
-    art.stats["M"] = art.M[bmu]
-    art.stats["T"] = art.T[bmu]
-    art.stats["bmu"] = bmu
-    art.stats["mismatch"] = mismatch
-
-    # Return empty
-    return
-end
-
 
 """
 Gets the local learning parameter.
