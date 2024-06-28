@@ -8,7 +8,8 @@ include("setup.jl")
 
 # Model definition
 head_dim = 10
-model = DeepART.get_rep_fia_dense(n_input, head_dim)
+# model = DeepART.get_rep_fia_dense(n_input, head_dim)
+model = DeepART.get_rep_fia_conv(n_input, head_dim)
 
 art = DeepART.FIA(
     model,

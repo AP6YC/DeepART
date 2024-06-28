@@ -48,6 +48,41 @@ function get_rep_dense(n_input::Integer, head_dim::Integer)
     return model
 end
 
+
+"""
+Constructs and returns the representative convolutional model for [`DeepARTModule`](@ref)s.
+
+# Arguments
+- `size_tuple::Tuple`: the size of the input data for convolutions and batchs.
+- `head_dim::Integer`: the dimension of the output head for the FuzzyARTMAP field.
+"""
+function get_rep_fia_conv(size_tuple::Tuple, head_dim::Integer)
+    conv_model = Flux.@autosize (size_tuple,) Chain(
+        DeepART.CCConv(),
+        Chain(
+            Conv((3, 3), _ => 8, sigmoid_fast, bias=false),
+        ),
+        Chain(
+            MaxPool((2,2)),
+            DeepART.CCConv(),
+        ),
+        Chain(
+            Conv((5,5), _ => 16, sigmoid_fast, bias=false),
+        ),
+        Chain(
+            Flux.AdaptiveMaxPool((4, 4)),
+            Flux.flatten,
+            DeepART.CC(),
+        ),
+        Chain(
+            Dense(_, head_dim, sigmoid_fast, bias=false),
+            vec,
+        ),
+        DeepART.CC(),
+    )
+    return conv_model
+end
+
 """
 Constructs and returns the representative convolutional model for [`DeepARTModule`](@ref)s.
 
