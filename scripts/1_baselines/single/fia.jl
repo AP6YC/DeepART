@@ -9,7 +9,9 @@ include("setup.jl")
 # Model definition
 head_dim = 10
 # model = DeepART.get_rep_fia_dense(n_input, head_dim)
-model = DeepART.get_rep_fia_conv(n_input, head_dim)
+
+size_tuple = (size(data.train.x)[1:3]..., 1)
+model = DeepART.get_rep_fia_conv(size_tuple, head_dim)
 
 art = DeepART.FIA(
     model,
@@ -21,14 +23,15 @@ art = DeepART.FIA(
     gpu=false,
 )
 
-dev_xf = fdata.train.x[:, 1]
-prs = Flux.params(art.model)
-acts = Flux.activations(model, dev_xf)
+# dev_xf = fdata.train.x[:, 1]
+# prs = Flux.params(art.model)
+# acts = Flux.activations(model, dev_xf)
 
 # Train/test
 results = DeepART.tt_basic!(
     art,
-    fdata,
+    # fdata,
+    data,
     display=DISPLAY,
 )
 # @info "Results: " results["perf"] results["n_cat"]

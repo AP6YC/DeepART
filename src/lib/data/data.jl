@@ -32,6 +32,9 @@ function text_targets_to_ints(
     return [target_map[t] for t in targets]
 end
 
+"""
+Gets a subset of the dataset samples from the first index up to the number requested.
+"""
 function get_x_subset(
     x::AbstractArray,
     n_samples::Integer=IInf,
@@ -49,6 +52,9 @@ function get_x_subset(
     return local_features
 end
 
+"""
+Gets a subset of the dataset labels from the first index up to the number requested.
+"""
 function get_y_subset(
     y::AbstractArray,
     n_samples::Integer=IInf,
@@ -123,6 +129,9 @@ function get_supervised_subset(
     return new_data
 end
 
+"""
+Gets a training and testing subset of the data from a [`DataSplit`](@ref) object.
+"""
 function get_data_subset(
     data::DataSplit;
     n_train::Integer=IInf,
