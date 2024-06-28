@@ -79,6 +79,16 @@ function incremental_supervised_train!(
     # return isempty(art.labels) ? y_hat : art.labels[art.stats["bmu"]]
 end
 
+function incremental_supervised_train!(
+    art::DeepARTModule,
+    x::RealArray,
+    y::Integer,
+)
+    y_hat = DeepART.train!(art, x, y=y)
+    # return iszero(bmu) ? y_hat : art.head.labels[bmu]
+    return y_hat
+end
+
 # -----------------------------------------------------------------------------
 # INCREMENTAL CLASSIFICATION
 # -----------------------------------------------------------------------------

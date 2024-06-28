@@ -170,6 +170,8 @@ function copy_stats!(art::ARTINSTART)
     art.stats["T"] = art.head.stats["T"]
     art.stats["mismatch"] = art.head.stats["mismatch"]
     art.n_categories = art.head.n_categories
+
+    return
 end
 
 function train!(

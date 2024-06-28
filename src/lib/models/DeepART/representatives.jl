@@ -5,6 +5,27 @@
 Representative models for the deep component of DeepART modules.
 """
 
+
+"""
+Constructs and returns the representative dense model for [`DeepARTModule`](@ref)s.
+
+# Arguments
+- `n_input::Integer`: the size of the input data.
+- `head_dim::Integer`: the dimension of the output head for the FuzzyARTMAP field.
+"""
+function get_rep_fia_dense(n_input::Integer, head_dim::Integer)
+    model = Flux.@autosize (n_input,) Chain(
+        DeepART.CC(),
+        Dense(_, 512, sigmoid_fast, bias=false),
+        DeepART.CC(),
+        Dense(_, 256, sigmoid_fast, bias=false),
+        DeepART.CC(),
+        Dense(_, head_dim, sigmoid_fast, bias=false),
+        DeepART.CC(),
+    )
+    return model
+end
+
 """
 Constructs and returns the representative dense model for [`DeepARTModule`](@ref)s.
 

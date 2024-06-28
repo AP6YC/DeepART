@@ -115,10 +115,15 @@ function basic_train!(
         y_hat = incremental_supervised_train!(art, xf, cpu(label)[1])
         # Push the estimate
         push!(y_hats, y_hat)
+
         # Update the display iterator
-        next!(pr; showvalues=[
-            (:NCat, art.n_categories),
-        ])
+        out_values = if !(art isa DeepART.FIA)
+            [(:NCat, art.n_categories)]
+        else
+            []
+        end
+
+        next!(pr; showvalues=out_values)
     end
 
     # Return the estimates
@@ -257,11 +262,18 @@ function tt_basic!(
     perf = get_perf(data.test, y_hats)
 
     # Compile the experiment results
-    out_dict = Dict(
-        "n_cat" => art.n_categories,
-        "y_hats" => y_hats,
-        "perf" => perf,
-    )
+    out_dict = if !(art isa DeepART.FIA)
+        Dict(
+            "n_cat" => art.n_categories,
+            "y_hats" => y_hats,
+            "perf" => perf,
+        )
+    else
+        Dict(
+            "y_hats" => y_hats,
+            "perf" => perf,
+        )
+    end
 
     # Return the experiment results
     return out_dict
