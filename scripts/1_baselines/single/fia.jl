@@ -25,7 +25,7 @@ art = DeepART.FIA(
 )
 
 # old_weights = deepcopy(Flux.params(art.model[end-1])[1])
-old_weights = deepcopy(Flux.params(art.model))
+# old_weights = deepcopy(Flux.params(art.model))
 
 # dev_xf = fdata.train.x[:, 1]
 # prs = Flux.params(art.model)
@@ -42,18 +42,32 @@ results = DeepART.tt_basic!(
     # fdata,
     data,
     display=DISPLAY,
-    epochs=1,
+    epochs=2,
 )
 
 # acts = DeepART.learn_model(art, dev_xf, y=dev_y)
-y_hat_train = DeepART.train!(art, dev_xf, y=dev_y)
-@info weights = Flux.params(art.model)
+begin
+    y_hat_train = DeepART.train!(art, dev_xf, y=dev_y)
+    # weights = Flux.params(art.model)
+    # @info weights[length(weights)][:, 1]
+    # @info weights
+end
+
+begin
+    check_weights = deepcopy(Flux.params(art.model))
+    for p in check_weights
+        result = p .+ 1
+        p .= result
+    end
+    @info check_weights
+end
+# weights[length()]
 
 # new_weights = Flux.params(art.model[end-1])[1]
-new_weights = deepcopy(Flux.params(art.model))
-
-last_index = 3
-old_weights[last_index] - new_weights[last_index]
+# new_weights = deepcopy(Flux.params(art.model))
+# weights .= DeepART.art_learn
+# last_index = 3
+# old_weights[last_index] - new_weights[last_index]
 
 @info "Results: " results["perf"]
 

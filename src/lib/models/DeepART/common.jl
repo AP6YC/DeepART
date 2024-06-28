@@ -69,6 +69,11 @@ function art_learn_cast(x, W, beta)
     else
         beta
     end
+    # @info size(_beta)
+    # @info _beta[:, 1]
+    # result = art_learn_basic(_x, W, _beta)
+    # @info sum(result - _x)
+    # return result
     return art_learn_basic(_x, W, _beta)
 end
 
