@@ -13,16 +13,17 @@ This is not a good name for the model, but I couldn't think of a better one.
 """
 Options container for a [`FIA`](@ref) module.
 """
-@with_kw struct opts_FIA
+@with_kw struct opts_FIA @deftype Float32
+# @with_kw struct opts_FIA{R<:Real} @deftype R
     """
     The vigilance parameter of the [`FIA`](@ref) module, rho ∈ (0.0, 1.0].
     """
-    rho::Float = 0.6; @assert rho >= 0.0 && rho <= 1.0
+    rho = 0.6; @assert rho >= 0.0 && rho <= 1.0
 
     """
     Instar learning rate.
     """
-    eta::Float = 0.1
+    eta = 0.1
 
     """
     Choice parameter: alpha > 0.
@@ -184,24 +185,26 @@ function learn_model(
     xf::RealArray;
     y::Integer=0,
 )
+    # Extract the weights and compute the activations
     weights = Flux.params(art.model)
     acts = Flux.activations(art.model, xf)
-
     n_layers = length(weights)
 
-    # trainables = weights
+    # Index the input and output activations
     ins = [acts[jx] for jx = 1:2:(n_layers*2)]
     outs = [acts[jx] for jx = 2:2:(n_layers*2)]
 
     # FIA modification
 
     # Get the length
-    n_out = length(outs[end])
-    half_out = Int(n_out / 2)
+    # n_out = length(outs[end])
+    # half_out = Int(n_out / 2)
+
     # Clear the output
-    outs[end][:] .= zero(Float32)
+    # outs[end][:] .= zero(Float32)
+    # outs[end][:] .= -one(Float32)
     # Set the target index high
-    outs[end][y] = one(Float32)
+    # outs[end][y] = one(Float32)
     # Set the complement section high
     # outs[end][half_out + 1 : end] .= one(Float32)
     # @info outs[end]
@@ -224,33 +227,51 @@ function learn_model(
 
                 # Get the averaged and reshaped local output
                 local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
+
                 # Reshape the weights to be (n_kernels, n_features)
                 local_weight = reshape(weights[ix], :, n_kernels)'
+
                 # Get the local learning parameter beta
                 local_beta = get_beta(art, local_out)
                 # @info local_beta
-                # old_weights = deepcopy(local_weight)
+                @debug "sizes going into conv: $(size(local_in)) $(size(local_weight)) $(size(local_beta))"
                 result = DeepART.art_learn_cast(
                     local_in,
                     local_weight,
                     local_beta,
                 )
-                @info sum(result - local_weight)
+                @debug "Conv before: \t$(sum(result .- local_weight))"
+
                 local_weight .= result
+
+                @debug "Conv after: \t$(sum(result .- local_weight))"
+                # @debug result[1]
+                # @debug local_weight[1]
+                # @debug "types: " typeof(result) typeof(local_weight) typeof(weights[ix]) typeof(local_in) typeof(local_beta)
+
                 # local_weight .= DeepART.art_learn_cast(
                 #     local_in,
                 #     local_weight,
                 #     local_beta,
                 # )
-                # @info sum(old_weights - local_weight)
-                # local_weight .= zeros(Float32, size(local_weight))
             else
-                weights[ix] .= DeepART.art_learn_cast(
-                    ins[ix],
+                @debug "sizes going into dense: $(size(vec(ins[ix]))) $(size(weights[ix])) $(size(get_beta(art, outs[ix])))"
+                result = DeepART.art_learn_cast(
+                    vec(ins[ix]),
+                    # ins[ix],
                     weights[ix],
                     get_beta(art, outs[ix]),
                 )
-                # weights[ix] .= zeros(Float32, size(weights[ix]))
+                # @info result
+                @debug "Dense before: \t$(sum(result - weights[ix]))"
+                weights[ix] .= result
+                @debug "Dense after: \t$(sum(result - weights[ix]))"
+
+                # weights[ix] .= DeepART.art_learn_cast(
+                #     ins[ix],
+                #     weights[ix],
+                #     get_beta(art, outs[ix]),
+                # )
             end
         elseif art.opts.update == "instar"
             weights[ix] .+= DeepART.instar(

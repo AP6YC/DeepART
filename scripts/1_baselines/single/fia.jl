@@ -1,3 +1,5 @@
+using Logging
+
 include("setup.jl")
 
 # -----------------------------------------------------------------------------
@@ -32,25 +34,41 @@ art = DeepART.FIA(
 # acts = Flux.activations(model, dev_xf)
 
 # dev_xf = data.train.x[:, :, :, 1]
-dev_xf, dev_y = data.train[1]
+dev_xf, dev_y = data.train[2]
 prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
-# Train/test
-results = DeepART.tt_basic!(
-    art,
-    # fdata,
-    data,
-    display=DISPLAY,
-    epochs=2,
-)
+
+begin
+    debuglogger = ConsoleLogger(stdout, Logging.Info)
+    Base.global_logger(debuglogger)
+
+    # Train/test
+    results = DeepART.tt_basic!(
+        art,
+        # fdata,
+        data,
+        display=DISPLAY,
+        epochs=1,
+    )
+end
 
 # acts = DeepART.learn_model(art, dev_xf, y=dev_y)
+# debuglogger = SimpleLogger(Logging.Debug)
+
 begin
+    dev_xf, dev_y = data.train[4]
+    debuglogger = ConsoleLogger(stdout, Logging.Debug)
+    Base.global_logger(debuglogger)
+    @debug "test"
     y_hat_train = DeepART.train!(art, dev_xf, y=dev_y)
+    y_hat_test = DeepART.classify(art, dev_xf)
     # weights = Flux.params(art.model)
     # @info weights[length(weights)][:, 1]
     # @info weights
+    acts = Flux.activations(model, dev_xf)
+    @debug "y_hats: " dev_y y_hat_train y_hat_test
+    @debug "acts: $(acts[end])"
 end
 
 begin

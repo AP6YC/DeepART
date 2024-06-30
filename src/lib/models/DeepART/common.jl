@@ -51,8 +51,14 @@ end
 """
 Basic FuzzyART learning rule.
 """
-function art_learn_basic(x, W, beta)
-    return beta .* min.(x, W) + W .* (1.0 .- beta)
+function art_learn_basic(
+    x,
+    W,
+    beta,
+)
+    # return beta .* min.(x, W) + W .* (1.0 .- beta)
+    # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
+    return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
 end
 
 """
@@ -61,6 +67,9 @@ FuzzyART learning rule casting a vector input to a matrix of weights.
 function art_learn_cast(x, W, beta)
     # Get the size of the weights
     Wy, Wx = size(W)
+
+    @debug "sizes before: $(size(x)), $(size(W)), $(size(beta))"
+
     # Repeat the input across the categories dimension of the weights
     _x = repeat(x', Wy, 1)
     # Do the same for the beta value, but across the outputs dimension
@@ -69,12 +78,26 @@ function art_learn_cast(x, W, beta)
     else
         beta
     end
-    # @info size(_beta)
-    # @info _beta[:, 1]
+    @debug "sizes after: $(size(_x)), $(size(W)), $(size(_beta))"
+
+    result = zeros(eltype(W), size(W))
+    # for ix = 1:Wy
+    #     result[ix, :] .= art_learn_basic(_x[ix, :], W[ix, :], _beta[ix, :])
+    # end
+    # for jx = 1:Wx
+    for ix = 1:Wy
+        # result[:, jx] .= art_learn_basic(_x[:, jx], W[:, jx], _beta[:, jx])
+        # result[:, jx] .= art_learn_basic(_x[:, jx], W[:, jx], beta)
+        # @info "x: $(size(x)), W: $(size(W[:, jx])), beta: $(beta)"
+        # result[:, jx] .= art_learn_basic(x, W[:, jx], beta[jx])
+        result[ix, :] .= art_learn_basic(x, W[ix, :], beta[ix])
+    end
+
     # result = art_learn_basic(_x, W, _beta)
-    # @info sum(result - _x)
-    # return result
-    return art_learn_basic(_x, W, _beta)
+    # return art_learn_basic(_x, W, _beta)
+
+    @debug "Learn difference: $(sum(result - W))"
+    return result
 end
 
 """

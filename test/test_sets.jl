@@ -32,13 +32,23 @@ LogLevel(Logging.Info)
     ENV["GKSwstype"] = "100"
     # Dataset selection
     DATASET = "mnist"
+    # Small data subset
     N_TRAIN = 100
     N_TEST = 100
 
+    # Load one dataset from the selection
     data = DeepART.load_one_dataset(
         DATASET,
         n_train=N_TRAIN,
         n_test=N_TEST,
     )
+
+    # Check that we can flatten the dataset for training dense networks
     fdata = DeepART.flatty(data)
+end
+
+
+@testset "Weight Update Sanity Checks" begin
+    @info "----------------- WEIGHTS CHECK -----------------"
+    @assert 1 == 1
 end

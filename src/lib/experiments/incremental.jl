@@ -80,7 +80,7 @@ function incremental_supervised_train!(
 end
 
 function incremental_supervised_train!(
-    art::DeepARTModule,
+    art::FIA,
     x::RealArray,
     y::Integer,
 )
