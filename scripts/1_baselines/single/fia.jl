@@ -1,3 +1,4 @@
+using Revise
 using Logging
 
 include("setup.jl")

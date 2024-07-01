@@ -264,8 +264,12 @@ function learn_model(
                 )
                 # @info result
                 @debug "Dense before: \t$(sum(result - weights[ix]))"
+                # @debug "Dense out before: \t$(result[y] - weights[ix][y])"
+                @debug "Dense out before: \t$(result[y]) $(weights[ix][y])"
                 weights[ix] .= result
                 @debug "Dense after: \t$(sum(result - weights[ix]))"
+                # @debug "Dense out before: \t$(result[y] - weights[ix][y])"
+                @debug "Dense out before: \t$(result[y]) $(weights[ix][y])"
 
                 # weights[ix] .= DeepART.art_learn_cast(
                 #     ins[ix],
