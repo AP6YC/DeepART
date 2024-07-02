@@ -32,8 +32,8 @@ conv_model = DeepART.get_rep_conv(size_tuple, head_dim)
 art = DeepART.ARTINSTART(
     conv_model,
     head_dim=head_dim,
-    beta=BETA_D,
-    beta_s=BETA_S,
+    beta=params["beta_d"],
+    beta_s=params["beta_s"],
     # rho=0.6,
     rho=0.3,
     update="art",
@@ -50,7 +50,7 @@ begin
     results = DeepART.tt_basic!(
         art,
         data,
-        display=DISPLAY
+        display=params["display"],
     )
     @info "Results: " results["perf"] results["n_cat"]
 end
@@ -62,5 +62,5 @@ DeepART.plot_confusion_matrix(
     results["y_hats"],
     names,
     "conv_basic_confusion",
-    EXP_TOP,
+    params["exp_top"],
 )

@@ -36,7 +36,7 @@ end
 @info "Building ART module"
 art = DeepART.FIA(
     model,
-    beta=BETA_D,
+    beta=params["beta_d"],
     rho=0.6,
     update="art",
     # update="instar",
@@ -67,9 +67,10 @@ begin
     results = DeepART.tt_basic!(
         art,
         script_data,
-        display=DISPLAY,
+        display=params["display"],
         epochs=2,
     )
+    @info "Results: " results["perf"]
 end
 
 # acts = DeepART.learn_model(art, dev_xf, y=dev_y)
@@ -106,8 +107,6 @@ end
 # weights .= DeepART.art_learn
 # last_index = 3
 # old_weights[last_index] - new_weights[last_index]
-
-@info "Results: " results["perf"]
 
 # # Create the confusion matrix from this experiment
 # DeepART.plot_confusion_matrix(

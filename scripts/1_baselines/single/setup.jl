@@ -32,34 +32,32 @@ Random.seed!(1234)
 
 # Accept data downloads
 ENV["DATADEPS_ALWAYS_ACCEPT"] = true
-
 # Fix plotting on headless
 ENV["GKSwstype"] = "100"
-
-# Dataset selection
-DATASET = "mnist"
-# DATASET = "cifar10"
-# DATASET = "fashionmnist"
-# DATASET = "omniglot"
-DISPLAY = true
 
 # Separate development and cluster settings
 # DEV = Sys.iswindows()
 # DEV = false
 DEV = true
-N_TRAIN = DEV ? 1000 : 10000
-N_TEST = DEV ? 500 : 1000
-# N_TRAIN = DEV ? 1000 : 50000
-# N_TEST = DEV ? 1000 : 1000
-# GPU = !DEV
-GPU = true
-
-# BETA_S = 0.5
-BETA_S = 1.0
-# BETA_D = 0.01
-BETA_D = 1.0
-
-EXP_TOP = ["singles"]
+# Dataset selection
+params = Dict{String, Any}(
+    "dataset" => "mnist",
+    # DATASET = "cifar10"
+    # DATASET = "fashionmnist"
+    # DATASET = "omniglot"
+    "display" => true,
+    "n_train" => DEV ? 1000 : 10000,
+    "n_test" => DEV ? 500 : 1000,
+    # N_TRAIN = DEV ? 1000 : 50000
+    # N_TEST = DEV ? 1000 : 1000
+    # GPU = !DEV
+    "gpu" => true,
+    # BETA_S = 0.5
+    "beta_s" => 1.0,
+    # BETA_D = 0.01
+    "beta_d" => 1.0,
+    "exp_top" => ["singles"],
+)
 
 # opts = Dict(
 #     "beta_s" => 0.5,
@@ -79,10 +77,10 @@ head_dim = 784
 @info "----------------- LOADING DATA -----------------"
 
 data = DeepART.load_one_dataset(
-    # DATASET,
-    "mnist",
-    n_train=N_TRAIN,
-    n_test=N_TEST,
+    params["dataset"],
+    # "mnist",
+    n_train=params["n_train"],
+    n_test=params["n_test"],
 )
 fdata = DeepART.flatty(data)
 
@@ -92,7 +90,7 @@ n_classes = length(unique(data.train.y))
 names_range = collect(1:n_classes)
 
 # Correction for digits being 0-9 while class labels are 1-10
-if DATASET == "mnist"
+if params["dataset"] == "mnist"
     names_range .-= 1
 end
 
@@ -102,4 +100,4 @@ names = string.(names_range)
 # Get the number of input features from the flat dataset
 n_input = size(fdata.train.x)[1]
 
-@info "Loaded dataset: " DATASET
+@info "Loaded dataset: $(params["dataset"])"

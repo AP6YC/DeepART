@@ -33,8 +33,8 @@ model = DeepART.get_rep_dense(n_input, head_dim)
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
-    beta=BETA_D,
-    beta_s=BETA_S,
+    beta=params["beta_d"],
+    beta_s=params["beta_s"],
     rho=0.6,
     # rho=0.3,
     # rho = 0.0,
@@ -57,7 +57,7 @@ begin
     results = DeepART.tt_basic!(
         art,
         fdata,
-        display=DISPLAY,
+        display=params["display"],
     )
     @info "Results: " results["perf"] results["n_cat"]
 end
@@ -69,5 +69,5 @@ DeepART.plot_confusion_matrix(
     results["y_hats"],
     names,
     "dense_basic_confusion",
-    EXP_TOP,
+    params["exp_top"],
 )
