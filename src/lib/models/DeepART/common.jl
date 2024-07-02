@@ -48,6 +48,10 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
+function elementwise_f(f, a, b)
+    return reduce((a, b) -> f.(a, b), a, b)
+end
+
 """
 Basic FuzzyART learning rule.
 """
@@ -58,7 +62,10 @@ function art_learn_basic(
 )
     # return beta .* min.(x, W) + W .* (1.0 .- beta)
     # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
-    return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
+
+    result = beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
+    return result
+    # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
 end
 
 """
@@ -78,20 +85,30 @@ function art_learn_cast(x, W, beta)
     else
         beta
     end
+
     @debug "sizes after: $(size(_x)), $(size(W)), $(size(_beta))"
 
-    result = zeros(eltype(W), size(W))
-    # for ix = 1:Wy
-    #     result[ix, :] .= art_learn_basic(_x[ix, :], W[ix, :], _beta[ix, :])
+    # if CUDA.functional()
+    #     _x = CUDA.copy(_x)
+    #     _beta = CUDA.copy(_beta)
     # end
-    # for jx = 1:Wx
+
+    result = zeros(eltype(W), size(W))
+
+    # result = CUDA.zeros(eltype(W), size(W))
+
+    # CUDA.allowscalar() do
     for ix = 1:Wy
         # result[:, jx] .= art_learn_basic(_x[:, jx], W[:, jx], _beta[:, jx])
         # result[:, jx] .= art_learn_basic(_x[:, jx], W[:, jx], beta)
         # @info "x: $(size(x)), W: $(size(W[:, jx])), beta: $(beta)"
         # result[:, jx] .= art_learn_basic(x, W[:, jx], beta[jx])
+        # result[ix, :] .= art_learn_basic(_x[ix, :], W[ix, :], _beta[ix, :])
         result[ix, :] .= art_learn_basic(x, W[ix, :], beta[ix])
     end
+    # end
+
+    # result = art_learn_basic(_x, W, _beta)
 
     # result = art_learn_basic(_x, W, _beta)
     # return art_learn_basic(_x, W, _beta)
@@ -234,10 +251,11 @@ Gets the local learning parameter.
 function get_beta(art::DeepARTModule, outs::RealArray)
     local_beta = if art.opts.softwta == true
         # art.opts.beta .* (1 .- outs[ix])
-        art.opts.beta .* Flux.softmax(
-            outs,
-        )
         # art.opts.beta .* (1 .- Flux.softmax(outs[ix]))
+
+        # art.opts.beta .* Flux.softmax(outs)
+        local_softmax = Flux.softmax(outs)
+        art.opts.beta .* local_softmax / maximum(local_softmax)
     else
         art.opts.beta
     end

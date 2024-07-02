@@ -105,6 +105,8 @@ function DataValSplit(
         copy(y_train),
         copy(X_test),
         copy(y_test),
+        copy(X_val),
+        copy(y_val),
     )
 end
 
@@ -122,6 +124,7 @@ function tensorize_DataValSplit(data::DataValSplit)
     new_dataset = DataValSplit(
         tensorize_dataset(data.train),
         tensorize_dataset(data.test),
+        tensorize_dataset(data.val),
     )
     return new_dataset
 end
@@ -143,6 +146,25 @@ function flatty(data::DataValSplit)
         new_test,
     )
 end
+"""
+Flattens a [`DataValSplit`](@ref).
+
+# Arguments
+$ARG_DataValSplit
+$ARG_N_CLASS
+"""
+function flatty(data::DataValSplit)
+    new_train = flatty(data.train)
+    new_test = flatty(data.test)
+    new_val = flatty(data.val)
+
+    # Construct and return the new DataValSplit
+    return DataValSplit(
+        new_train,
+        new_test,
+        new_val,
+    )
+end
 
 """
 Flattens and one-hot encodes a [`DataValSplit`](@ref).
@@ -154,11 +176,13 @@ $ARG_N_CLASS
 function flatty_hotty(data::DataValSplit, n_class::Int=0)
     new_train = flatty_hotty(data.train, n_class)
     new_test = flatty_hotty(data.test, n_class)
+    new_val = flatty_hotty(data.val, n_class)
 
     # Construct and return the new DataValSplit
     return DataValSplit(
         new_train,
         new_test,
+        new_val,
     )
 end
 

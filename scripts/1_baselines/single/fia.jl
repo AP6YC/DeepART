@@ -1,5 +1,13 @@
-using Revise
-using Logging
+"""
+    fia.jl
+
+# Description
+Fully instar model experiment.
+"""
+
+# -----------------------------------------------------------------------------
+# SETUP
+# -----------------------------------------------------------------------------
 
 include("setup.jl")
 
@@ -9,13 +17,23 @@ include("setup.jl")
 
 @info "----------------- FIA -----------------"
 
+@enum MODEL_TYPES DENSE CONV
+
+MODEL_TYPE = DENSE
+
+@info "Building model and loading data"
 # Model definition
 head_dim = 10
-# model = DeepART.get_rep_fia_dense(n_input, head_dim)
+if MODEL_TYPE == DENSE
+    model = DeepART.get_rep_fia_dense(n_input, head_dim)
+    script_data = fdata
+elseif MODEL_TYPE == CONV
+    size_tuple = (size(data.train.x)[1:3]..., 1)
+    model = DeepART.get_rep_fia_conv(size_tuple, head_dim)
+    script_data = data
+end
 
-size_tuple = (size(data.train.x)[1:3]..., 1)
-model = DeepART.get_rep_fia_conv(size_tuple, head_dim)
-
+@info "Building ART module"
 art = DeepART.FIA(
     model,
     beta=BETA_D,
@@ -34,12 +52,13 @@ art = DeepART.FIA(
 # prs = Flux.params(art.model)
 # acts = Flux.activations(model, dev_xf)
 
+
 # dev_xf = data.train.x[:, :, :, 1]
-dev_xf, dev_y = data.train[2]
+dev_xf, dev_y = script_data.train[1]
 prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
-
+@info "Beginning train-test loop"
 begin
     debuglogger = ConsoleLogger(stdout, Logging.Info)
     Base.global_logger(debuglogger)
@@ -47,18 +66,19 @@ begin
     # Train/test
     results = DeepART.tt_basic!(
         art,
-        # fdata,
-        data,
+        script_data,
         display=DISPLAY,
-        epochs=1,
+        epochs=2,
     )
 end
 
 # acts = DeepART.learn_model(art, dev_xf, y=dev_y)
 # debuglogger = SimpleLogger(Logging.Debug)
 
+@info "Beginning in-depth train loop analysis"
 begin
-    dev_xf, dev_y = data.train[4]
+    # dev_xf, dev_y = data.train[4]
+    dev_xf, dev_y = script_data.train[4]
     debuglogger = ConsoleLogger(stdout, Logging.Debug)
     Base.global_logger(debuglogger)
     @debug "test"
@@ -72,15 +92,14 @@ begin
     @debug "acts: $(acts[end])"
 end
 
-begin
-    check_weights = deepcopy(Flux.params(art.model))
-    for p in check_weights
-        result = p .+ 1
-        p .= result
-    end
-    @info check_weights
-end
-# weights[length()]
+# begin
+#     check_weights = deepcopy(Flux.params(art.model))
+#     for p in check_weights
+#         result = p .+ 1
+#         p .= result
+#     end
+#     @info check_weights
+# end
 
 # new_weights = Flux.params(art.model[end-1])[1]
 # new_weights = deepcopy(Flux.params(art.model))

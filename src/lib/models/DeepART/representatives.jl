@@ -16,8 +16,8 @@ Constructs and returns the representative dense model for [`DeepARTModule`](@ref
 function get_rep_fia_dense(n_input::Integer, head_dim::Integer)
     model = Flux.@autosize (n_input,) Chain(
         DeepART.CC(),
-        Dense(_, 512, sigmoid_fast, bias=false),
-        DeepART.CC(),
+        # Dense(_, 512, sigmoid_fast, bias=false),
+        # DeepART.CC(),
         Dense(_, 256, sigmoid_fast, bias=false),
         DeepART.CC(),
         Dense(_, head_dim, sigmoid_fast, bias=false),

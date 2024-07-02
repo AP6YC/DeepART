@@ -10,6 +10,7 @@ Setup script for the single model experiments.
 # -----------------------------------------------------------------------------
 
 using Revise
+using Logging
 using DeepART
 using Flux
 using Random
@@ -44,7 +45,8 @@ DISPLAY = true
 
 # Separate development and cluster settings
 # DEV = Sys.iswindows()
-DEV = false
+# DEV = false
+DEV = true
 N_TRAIN = DEV ? 1000 : 10000
 N_TEST = DEV ? 500 : 1000
 # N_TRAIN = DEV ? 1000 : 50000

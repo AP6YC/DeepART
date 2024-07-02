@@ -1,3 +1,14 @@
+"""
+    dense.jl
+
+# Description
+Single dense model experiment.
+"""
+
+# -----------------------------------------------------------------------------
+# SETUP
+# -----------------------------------------------------------------------------
+
 include("setup.jl")
 
 # -----------------------------------------------------------------------------
@@ -15,8 +26,10 @@ include("setup.jl")
 # n_cat=242
 
 # Model definition
+@info "Building model"
 model = DeepART.get_rep_dense(n_input, head_dim)
 
+@info "Building ART module"
 art = DeepART.ARTINSTART(
     model,
     head_dim=head_dim,
@@ -27,7 +40,8 @@ art = DeepART.ARTINSTART(
     # rho = 0.0,
     update="art",
     softwta=true,
-    gpu=GPU,
+    # gpu=GPU,
+    gpu=false,
 )
 
 dev_xf = fdata.train.x[:, 1]
@@ -35,14 +49,21 @@ prs = Flux.params(art.model)
 acts = Flux.activations(model, dev_xf)
 
 # Train/test
-results = DeepART.tt_basic!(
-    art,
-    fdata,
-    display=DISPLAY,
-)
-@info "Results: " results["perf"] results["n_cat"]
+begin
+    debuglogger = ConsoleLogger(stdout, Logging.Info)
+    Base.global_logger(debuglogger)
+
+    @info "Beginning train-test loop"
+    results = DeepART.tt_basic!(
+        art,
+        fdata,
+        display=DISPLAY,
+    )
+    @info "Results: " results["perf"] results["n_cat"]
+end
 
 # Create the confusion matrix from this experiment
+@info "Creating confusion matrix"
 DeepART.plot_confusion_matrix(
     data.test.y,
     results["y_hats"],

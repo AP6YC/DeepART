@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.19.42
+# v0.19.43
 
 using Markdown
 using InteractiveUtils
@@ -127,8 +127,8 @@ PlutoUtils.hint(md"Don't forget to bring a towel")
 # ╔═╡ Cell order:
 # ╟─90927cb7-6d97-46a1-8e3b-37a3cce394b1
 # ╟─9e191ddb-6915-4d90-b214-340702bd3acd
-# ╠═4c9c839d-de70-44b8-b5e9-ec56dbde1918
-# ╠═6b2ec3f0-a4ef-11ee-198f-e7efe4d5ed49
+# ╟─4c9c839d-de70-44b8-b5e9-ec56dbde1918
+# ╟─6b2ec3f0-a4ef-11ee-198f-e7efe4d5ed49
 # ╠═8d637d62-d5c0-4de9-a876-0d0dcac4aaee
 # ╟─9354d864-7504-47ee-b5c0-e34a8fac75c3
 # ╟─33ceb4c7-22fb-4ea9-9c05-7a37975e8e7f
