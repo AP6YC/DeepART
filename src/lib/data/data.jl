@@ -611,7 +611,7 @@ function load_dataset_file(
     filename::AbstractString,
 )
     # Load the data
-    data = readdlm(filename, ',', header=false)
+    data = readdlm(filename, ',', Float32, header=false)
 
     return data
 end
