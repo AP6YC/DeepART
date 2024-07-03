@@ -1,3 +1,14 @@
+"""
+    hebb.jl
+
+# Description
+Deep Hebbian learning experiment drafting script.
+"""
+
+@info "####################################"
+@info "###### NEW HEBBIAN EXPERIMENT ######"
+@info "####################################"
+
 @info "------- Loading dependencies -------"
 using Revise
 using DeepART
@@ -5,23 +16,40 @@ using Flux
 using ProgressMeter
 using Random
 using CUDA
+using UnicodePlots
 # Random.seed!(1234)
 
 # GPU = true
 GPU = false
-
+# "CBB-Aggregation",
+# "CBB-Aggregation",
+# "CBB-Compound",
+# "CBB-flame",
+# "CBB-jain",
+# "CBB-pathbased",
+# "CBB-R15",
+# "CBB-spiral",
+# "face",
+# "flag",
+# "halfring",
+# "iris",
+# "moon",
+# "ring",
+# "spiral",
+# "wave",
+# "wine",
 @info "------- Loading dataset -------"
 data = DeepART.load_one_dataset(
-    "iris",
+    # "iris",
+    # "wine",
+    # "wave",
+    # "face",
     # "mnist",
-    # "usps",
-    # n_train=1000,
-    # n_test=100,
-    # flatten=true,
+    "usps",
+    n_train=10000,
+    n_test=1000,
+    flatten=true,
 )
-# if GPU
-#     data = data |> gpu
-# end
 
 dev_x, dev_y = data.train[1]
 n_input = size(dev_x)[1]
@@ -36,28 +64,44 @@ function get_model(
     bias=false,
 )
     model = Flux.@autosize (n_input,) Chain(
-        DeepART.CC(),
-        Dense(
-            _,
-            20,
-            # 80,
-            sigmoid_fast,
-            bias=bias,
-        ),
+        # DeepART.CC(),
         # Dense(
-        #     _, 128,
+        #     # _, 20,
+        #     _, 40,
         #     sigmoid_fast,
         #     bias=bias,
         # ),
         DeepART.CC(),
         Dense(
-            _,
-            10,
-            # 40,
+            _, 128,
             sigmoid_fast,
             bias=bias,
         ),
+
+        DeepART.CC(),
+        Dense(
+            _, 64,
+            sigmoid_fast,
+            bias=bias,
+        ),
+
         # DeepART.CC(),
+        # Dense(
+        #     _, 10,
+        #     # _, 20,
+        #     sigmoid_fast,
+        #     bias=bias,
+        # ),
+
+        # DeepART.CC(),
+        # Dense(
+        #     _, 10,
+        #     # _, 20,
+        #     sigmoid_fast,
+        #     bias=bias,
+        # ),
+
+        # LAST LAYER
         Dense(
             _, n_class,
             sigmoid_fast,
@@ -67,11 +111,39 @@ function get_model(
     return model
 end
 
+function get_conv_model(size_tuple::Tuple, head_dim::Integer)
+    conv_model = Flux.@autosize (size_tuple,) Chain(
+        DeepART.CCConv(),
+        Chain(
+            Conv((3, 3), _ => 8, sigmoid_fast, bias=false),
+        ),
+        Chain(
+            MaxPool((2,2)),
+            DeepART.CCConv(),
+        ),
+        Chain(
+            Conv((5,5), _ => 16, sigmoid_fast, bias=false),
+        ),
+        Chain(
+            Flux.AdaptiveMaxPool((4, 4)),
+            Flux.flatten,
+            # DeepART.CC(),
+        ),
+        Chain(
+            Dense(_, head_dim, sigmoid_fast, bias=false),
+            vec,
+        ),
+        # DeepART.CC(),
+    )
+    return conv_model
+end
+
+
 @info "------- Constructing model -------"
 model = get_model(n_input, n_class)
-if GPU
-    model = model |> gpu
-end
+
+# size_tuple = (size(data.train.x)[1:3]..., 1)
+# model = DeepART.get_rep_conv(size_tuple, n_class)
 
 @info "------- Defining test -------"
 function test(model, data)
@@ -84,10 +156,8 @@ function test(model, data)
         test_loader = test_loader |> gpu
     end
 
-    # for ix = 1:n_test
     ix = 1
     for (x, _) in test_loader
-        # x, _ = data.test[ix]
         y_hats[ix] = argmax(model(x))
         ix += 1
     end
@@ -97,9 +167,16 @@ function test(model, data)
     end
 
     # @info y_hats
-    @info "unique y_hats:" unique(y_hats)
+    # @info "unique y_hats:" unique(y_hats)
     perf = DeepART.AdaptiveResonance.performance(y_hats, data.test.y)
-    @info "perf = $perf"
+    # @info "perf = $perf"
+    return perf
+end
+
+@info "------- TESTING BEFORE TRAINING -------"
+test(model, data)
+if GPU
+    model = model |> gpu
 end
 
 @info "------- Defining fuzzyart_learn -------"
@@ -109,12 +186,13 @@ end
 
 function fuzzyart_learn_cast(x, W, beta)
     Wy, Wx = size(W)
-    # @info size(W)
     _x = repeat(x', Wy, 1)
     _beta = repeat(beta, 1, Wx)
 
     # result = beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
+    # @info sum(result - W)
+    # @info beta
     return result
 end
 
@@ -131,16 +209,18 @@ function widrow_hoff_cast(weights, target, out, input, eta)
     return result
 end
 
-
 @info "------- Defining train -------"
 function train_hebb(
     chain,
     x,
     y;
     bias=false,
+    # eta = 0.1,
+    # eta = 0.5,
     eta = 0.1,
-    log_epoch = 0,
-    log_ix = 0,
+    beta_d = 0.1,
+    # log_epoch = 0,
+    # log_ix = 0,
     # decay = 0.01,
 )
     params = Flux.params(chain)
@@ -170,24 +250,34 @@ function train_hebb(
         weights = params[ix]
         out = outs[ix]
         input = ins[ix]
-        n_weight = size(weights)[1]
-
 
         if ix == n_layers
-            # for iw = 1:n_weight
-            #     # (target - out)*input
-            #     # weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* (input - weights[iw, :])
-            #     weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* input
-            #     # @info (target[iw] .- out[iw])
-            #     # weights[iw, :] .+= eta .* target[iw] .* (input - weights[iw, :])
-            # end
             weights .+= widrow_hoff_cast(weights, target, out, input, eta)
         else
-            beta = Flux.softmax(out)
-            # for iw = 1:n_weight
-            #     weights[iw, :] = fuzzyart_learn(input, weights[iw, :], beta[iw])
-            # end
-            weights .= fuzzyart_learn_cast(input, weights, beta)
+            if ndims(weights[ix]) == 4
+                full_size = size(weights[ix])
+                n_kernels = full_size[4]
+                kernel_shape = full_size[1:3]
+
+                unfolded = Flux.NNlib.unfold(ins[ix], full_size)
+                local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
+                # Get the averaged and reshaped local output
+                local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
+                # Reshape the weights to be (n_kernels, n_features)
+                local_weight = reshape(weights[ix], :, n_kernels)'
+                # Get the local learning parameter beta
+                # beta = Flux.softmax(local_out)
+                local_soft = Flux.softmax(local_out)
+                beta = beta_d .* local_soft ./ maximum(local_soft)
+                weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
+            else
+                # beta = Flux.softmax(out)
+                # beta = ones(Float32, size(out))
+                # beta = zeros(Float32, size(out))
+                local_soft = Flux.softmax(out)
+                beta = beta_d .* local_soft ./ maximum(local_soft)
+                weights .= fuzzyart_learn_cast(input, weights, beta)
+            end
         end
     end
 
@@ -198,9 +288,16 @@ end
 function train_loop(
     model,
     data;
-    n_epochs = 10
+    eta=0.1,
+    beta_d=0.1,
+    n_epochs = 10,
+    n_vals = 100,
 )
     # n_train = length(data.train)
+    # n_vals = 100
+    interval_vals = Int(floor(n_epochs / n_vals))
+    ix_vals = 1
+    vals = zeros(Float32, n_vals)
     @showprogress for ie = 1:n_epochs
         # train_loader = Flux.DataLoader(data.train, batchsize=-1, shuffle=true)
         train_loader = Flux.DataLoader(data.train, batchsize=-1)
@@ -210,29 +307,85 @@ function train_loop(
 
         ix = 1
         for (x, y) in train_loader
-            train_hebb(model, x, y, log_epoch=ie, log_ix=ix)
+            train_hebb(
+                model, x, y,
+                eta=eta,
+                beta_d=beta_d,
+            )
             ix += 1
+        end
+        if ie % interval_vals == 0
+            vals[ix_vals] = test(model, data)
+            ix_vals += 1
         end
     end
 
-    test(model, data)
+    perf = test(model, data)
+    @info "perf = $perf"
+    return vals
+end
+
+function view_weight(model, index)
+    weights = Flux.params(model)
+    dim = Int(sqrt(size(weights[1])[2] / 2))
+    local_weight = reshape(weights[1][index, :], dim, dim*2)
+    lmax = maximum(local_weight)
+    lmin = minimum(local_weight)
+    DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
 end
 
 @info "------- Training -------"
-train_loop(
+# CUDA.@time train_loop(
+# CUDA.@profile train_loop(
+vals = train_loop(
     model,
     data,
-    n_epochs=3000,
+    # n_epochs=5000,
+    # n_epochs=300,
+    n_epochs=1000,
+    eta=1.0,
+    # eta=0.5,
+    # eta=0.1,
+    beta_d=1.0,
+    # beta_d=0.5,
+    # beta_d=0.1,
 )
 
-@info "------- Post-training analysis -------"
-dev_x, dev_y = data.test[22]
-p = Flux.params(model)
-acts = Flux.activations(model, dev_x)
-n_layers = length(p)
-@info "acts" acts
-@info "inference:" dev_y model(dev_x)
-@info "params:" p
+local_plot = lineplot(
+    vals,
+)
+show(local_plot)
+
+
+# OLD TRAIN LOOP:
+# n_weight = size(weights)[1]
+# if ix == n_layers
+#     # for iw = 1:n_weight
+#     #     # (target - out)*input
+#     #     # weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* (input - weights[iw, :])
+#     #     weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* input
+#     #     # @info (target[iw] .- out[iw])
+#     #     # weights[iw, :] .+= eta .* target[iw] .* (input - weights[iw, :])
+#     # end
+#     weights .+= widrow_hoff_cast(weights, target, out, input, eta)
+# else
+#     beta = Flux.softmax(out)
+#     # for iw = 1:n_weight
+#     #     weights[iw, :] = fuzzyart_learn(input, weights[iw, :], beta[iw])
+#     # end
+#     weights .= fuzzyart_learn_cast(input, weights, beta)
+# end
+
+
+
+# @info "------- Post-training analysis -------"
+# dev_x, dev_y = data.test[22]
+# p = Flux.params(model)
+# acts = Flux.activations(model, dev_x)
+# n_layers = length(p)
+# @info "acts" acts
+# @info "inference:" dev_y model(dev_x)
+# @info "params:" p
 
 
 # n_layers = length(p)

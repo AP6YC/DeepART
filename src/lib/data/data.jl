@@ -667,7 +667,6 @@ A list of the data package names, mainly used as clustering benchmarks.
 """
 const DATA_PACKAGE_NAMES = [
     "CBB-Aggregation",
-    "CBB-Aggregation",
     "CBB-Compound",
     "CBB-flame",
     "CBB-jain",
