@@ -40,15 +40,15 @@ GPU = false
 # "wine",
 @info "------- Loading dataset -------"
 data = DeepART.load_one_dataset(
-    # "iris",
+    "iris",
     # "wine",
     # "wave",
     # "face",
     # "mnist",
-    "usps",
-    n_train=10000,
-    n_test=1000,
-    flatten=true,
+    # "usps",
+    # n_train=1000,
+    # n_test=100,
+    # flatten=true,
 )
 
 dev_x, dev_y = data.train[1]
@@ -64,34 +64,35 @@ function get_model(
     bias=false,
 )
     model = Flux.@autosize (n_input,) Chain(
-        # DeepART.CC(),
-        # Dense(
-        #     # _, 20,
-        #     _, 40,
-        #     sigmoid_fast,
-        #     bias=bias,
-        # ),
         DeepART.CC(),
         Dense(
-            _, 128,
-            sigmoid_fast,
-            bias=bias,
-        ),
-
-        DeepART.CC(),
-        Dense(
-            _, 64,
+            # _, 20,
+            _, 40,
             sigmoid_fast,
             bias=bias,
         ),
 
         # DeepART.CC(),
         # Dense(
-        #     _, 10,
-        #     # _, 20,
+        #     _, 128,
         #     sigmoid_fast,
         #     bias=bias,
         # ),
+
+        # DeepART.CC(),
+        # Dense(
+        #     _, 64,
+        #     sigmoid_fast,
+        #     bias=bias,
+        # ),
+
+        DeepART.CC(),
+        Dense(
+            _, 10,
+            # _, 20,
+            sigmoid_fast,
+            bias=bias,
+        ),
 
         # DeepART.CC(),
         # Dense(
@@ -196,6 +197,20 @@ function fuzzyart_learn_cast(x, W, beta)
     return result
 end
 
+function fuzzyart_learn_cast_cache(x, W, beta, cache)
+    Wy, Wx = size(W)
+    _x = repeat(x', Wy, 1)
+    _beta = repeat(beta, 1, Wx)
+
+    cache[:,:,1] .= _x
+    cache[:,:,2] .= W
+
+    # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
+    result = beta .* minimum(cache, dims=3) + W .* (one(eltype(_beta)) .- _beta)
+    return result
+end
+
+
 function widrow_hoff_cast(weights, target, out, input, eta)
     Wy, Wx = size(weights)
     _input = repeat(input', Wy, 1)
@@ -228,6 +243,12 @@ function train_hebb(
     n_layers = length(params)
     n_acts = length(acts)
 
+    # Caches
+    caches = []
+    for p in params
+        push!(caches, zeros(Float32, (size(p)..., 2)))
+    end
+
     # if bias
     #     n_layers = Int(length(params) / 2)
     # else
@@ -250,6 +271,7 @@ function train_hebb(
         weights = params[ix]
         out = outs[ix]
         input = ins[ix]
+        cache = caches[ix]
 
         if ix == n_layers
             weights .+= widrow_hoff_cast(weights, target, out, input, eta)
@@ -276,7 +298,8 @@ function train_hebb(
                 # beta = zeros(Float32, size(out))
                 local_soft = Flux.softmax(out)
                 beta = beta_d .* local_soft ./ maximum(local_soft)
-                weights .= fuzzyart_learn_cast(input, weights, beta)
+                # weights .= fuzzyart_learn_cast(input, weights, beta)
+                weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
             end
         end
     end
@@ -288,10 +311,11 @@ end
 function train_loop(
     model,
     data;
-    eta=0.1,
-    beta_d=0.1,
-    n_epochs = 10,
     n_vals = 100,
+    n_epochs = 10,
+    kwargs...
+    # eta=0.1,
+    # beta_d=0.1,
 )
     # n_train = length(data.train)
     # n_vals = 100
@@ -308,9 +332,10 @@ function train_loop(
         ix = 1
         for (x, y) in train_loader
             train_hebb(
-                model, x, y,
-                eta=eta,
-                beta_d=beta_d,
+                model, x, y;
+                kwargs...
+                # eta=eta,
+                # beta_d=beta_d,
             )
             ix += 1
         end
@@ -337,25 +362,49 @@ end
 @info "------- Training -------"
 # CUDA.@time train_loop(
 # CUDA.@profile train_loop(
-vals = train_loop(
-    model,
-    data,
-    # n_epochs=5000,
-    # n_epochs=300,
-    n_epochs=1000,
-    eta=1.0,
-    # eta=0.5,
-    # eta=0.1,
-    beta_d=1.0,
-    # beta_d=0.5,
-    # beta_d=0.1,
-)
 
-local_plot = lineplot(
-    vals,
-)
-show(local_plot)
+function profile_test(n_epochs)
+    vals = train_loop(
+        model,
+        data,
+        n_epochs=n_epochs,
+        eta=0.5,
+        beta_d=0.5,
+    )
+end
 
+# compilation
+@profview profile_test(100)
+# pure runtime
+@profview profile_test(1000)
+
+# -----------------------------------------------------------------------------
+# TRAIN/TEST
+# -----------------------------------------------------------------------------
+
+# vals = train_loop(
+#     model,
+#     data,
+#     # n_epochs=5000,
+#     # n_epochs=300,
+#     n_epochs=1000,
+#     # eta=1.0,
+#     eta=0.5,
+#     # eta=0.1,
+#     beta_d=1.0,
+#     # beta_d=0.5,
+#     # beta_d=0.1,
+# )
+
+# local_plot = lineplot(
+#     vals,
+# )
+# show(local_plot)
+
+
+# -----------------------------------------------------------------------------
+# SCRATCH SPACE
+# -----------------------------------------------------------------------------
 
 # OLD TRAIN LOOP:
 # n_weight = size(weights)[1]
