@@ -26,6 +26,9 @@ jobs:
         with:
           version: '1.10'
 
+      # Cache Julia artifacts for faster workflow runs
+      - uses: julia-actions/cache@v2
+
       # Install the Julia dependencies
       - name: Install dependencies
         run: julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd())); Pkg.instantiate()'

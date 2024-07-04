@@ -102,17 +102,17 @@ include("version.jl")
 
 export
     # Constants
-    DEEPART_VERSION,
+    DEEPART_VERSION
 
     # Configs
-    NumConfig,
-    OptConfig,
+    # NumConfig,
+    # OptConfig,
 
     # Pluto utils
-    correct,
-    almost,
-    hint,
-    keep_working
+    # correct,
+    # almost,
+    # hint,
+    # keep_working
 
 # -----------------------------------------------------------------------------
 # PRECOMPILE

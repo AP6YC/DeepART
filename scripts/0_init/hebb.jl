@@ -17,42 +17,47 @@ using ProgressMeter
 using Random
 using CUDA
 using UnicodePlots
-# Random.seed!(1234)
 
-# GPU = true
-GPU = false
-# PROFILE = true
-PROFILE = false
+# perf = 0.9310344827586207
+# perf = 0.9655172413793104
 
+opts = Dict{String, Any}(
+    "gpu" => false,
+    "profile" => false,
+    "dataset" => "wine",
+    # "dataset" => "iris",
+    # "dataset" => "wave",
+    # "dataset" => "face",
+    # "dataset" => "flag",
+    # "dataset" => "halfring",
+    # "dataset" => "moon",
+    # "dataset" => "ring",
+    # "dataset" => "spiral",
+    # "dataset" => "mnist",
+    # "dataset" => "usps",
+    "n_train" => 1000,
+    "n_test" => 100,
+    "flatten" => true,
+    "n_epochs" => 1000,
+    "eta" => 1.0,
+    "beta_d" => 1.0,
+    "rng_seed" => 1234,
+)
 
-# "face",
-# "flag",
-# "halfring",
-# "iris",
-# "moon",
-# "ring",
-# "spiral",
-# "wave",
-# "wine",
+Random.seed!(opts["rng_seed"])
+
 @info "------- Loading dataset -------"
 data = DeepART.load_one_dataset(
-    # "iris",
-    "wine",
-    # "wave",
-    # "face",
-    # "mnist",
-    # "usps",
-    # n_train=1000,
-    # n_test=100,
-    # flatten=true,
+    opts["dataset"],
+    # n_train=opts["n_train"],
+    # n_test=opts["n_test"],
+    # flatten=opts["flatten"],
 )
 
 dev_x, dev_y = data.train[1]
 n_input = size(dev_x)[1]
 n_class = length(unique(data.train.y))
 
-# perf = 0.9310344827586207
-# perf = 0.9655172413793104
 @info "------- Defining model definigion -------"
 function get_model(
     n_input,
@@ -147,6 +152,8 @@ end
 @info "------- Constructing model -------"
 model = get_model(n_input, n_class)
 
+
+
 # size_tuple = (size(data.train.x)[1:3]..., 1)
 # model = DeepART.get_rep_conv(size_tuple, n_class)
 
@@ -156,7 +163,7 @@ function test(model, data)
 
     y_hats = zeros(Int, n_test)
     test_loader = Flux.DataLoader(data.test, batchsize=-1)
-    if GPU
+    if opts["gpu"]
         y_hats = y_hats |> gpu
         test_loader = test_loader |> gpu
     end
@@ -166,8 +173,10 @@ function test(model, data)
         y_hats[ix] = argmax(model(x))
         ix += 1
     end
+    # y_hats = model(data.test.x |> gpu) |> cpu  # first row is prob. of true, second row p(false)
+    # y_hats = argmaxmodel(data.test.x)  # first row is prob. of true, second row p(false)
 
-    if GPU
+    if opts["gpu"]
         y_hats = y_hats |> cpu
     end
 
@@ -180,7 +189,7 @@ end
 
 @info "------- TESTING BEFORE TRAINING -------"
 test(model, data)
-if GPU
+if opts["gpu"]
     model = model |> gpu
 end
 
@@ -205,8 +214,8 @@ function fuzzyart_learn_cast_cache(x, W, beta, cache)
     _x = repeat(x', Wy, 1)
     _beta = repeat(beta, 1, Wx)
 
-    cache[:,:,1] .= _x
-    cache[:,:,2] .= W
+    cache[:, :, 1] .= _x
+    cache[:, :, 2] .= W
 
     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
     result = beta .* minimum(cache, dims=3) + W .* (one(eltype(_beta)) .- _beta)
@@ -232,12 +241,9 @@ function train_hebb(
     chain,
     x,
     y;
-    bias=false,
+    # bias=false,
     eta = 0.1,
     beta_d = 0.1,
-    # log_epoch = 0,
-    # log_ix = 0,
-    # decay = 0.01,
 )
     params = Flux.params(chain)
     acts = Flux.activations(chain, x)
@@ -264,7 +270,7 @@ function train_hebb(
     target = zeros(Float32, size(outs[end]))
     # target = -ones(Float32, size(outs[end]))
     target[y] = 1.0
-    if GPU
+    if opts["gpu"]
         target = target |> gpu
     end
 
@@ -332,7 +338,7 @@ function train_loop(
     for ie = 1:n_epochs
         # train_loader = Flux.DataLoader(data.train, batchsize=-1, shuffle=true)
         train_loader = Flux.DataLoader(data.train, batchsize=-1)
-        if GPU
+        if opts["gpu"]
             train_loader = train_loader |> gpu
         end
 
@@ -386,12 +392,12 @@ function profile_test(n_epochs)
         model,
         data,
         n_epochs=n_epochs,
-        eta=0.5,
-        beta_d=0.5,
+        eta=opts["eta"],
+        beta_d=opts["beta_d"],
     )
 end
 
-if PROFILE
+if opts["profile"]
     # # compilation
     # @profview profile_test(100)
     # # pure runtime
@@ -405,16 +411,9 @@ else
     vals = train_loop(
         model,
         data,
-        # n_epochs=5000,
-        # n_epochs=300,
-        # n_epochs=1000,
-        n_epochs=10000,
-        eta=1.0,
-        # eta=0.5,
-        # eta=0.1,
-        beta_d=1.0,
-        # beta_d=0.5,
-        # beta_d=0.1,
+        n_epochs=opts["n_epochs"],
+        eta=opts["eta"],
+        beta_d=opts["beta_d"],
     )
 
     local_plot = lineplot(
