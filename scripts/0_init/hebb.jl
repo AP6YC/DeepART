@@ -392,10 +392,10 @@ function profile_test(n_epochs)
 end
 
 if PROFILE
-    # compilation
-    @profview profile_test(100)
-    # pure runtime
-    @profview profile_test(1000)
+    # # compilation
+    # @profview profile_test(100)
+    # # pure runtime
+    # @profview profile_test(1000)
 else
 
 # -----------------------------------------------------------------------------
