@@ -21,14 +21,10 @@ using UnicodePlots
 
 # GPU = true
 GPU = false
-# "CBB-Aggregation",
-# "CBB-Aggregation",
-# "CBB-Compound",
-# "CBB-flame",
-# "CBB-jain",
-# "CBB-pathbased",
-# "CBB-R15",
-# "CBB-spiral",
+# PROFILE = true
+PROFILE = false
+
+
 # "face",
 # "flag",
 # "halfring",
@@ -40,8 +36,8 @@ GPU = false
 # "wine",
 @info "------- Loading dataset -------"
 data = DeepART.load_one_dataset(
-    "iris",
-    # "wine",
+    # "iris",
+    "wine",
     # "wave",
     # "face",
     # "mnist",
@@ -85,6 +81,14 @@ function get_model(
         #     sigmoid_fast,
         #     bias=bias,
         # ),
+
+        DeepART.CC(),
+        Dense(
+            _, 20,
+            # _, 20,
+            sigmoid_fast,
+            bias=bias,
+        ),
 
         DeepART.CC(),
         Dense(
@@ -193,7 +197,6 @@ function fuzzyart_learn_cast(x, W, beta)
     # result = beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
     # @info sum(result - W)
-    # @info beta
     return result
 end
 
@@ -230,8 +233,6 @@ function train_hebb(
     x,
     y;
     bias=false,
-    # eta = 0.1,
-    # eta = 0.5,
     eta = 0.1,
     beta_d = 0.1,
     # log_epoch = 0,
@@ -319,17 +320,24 @@ function train_loop(
 )
     # n_train = length(data.train)
     # n_vals = 100
+
     interval_vals = Int(floor(n_epochs / n_vals))
     ix_vals = 1
     vals = zeros(Float32, n_vals)
-    @showprogress for ie = 1:n_epochs
+
+    p = Progress(n_epochs)
+    generate_showvalues(val) = () -> [(:val, val)]
+
+    # @showprogress for ie = 1:n_epochs
+    for ie = 1:n_epochs
         # train_loader = Flux.DataLoader(data.train, batchsize=-1, shuffle=true)
         train_loader = Flux.DataLoader(data.train, batchsize=-1)
         if GPU
             train_loader = train_loader |> gpu
         end
 
-        ix = 1
+        # Iteratively train
+        # ix = 1
         for (x, y) in train_loader
             train_hebb(
                 model, x, y;
@@ -337,12 +345,22 @@ function train_loop(
                 # eta=eta,
                 # beta_d=beta_d,
             )
-            ix += 1
+            # ix += 1
         end
+
+        # Compute validation performance
         if ie % interval_vals == 0
             vals[ix_vals] = test(model, data)
             ix_vals += 1
         end
+
+        # Update progress bar
+        report_value = if ix_vals > 1
+            vals[ix_vals - 1]
+        else
+            0.0
+        end
+        next!(p; showvalues=generate_showvalues(report_value))
     end
 
     perf = test(model, data)
@@ -373,34 +391,37 @@ function profile_test(n_epochs)
     )
 end
 
-# compilation
-@profview profile_test(100)
-# pure runtime
-@profview profile_test(1000)
+if PROFILE
+    # compilation
+    @profview profile_test(100)
+    # pure runtime
+    @profview profile_test(1000)
+else
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST
 # -----------------------------------------------------------------------------
 
-# vals = train_loop(
-#     model,
-#     data,
-#     # n_epochs=5000,
-#     # n_epochs=300,
-#     n_epochs=1000,
-#     # eta=1.0,
-#     eta=0.5,
-#     # eta=0.1,
-#     beta_d=1.0,
-#     # beta_d=0.5,
-#     # beta_d=0.1,
-# )
+    vals = train_loop(
+        model,
+        data,
+        # n_epochs=5000,
+        # n_epochs=300,
+        # n_epochs=1000,
+        n_epochs=10000,
+        eta=1.0,
+        # eta=0.5,
+        # eta=0.1,
+        beta_d=1.0,
+        # beta_d=0.5,
+        # beta_d=0.1,
+    )
 
-# local_plot = lineplot(
-#     vals,
-# )
-# show(local_plot)
-
+    local_plot = lineplot(
+        vals,
+    )
+    show(local_plot)
+end
 
 # -----------------------------------------------------------------------------
 # SCRATCH SPACE
