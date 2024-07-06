@@ -79,6 +79,7 @@ end
 struct Fuzzy{F, M<:AbstractMatrix}
     weight::M
     activation::F
+    cache::Dict{String, Any}
 end
 
 # function Fuzzy(
@@ -97,6 +98,7 @@ function Fuzzy(
     Fuzzy(
         init(out, in),
         activation,
+        Dict{String, Any}(),
     )
 end
 
@@ -106,27 +108,45 @@ Flux.@layer Fuzzy
 #     return norm(min.(x, W), 1) / (1e-3 + norm(W, 1))
 # end
 
+
 function (a::Fuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
 #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
-    xT = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
+    a.cache["xT"] = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
 #   return σ.(a.weight * xT .+ a.bias)
-    # _weight = complement_code(a.weight')
-    # _x = complement_code(xT)
-    _weight = a.weight'
-    # _x = xT
-    _x = repeat(xT, 1, size(_weight, 2))
+    a.cache["_weight"] = a.weight'
+    a.cache["_x"] = repeat(a.cache["xT"], 1, size(a.cache["_weight"], 2))
 
-    xw_norm = sum(abs.(min.(_x, _weight)), dims=1)
-    # @info "sizes: $(size(_x)) $(size(_weight))"
+    a.cache["xw_norm"] = sum(abs.(min.(a.cache["_x"], a.cache["_weight"])), dims=1)
 
-    w_norm = sum(abs.(_weight), dims=1)
-    M = a.activation(vec(xw_norm ./ (ALPHA .+ w_norm)))
+    a.cache["w_norm"] = sum(abs.(a.cache["_weight"]), dims=1)
+    M = a.activation(vec(a.cache["xw_norm"] ./ (ALPHA .+ a.cache["w_norm"])))
     # T = a.activation(vec(xw_norm ./ size(_weight, 1) ./ 2))
     # return T
     return M
-    # return norm(min.(_x, _weight), 1) / (ALPHA + norm(_weight, 1))
 end
+
+# function (a::Fuzzy)(x::AbstractVecOrMat)
+#     Flux._size_check(a, x, 1 => size(a.weight, 2))
+# #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
+#     xT = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
+# #   return σ.(a.weight * xT .+ a.bias)
+#     # _weight = complement_code(a.weight')
+#     # _x = complement_code(xT)
+#     _weight = a.weight'
+#     # _x = xT
+#     _x = repeat(xT, 1, size(_weight, 2))
+
+#     xw_norm = sum(abs.(min.(_x, _weight)), dims=1)
+#     # @info "sizes: $(size(_x)) $(size(_weight))"
+
+#     w_norm = sum(abs.(_weight), dims=1)
+#     M = a.activation(vec(xw_norm ./ (ALPHA .+ w_norm)))
+#     # T = a.activation(vec(xw_norm ./ size(_weight, 1) ./ 2))
+#     # return T
+#     return M
+#     # return norm(min.(_x, _weight), 1) / (ALPHA + norm(_weight, 1))
+# end
 
 function (a::Fuzzy)(x::AbstractArray)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
