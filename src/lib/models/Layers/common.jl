@@ -15,7 +15,8 @@ abstract type CustomLayer end
 # CONSTANTS
 # -----------------------------------------------------------------------------
 
-const ALPHA = 1e-3
+const ALPHA = Float32(1e-3)
+# const ALPHA32 = Float32(1e-3)
 
 # -----------------------------------------------------------------------------
 # FUNCTIONS

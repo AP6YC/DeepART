@@ -30,14 +30,14 @@ using UnicodePlots
 # perf = 0.9655172413793104
 
 opts = Dict{String, Any}(
-    "n_epochs" => 2000,
+    "n_epochs" => 1000,
     # "n_epochs" => 100,
     "eta" => 0.1,
-    # "beta_d" => 0.1,
+    "beta_d" => 0.1,
     # "eta" => 0.2,
     # "beta_d" => 0.2,
     # "eta" => 0.5,
-    "beta_d" => 0.5,
+    # "beta_d" => 0.5,
     # "eta" => 1.0,
     # "beta_d" => 1.0,
     # "beta_d" => 0.001,
@@ -46,21 +46,20 @@ opts = Dict{String, Any}(
     # "final_sigmoid" => true,
     "gpu" => false,
     "profile" => false,
+    # "profile" => true,
+    "model" => "dense",
     # "dataset" => "wine",
-    "dataset" => "iris",
-    "model" => "fuzzy",
-    # "model" => "dense",
+    # "dataset" => "iris",
+    # "model" => "fuzzy",
     # "dataset" => "wave",
     # "dataset" => "face",
     # "dataset" => "flag",
     # "dataset" => "halfring",
     # "dataset" => "moon",
     # "dataset" => "ring",
-    # "dataset" => "spiral",
+    "dataset" => "spiral",
     # "dataset" => "mnist",
     # "dataset" => "usps",
-    # "n_train" => 1000,
-    # "n_test" => 100,
     "n_train" => 10000,
     "n_test" => 10000,
     "flatten" => true,
@@ -80,9 +79,6 @@ data = if opts["dataset"] in ["mnist", "usps"]
 else
     DeepART.load_one_dataset(
         opts["dataset"],
-        # n_train=opts["n_train"],
-        # n_test=opts["n_test"],
-        # flatten=opts["flatten"],
     )
 end
 
@@ -187,40 +183,18 @@ function get_model(
     final_sigmoid=false,
 )
     model = Flux.@autosize (n_input,) Chain(
-        DeepART.CC(),
-        Dense(
-            _, 40,
-            # sigmoid_fast,
-            bias=bias,
-        ),
+        Chain(DeepART.CC()),
+        Dense(_, 64, bias=bias),
 
-        Chain(
-            sigmoid_fast,
-            DeepART.CC(),
-        ),
-        Dense(
-            _, 20,
-            # sigmoid_fast,
-            bias=bias,
-        ),
+        Chain(sigmoid_fast, DeepART.CC()),
+        Dense(_, 32, bias=bias),
 
-        Chain(
-            sigmoid_fast,
-            DeepART.CC(),
-        ),
+        # Chain(sigmoid_fast, DeepART.CC()),
+        # Dense(_, 32, bias=bias),
 
-        Dense(
-            _, 20,
-            # sigmoid_fast,
-            bias=bias,
-        ),
-
-        Chain(
-            # sigmoid_fast,
-            identity,
-        ),
 
         # LAST LAYER
+        Chain(identity),
         Chain(
             sigmoid_fast,
             Dense(
@@ -344,6 +318,7 @@ function fuzzyart_learn_cast(x, W, beta)
 
     # result = beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
+    # @info "sizes" size(W) size(_x) size(_beta)
     result = beta .* min.(_x, W) + W .* (one(eltype(_beta)) .- _beta)
     # @info sum(result - W)
     return result
@@ -410,7 +385,8 @@ function train_hebb(
     # ins = push!([acts[jx] for jx = 1:2:((n_acts-1))], acts[n_acts-1])
     # outs = push!([acts[jx] for jx = 2:2:((n_acts-1))], acts[n_acts])
     ins = [acts[jx] for jx = 1:2:n_acts-1]
-    outs =[acts[jx] for jx = 2:2:n_acts]
+    outs = [acts[jx] for jx = 2:2:n_acts]
+
 
     target = zeros(Float32, size(outs[end]))
     # target = -ones(Float32, size(outs[end]))
@@ -445,11 +421,15 @@ function train_hebb(
                 beta = beta_d .* local_soft ./ maximum(local_soft)
                 weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
             else
-                # beta = Flux.softmax(out)
-                # beta = ones(Float32, size(out))
-                # beta = zeros(Float32, size(out))
                 local_soft = Flux.softmax(out)
+                # max_ind = argmax(local_soft)
+                # local_soft = zeros(Float32, size(out))
+                # local_soft[max_ind] = one(Float32)
+                # @info max_ind
+
                 beta = beta_d .* local_soft ./ maximum(local_soft)
+                # beta = beta_d .* local_soft
+                # @info "precall:" size(beta) size(local_soft) size(input) size(weights)
                 weights .= fuzzyart_learn_cast(input, weights, beta)
                 # weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
             end
@@ -459,86 +439,85 @@ function train_hebb(
     return
 end
 
-function train_hebb_alt(
-    chain,
-    x,
-    y;
-    # bias=false,
-    eta = 0.1,
-    beta_d = 0.1,
-)
-    params = Flux.params(chain)
-    # acts = Flux.activations(chain, x)
-    n_layers = length(params)
-    n_acts = length(acts)
+# function train_hebb_alt(
+#     chain,
+#     x,
+#     y;
+#     # bias=false,
+#     eta = 0.1,
+#     beta_d = 0.1,
+# )
+#     params = Flux.params(chain)
+#     # acts = Flux.activations(chain, x)
+#     n_layers = length(params)
+#     n_acts = length(acts)
 
-    # Caches
-    caches = []
-    for p in params
-        push!(caches, zeros(Float32, (size(p)..., 2)))
-    end
+#     # Caches
+#     caches = []
+#     for p in params
+#         push!(caches, zeros(Float32, (size(p)..., 2)))
+#     end
 
-    # if bias
-    #     n_layers = Int(length(params) / 2)
-    # else
-    #     n_layers = length(params)
-    #     ins = [x, acts[1:end-1]...]
-    #     outs = [acts...]
-    # end
+#     # if bias
+#     #     n_layers = Int(length(params) / 2)
+#     # else
+#     #     n_layers = length(params)
+#     #     ins = [x, acts[1:end-1]...]
+#     #     outs = [acts...]
+#     # end
 
-    # ins = push!([acts[jx] for jx = 1:2:((n_acts-1))], acts[n_acts-1])
-    # outs = push!([acts[jx] for jx = 2:2:((n_acts-1))], acts[n_acts])
-    ins = [acts[jx] for jx = 1:2:n_acts-1]
-    outs =[acts[jx] for jx = 2:2:n_acts]
+#     # ins = push!([acts[jx] for jx = 1:2:((n_acts-1))], acts[n_acts-1])
+#     # outs = push!([acts[jx] for jx = 2:2:((n_acts-1))], acts[n_acts])
+#     ins = [acts[jx] for jx = 1:2:n_acts-1]
+#     outs =[acts[jx] for jx = 2:2:n_acts]
 
-    target = zeros(Float32, size(outs[end]))
-    # target = -ones(Float32, size(outs[end]))
-    target[y] = 1.0
-    if opts["gpu"]
-        target = target |> gpu
-    end
+#     target = zeros(Float32, size(outs[end]))
+#     # target = -ones(Float32, size(outs[end]))
+#     target[y] = 1.0
+#     if opts["gpu"]
+#         target = target |> gpu
+#     end
 
-    for ix = 1:n_layers
-        weights = params[ix]
-        out = outs[ix]
-        input = ins[ix]
-        cache = caches[ix]
+#     for ix = 1:n_layers
+#         weights = params[ix]
+#         out = outs[ix]
+#         input = ins[ix]
+#         cache = caches[ix]
 
-        if ix == n_layers
-            weights .+= widrow_hoff_cast(weights, target, out, input, eta)
-        else
-            if ndims(weights[ix]) == 4
-                full_size = size(weights[ix])
-                n_kernels = full_size[4]
-                kernel_shape = full_size[1:3]
+#         if ix == n_layers
+#             weights .+= widrow_hoff_cast(weights, target, out, input, eta)
+#         else
+#             if ndims(weights[ix]) == 4
+#                 full_size = size(weights[ix])
+#                 n_kernels = full_size[4]
+#                 kernel_shape = full_size[1:3]
 
-                unfolded = Flux.NNlib.unfold(ins[ix], full_size)
-                local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
-                # Get the averaged and reshaped local output
-                local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
-                # Reshape the weights to be (n_kernels, n_features)
-                local_weight = reshape(weights[ix], :, n_kernels)'
-                # Get the local learning parameter beta
-                # beta = Flux.softmax(local_out)
-                local_soft = Flux.softmax(local_out)
-                beta = beta_d .* local_soft ./ maximum(local_soft)
-                weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
-            else
-                # beta = Flux.softmax(out)
-                # beta = ones(Float32, size(out))
-                # beta = zeros(Float32, size(out))
-                local_soft = Flux.softmax(out)
-                beta = beta_d .* local_soft ./ maximum(local_soft)
-                # beta = local_soft
-                # @info beta_d
-                # weights .= fuzzyart_learn_cast(input, weights, beta)
-                weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
-            end
-        end
-    end
+#                 unfolded = Flux.NNlib.unfold(ins[ix], full_size)
+#                 local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
+#                 # Get the averaged and reshaped local output
+#                 local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
+#                 # Reshape the weights to be (n_kernels, n_features)
+#                 local_weight = reshape(weights[ix], :, n_kernels)'
+#                 # Get the local learning parameter beta
+#                 # beta = Flux.softmax(local_out)
+#                 local_soft = Flux.softmax(local_out)
+#                 beta = beta_d .* local_soft ./ maximum(local_soft)
+#                 weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
+#             else
+#                 # beta = Flux.softmax(out)
+#                 # beta = ones(Float32, size(out))
+#                 # beta = zeros(Float32, size(out))
+#                 local_soft = Flux.softmax(out)
+#                 # beta = beta_d .* local_soft ./ maximum(local_soft)
+#                 beta = beta_d .* local_soft ./ maximum(local_soft)
+#                 # weights .= fuzzyart_learn_cast(input, weights, beta)
+#                 weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
+#             end
+#         end
+#     end
 
-    return
-end
+#     return
+# end
 
 @info "------- Defining loop -------"
 function train_loop(
@@ -547,21 +526,18 @@ function train_loop(
     n_vals = 100,
     n_epochs = 10,
     kwargs...
-    # eta=0.1,
-    # beta_d=0.1,
 )
-    # n_train = length(data.train)
-    # n_vals = 100
-
+    # Set up the validation intervals
     local_n_vals = min(n_vals, n_epochs)
     interval_vals = Int(floor(n_epochs / local_n_vals))
     ix_vals = 1
     vals = zeros(Float32, local_n_vals)
 
+    # Set up the epochs progress bar
     p = Progress(n_epochs)
     generate_showvalues(val) = () -> [(:val, val)]
 
-    # @showprogress for ie = 1:n_epochs
+    # Iterate over each epoch
     for ie = 1:n_epochs
         # train_loader = Flux.DataLoader(data.train, batchsize=-1, shuffle=true)
         train_loader = Flux.DataLoader(data.train, batchsize=-1)
@@ -570,15 +546,11 @@ function train_loop(
         end
 
         # Iteratively train
-        # ix = 1
         for (x, y) in train_loader
             train_hebb(
                 model, x, y;
                 kwargs...
-                # eta=eta,
-                # beta_d=beta_d,
             )
-            # ix += 1
         end
 
         # Compute validation performance
@@ -625,10 +597,10 @@ function profile_test(n_epochs)
 end
 
 if opts["profile"]
-    # # compilation
-    # @profview profile_test(100)
-    # # pure runtime
-    # @profview profile_test(1000)
+    # compilation
+    @profview profile_test(10)
+    # pure runtime
+    @profview profile_test(100)
 else
 
 # -----------------------------------------------------------------------------

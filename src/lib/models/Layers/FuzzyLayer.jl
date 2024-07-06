@@ -112,19 +112,27 @@ Flux.@layer Fuzzy
 function (a::Fuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
 #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
-    a.cache["xT"] = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
+    # a.cache["xT"] = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
+    # @info typeof(x)
+    a.cache["xT"] = x
 #   return σ.(a.weight * xT .+ a.bias)
     a.cache["_weight"] = a.weight'
     a.cache["_x"] = repeat(a.cache["xT"], 1, size(a.cache["_weight"], 2))
 
     a.cache["xw_norm"] = sum(abs.(min.(a.cache["_x"], a.cache["_weight"])), dims=1)
+    # a.cache["xw_norm"] = sum(min.(a.cache["_x"], a.cache["_weight"]), dims=1)
 
     a.cache["w_norm"] = sum(abs.(a.cache["_weight"]), dims=1)
-    M = a.activation(vec(a.cache["xw_norm"] ./ (ALPHA .+ a.cache["w_norm"])))
+    # M = a.activation(vec(a.cache["xw_norm"] ./ (ALPHA .+ a.cache["w_norm"])))
+
     # T = a.activation(vec(xw_norm ./ size(_weight, 1) ./ 2))
-    # return T
-    return M
+    T = a.activation(vec(a.cache["xw_norm"] ./ size(a.cache["_weight"], 1) ./ 2))
+    return T
+    # return M
 end
+
+# Tell Flux that not every gosh darn cached parameter is trainable
+Flux.trainable(a::Fuzzy) = (; W=a.weight)
 
 # function (a::Fuzzy)(x::AbstractVecOrMat)
 #     Flux._size_check(a, x, 1 => size(a.weight, 2))
