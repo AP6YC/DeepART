@@ -114,10 +114,10 @@ function (a::Fuzzy)(x::AbstractVecOrMat)
 #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
     # a.cache["xT"] = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
     # @info typeof(x)
-    a.cache["xT"] = x
+    a.cache["xT"] .= x
 #   return σ.(a.weight * xT .+ a.bias)
-    a.cache["_weight"] = a.weight'
-    a.cache["_x"] = repeat(a.cache["xT"], 1, size(a.cache["_weight"], 2))
+    a.cache["_weight"] .= a.weight'
+    a.cache["_x"] .= repeat(a.cache["xT"], 1, size(a.cache["_weight"], 2))
 
     a.cache["xw_norm"] = sum(abs.(min.(a.cache["_x"], a.cache["_weight"])), dims=1)
     # a.cache["xw_norm"] = sum(min.(a.cache["_x"], a.cache["_weight"]), dims=1)

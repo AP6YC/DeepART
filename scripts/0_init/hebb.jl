@@ -193,7 +193,6 @@ function get_model(
         # Chain(sigmoid_fast, DeepART.CC()),
         # Dense(_, 32, bias=bias),
 
-
         # LAST LAYER
         Chain(identity),
         Chain(
