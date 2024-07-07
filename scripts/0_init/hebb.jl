@@ -41,13 +41,13 @@ opts = Dict{String, Any}(
 
     "eta" => 0.1,
     # "beta_d" => 0.0,
-    "beta_d" => 0.1,
+    # "beta_d" => 0.1,
     # "eta" => 0.2,
     # "beta_d" => 0.2,
     # "eta" => 0.5,
     # "beta_d" => 0.5,
     # "eta" => 1.0,
-    # "beta_d" => 1.0,
+    "beta_d" => 1.0,
     # "beta_d" => 0.001,
 
     "final_sigmoid" => false,
@@ -344,7 +344,7 @@ function fuzzyart_learn_cast_cache(x, W, beta, cache)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
     _beta = repeat(beta, 1, Wx)
-    # @info "stuff:" _x _beta size(_x) size(_beta) size(W)
+
     cache[:, :, 1] .= _x
     cache[:, :, 2] .= W
 
@@ -418,7 +418,6 @@ function train_hebb(
             weights .+= widrow_hoff_cast(weights, target, out, input, eta)
         else
             if ndims(weights) == 4
-                # @info "doing the convolution one"
                 # full_size = size(weights[ix])
                 full_size = size(weights)
                 n_kernels = full_size[4]
@@ -437,9 +436,6 @@ function train_hebb(
                 # beta = Flux.softmax(local_out)
                 local_soft = Flux.softmax(local_out)
                 beta = beta_d .* local_soft ./ maximum(local_soft)
-
-                # @info "before conv:" size(local_in) size(local_weight) size(beta)
-                # @info "weights size before" size(weights)
 
                 # weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
                 local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
@@ -621,10 +617,12 @@ end
 # CUDA.@profile train_loop(
 if opts["profile"]
     @info "------- Profiling -------"
-    # compilation
-    @profview profile_test(10)
-    # pure runtime
-    @profview profile_test(100)
+    @static if @isdefined(@profview)
+        # compilation
+        @profview profile_test(10)
+        # pure runtime
+        @profview profile_test(100)
+    end
 else
     @info "------- Training -------"
     vals = train_loop(
