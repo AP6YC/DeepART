@@ -30,8 +30,8 @@ using UnicodePlots
 # perf = 0.9655172413793104
 
 opts = Dict{String, Any}(
-    "n_epochs" => 1000,
-    # "n_epochs" => 100,
+    # "n_epochs" => 1000,
+    "n_epochs" => 100,
     "eta" => 0.1,
     "beta_d" => 0.1,
     # "eta" => 0.2,
@@ -44,6 +44,7 @@ opts = Dict{String, Any}(
     # "beta_d" => 0.0,
     "final_sigmoid" => false,
     # "final_sigmoid" => true,
+    "immediate" => true,
     "gpu" => false,
     "profile" => false,
     # "profile" => true,
@@ -439,85 +440,80 @@ function train_hebb(
     return
 end
 
-# function train_hebb_alt(
-#     chain,
-#     x,
-#     y;
-#     # bias=false,
-#     eta = 0.1,
-#     beta_d = 0.1,
-# )
-#     params = Flux.params(chain)
-#     # acts = Flux.activations(chain, x)
-#     n_layers = length(params)
-#     n_acts = length(acts)
+function train_hebb_immediate(
+    chain,
+    x,
+    y;
+    # bias=false,
+    eta = 0.1,
+    beta_d = 0.1,
+)
+    params = Flux.params(chain)
+    # acts = Flux.activations(chain, x)
+    n_layers = length(params)
+    n_acts = length(acts)
 
-#     # Caches
-#     caches = []
-#     for p in params
-#         push!(caches, zeros(Float32, (size(p)..., 2)))
-#     end
+    # if bias
+    #     n_layers = Int(length(params) / 2)
+    # else
+    #     n_layers = length(params)
+    #     ins = [x, acts[1:end-1]...]
+    #     outs = [acts...]
+    # end
 
-#     # if bias
-#     #     n_layers = Int(length(params) / 2)
-#     # else
-#     #     n_layers = length(params)
-#     #     ins = [x, acts[1:end-1]...]
-#     #     outs = [acts...]
-#     # end
+    # ins = push!([acts[jx] for jx = 1:2:((n_acts-1))], acts[n_acts-1])
+    # outs = push!([acts[jx] for jx = 2:2:((n_acts-1))], acts[n_acts])
+    ins = [acts[jx] for jx = 1:2:n_acts-1]
+    outs =[acts[jx] for jx = 2:2:n_acts]
 
-#     # ins = push!([acts[jx] for jx = 1:2:((n_acts-1))], acts[n_acts-1])
-#     # outs = push!([acts[jx] for jx = 2:2:((n_acts-1))], acts[n_acts])
-#     ins = [acts[jx] for jx = 1:2:n_acts-1]
-#     outs =[acts[jx] for jx = 2:2:n_acts]
+    target = zeros(Float32, size(outs[end]))
+    # target = -ones(Float32, size(outs[end]))
+    target[y] = 1.0
+    if opts["gpu"]
+        target = target |> gpu
+    end
 
-#     target = zeros(Float32, size(outs[end]))
-#     # target = -ones(Float32, size(outs[end]))
-#     target[y] = 1.0
-#     if opts["gpu"]
-#         target = target |> gpu
-#     end
+    for ix = 1:n_layers
+        weights = params[ix]
+        # out = outs[ix]
+        if ix == 1
+            input = x
+            out = chain[1][input]
+        else
+            out = chain[ix][out]
+        end
 
-#     for ix = 1:n_layers
-#         weights = params[ix]
-#         out = outs[ix]
-#         input = ins[ix]
-#         cache = caches[ix]
+        input = ins[ix]
 
-#         if ix == n_layers
-#             weights .+= widrow_hoff_cast(weights, target, out, input, eta)
-#         else
-#             if ndims(weights[ix]) == 4
-#                 full_size = size(weights[ix])
-#                 n_kernels = full_size[4]
-#                 kernel_shape = full_size[1:3]
+        if ix == n_layers
+            weights .+= widrow_hoff_cast(weights, target, out, input, eta)
+        else
+            if ndims(weights[ix]) == 4
+                full_size = size(weights[ix])
+                n_kernels = full_size[4]
+                kernel_shape = full_size[1:3]
 
-#                 unfolded = Flux.NNlib.unfold(ins[ix], full_size)
-#                 local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
-#                 # Get the averaged and reshaped local output
-#                 local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
-#                 # Reshape the weights to be (n_kernels, n_features)
-#                 local_weight = reshape(weights[ix], :, n_kernels)'
-#                 # Get the local learning parameter beta
-#                 # beta = Flux.softmax(local_out)
-#                 local_soft = Flux.softmax(local_out)
-#                 beta = beta_d .* local_soft ./ maximum(local_soft)
-#                 weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
-#             else
-#                 # beta = Flux.softmax(out)
-#                 # beta = ones(Float32, size(out))
-#                 # beta = zeros(Float32, size(out))
-#                 local_soft = Flux.softmax(out)
-#                 # beta = beta_d .* local_soft ./ maximum(local_soft)
-#                 beta = beta_d .* local_soft ./ maximum(local_soft)
-#                 # weights .= fuzzyart_learn_cast(input, weights, beta)
-#                 weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
-#             end
-#         end
-#     end
+                unfolded = Flux.NNlib.unfold(ins[ix], full_size)
+                local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
+                # Get the averaged and reshaped local output
+                local_out = reshape(mean(outs[ix], dims=(1, 2)), n_kernels)
+                # Reshape the weights to be (n_kernels, n_features)
+                local_weight = reshape(weights[ix], :, n_kernels)'
+                # Get the local learning parameter beta
+                # beta = Flux.softmax(local_out)
+                local_soft = Flux.softmax(local_out)
+                beta = beta_d .* local_soft ./ maximum(local_soft)
+                weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
+            else
+                local_soft = Flux.softmax(out)
+                beta = beta_d .* local_soft ./ maximum(local_soft)
+                weights .= fuzzyart_learn_cast(input, weights, beta)
+            end
+        end
+    end
 
-#     return
-# end
+    return
+end
 
 @info "------- Defining loop -------"
 function train_loop(
@@ -547,10 +543,17 @@ function train_loop(
 
         # Iteratively train
         for (x, y) in train_loader
-            train_hebb(
-                model, x, y;
-                kwargs...
-            )
+            if opts["immediate"]
+                train_hebb_immediate(
+                    model, x, y;
+                    kwargs...
+                )
+            else
+                train_hebb(
+                    model, x, y;
+                    kwargs...
+                )
+            end
         end
 
         # Compute validation performance
