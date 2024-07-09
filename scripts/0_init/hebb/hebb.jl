@@ -17,8 +17,15 @@ Deep Hebbian learning experiment drafting script.
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
+@info "------- Loading dependencies -------"
+using Flux
+using Random
+using UnicodePlots
+
+@info "------- Loading definitions -------"
 include("definitions.jl")
 
+@info "------- Loading Hebb module -------"
 import .Hebb
 
 # perf = 0.9310344827586207
@@ -29,16 +36,17 @@ import .Hebb
 # -----------------------------------------------------------------------------
 
 opts = Dict{String, Any}(
-    "n_epochs" => 1000,
+    # "n_epochs" => 1000,
     # "n_epochs" => 200,
-    # "n_epochs" => 10,
+    "n_epochs" => 10,
+    # "n_epochs" => 50,
 
     "model_opts" => Dict{String, Any}(
         # "immediate" => true,
         "immediate" => false,
 
         "bias" => false,
-        "eta" => 0.1,
+        "eta" => 0.05,
         # "beta_d" => 0.0,
         # "beta_d" => 0.1,
         # "eta" => 0.2,
@@ -56,28 +64,30 @@ opts = Dict{String, Any}(
 
         # "model" => "dense",
         # "model" => "small_dense",
-        "model" => "fuzzy",
+        # "model" => "fuzzy",
         # "model" => "conv",
+        # "model" => "fuzzy_new",
         # "model" => "dense_new",
+        "model" => "conv_new",
 
-        "init" => Flux.rand32,
-        # "init" => Flux.glorot_uniform,
+        # "init" => Flux.rand32,
+        "init" => Flux.glorot_uniform,
 
         # "positive_weights" => true,
         "positive_weights" => false,
 
         # "beta_normalize" => false,
         "beta_normalize" => true,
-        "beta_rule" => "wta",
+        # "beta_rule" => "wta",
         # "beta_rule" => "contrast",
-        # "beta_rule" => "softmax",
+        "beta_rule" => "softmax",
     ),
 
     "profile" => false,
     # "profile" => true,
 
     # "dataset" => "wine",
-    "dataset" => "iris",
+    # "dataset" => "iris",
     # "dataset" => "wave",
     # "dataset" => "face",
     # "dataset" => "flag",
@@ -86,9 +96,9 @@ opts = Dict{String, Any}(
     # "dataset" => "ring",
     # "dataset" => "spiral",
     # "dataset" => "mnist",
-    # "dataset" => "usps",
+    "dataset" => "usps",
 
-    "n_train" => 10000,
+    "n_train" => 50000,
     "n_test" => 10000,
     # "flatten" => true,
     "rng_seed" => 1235,
@@ -97,7 +107,6 @@ opts = Dict{String, Any}(
 # Correct for Float32 types
 opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
 opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
-
 
 Random.seed!(opts["rng_seed"])
 
@@ -127,8 +136,8 @@ datasets = Dict(
 data = Hebb.get_data(opts)
 
 dev_x, dev_y = data.train[1]
-# n_input = size(dev_x)[1]
-# n_class = length(unique(data.train.y))
+n_input = size(dev_x)[1]
+n_class = length(unique(data.train.y))
 
 # -----------------------------------------------------------------------------
 # MODEL
@@ -147,7 +156,7 @@ model = Hebb.HebbModel(data, opts["model_opts"])
 if model.opts["gpu"]
     model.model = model.model |> gpu
 end
-test(model, data)
+Hebb.test(model, data)
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST

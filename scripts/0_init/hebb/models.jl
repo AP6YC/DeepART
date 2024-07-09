@@ -1,23 +1,36 @@
+"""
+    models.jl
+
+# Description
+Collection of model definitions for the Hebb module.
+"""
+
+# -----------------------------------------------------------------------------
+# TYPE ALIASES
+# -----------------------------------------------------------------------------
 
 const ModelOpts = Dict{String, Any}
+
+# -----------------------------------------------------------------------------
+# MODEL CONSTRUCTORS
+# -----------------------------------------------------------------------------
 
 function get_conv_model(
     size_tuple::Tuple,
     head_dim::Integer,
-    opts;
-    # bias::Bool = false,
-    # final_sigmoid::Bool = false,
+    opts::ModelOpts
 )
     conv_model = Flux.@autosize (size_tuple,) Chain(
         # CC layer
-        Chain(DeepART.CCConv()),
+        Chain(
+            DeepART.CCConv()
+        ),
 
         # Conv layer
         Chain(
             Conv(
                 (3, 3), _ => 8,
                 # sigmoid_fast,
-                # bias=false,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
@@ -55,7 +68,10 @@ function get_conv_model(
         ),
 
         # Last layers
-        Chain(identity),
+        Chain(
+            # identity,
+            sigmoid_fast,
+        ),
         Chain(
             Dense(
                 _, head_dim,
@@ -66,32 +82,37 @@ function get_conv_model(
             ),
             vec,
         ),
-        # DeepART.CC(),
     )
     return conv_model
 end
 
 function get_fuzzy_model(
-    n_input,
-    n_class,
-    opts;
-    # bias=false,
-    # final_sigmoid=false,
+    n_input::Integer,
+    n_class::Integer,
+    opts::ModelOpts
 )
     model = Flux.@autosize (n_input,) Chain(
         DeepART.CC(),
-        DeepART.Fuzzy(_, 40,),
-        Chain(sigmoid_fast, DeepART.CC()),
-        DeepART.Fuzzy(_, 20,
+        DeepART.Fuzzy(
+            _, 40,
             init=opts["init"],
         ),
-        Chain(sigmoid_fast, DeepART.CC()),
-        DeepART.Fuzzy(_, 20),
-        Chain(identity),
+        Chain(
+            sigmoid_fast,
+            DeepART.CC()
+        ),
+        DeepART.Fuzzy(
+            _, 20,
+            init=opts["init"],
+        ),
 
         # LAST LAYER
         Chain(
+            # identity,
             sigmoid_fast,
+        ),
+        Chain(
+            # sigmoid_fast,
             Dense(
                 _, n_class,
                 # sigmoid_fast,
@@ -103,9 +124,9 @@ function get_fuzzy_model(
     return model
 end
 
-function get_model(
-    n_input,
-    n_class,
+function get_dense_model(
+    n_input::Integer,
+    n_class::Integer,
     opts::ModelOpts,
 )
     model = Flux.@autosize (n_input,) Chain(
@@ -130,10 +151,8 @@ function get_model(
             sigmoid_fast,
         ),
         Chain(
-            # sigmoid_fast,
             Dense(
                 _, n_class,
-                # sigmoid_fast,
                 opts["final_sigmoid"] ? sigmoid_fast : identity,
                 bias=opts["bias"],
                 # init=Flux.identity_init,
@@ -145,11 +164,10 @@ function get_model(
 end
 
 
-
 function get_dense_deepart_layer(
     n_in::Integer,
     n_out::Integer,
-    opts;
+    opts::ModelOpts;
     first_layer::Bool = false,
 )
     return Flux.@autosize (n_in,) Chain(
@@ -159,11 +177,46 @@ function get_dense_deepart_layer(
         ),
         Dense(
             _, n_out,
-            # bias=bias,
             bias = opts["bias"],
-            # init=Flux.identity_init
-            # init=rand,
-            init=opts["init"],
+            init = opts["init"],
+        ),
+    )
+end
+
+struct RandomTransform
+    chain::Dense
+end
+
+function RandomTransform(
+    n_in::Integer,
+    n_out::Integer,
+)
+    return RandomTransform(Dense(n_in, n_out, bias=false))
+end
+
+function (m::RandomTransform)(x)
+    return m.chain(x)
+end
+
+Flux.@layer RandomTransform
+
+Flux.trainable(m::RandomTransform) = ()
+
+function get_fuzzy_deepart_layer(
+    n_in::Integer,
+    n_out::Integer,
+    opts::ModelOpts;
+    first_layer::Bool = false,
+)
+    return Flux.@autosize (n_in,) Chain(
+        Chain(
+            RandomTransform(_, 16),
+            # first_layer ? identity : sigmoid_fast,
+            DeepART.CC(),
+        ),
+        DeepART.Fuzzy(
+            _, n_out,
+            init = opts["init"],
         ),
     )
 end
@@ -171,8 +224,7 @@ end
 function get_widrow_hoff_layer(
     n_in::Integer,
     n_out::Integer,
-    opts;
-    # bias::Bool = false,
+    opts::ModelOpts,
 )
     return Flux.@autosize (n_in,) Chain(
         Chain(
@@ -181,18 +233,16 @@ function get_widrow_hoff_layer(
         ),
         Dense(
             _, n_out,
-            bias=opts["bias"],
-            # init=Flux.identity_init
-            # init=rand,
-            init=opts["init"],
+            bias = opts["bias"],
+            init = opts["init"],
         ),
     )
 end
 
-function get_new_dense(
-    n_input,
-    n_class,
-    opts,
+function get_new_dense_model(
+    n_input::Integer,
+    n_class::Integer,
+    opts::ModelOpts,
 )
     return Chain(
         get_dense_deepart_layer(n_input, 64, opts, first_layer=true),
@@ -201,17 +251,121 @@ function get_new_dense(
     )
 end
 
+function get_new_fuzzy_model(
+    n_input::Integer,
+    n_class::Integer,
+    opts::ModelOpts,
+)
+    return Chain(
+        get_fuzzy_deepart_layer(n_input, 64, opts, first_layer=true),
+        get_fuzzy_deepart_layer(64, 32, opts),
+        get_widrow_hoff_layer(32, n_class, opts)
+    )
+end
+
+function get_conv_layer(
+    n_in::Integer,
+    n_out::Integer,
+    kernel::Tuple,
+    opts::ModelOpts;
+    first_layer::Bool = false,
+    n_pool::Tuple = (),
+)
+    return Flux.@autosize (n_in,) Chain(
+        # CC layer
+        Chain(
+            first_layer ? identity :
+                Chain(
+                    MaxPool(n_pool),
+                    sigmoid_fast,
+                ),
+            DeepART.CCConv()
+        ),
+
+        # Conv layer
+        Chain(
+            Conv(
+                kernel, _ => n_out,
+                # sigmoid_fast,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+    )
+end
+
+function get_inc_conv_model(
+    size_tuple::Tuple,
+    head_dim::Integer,
+    opts::ModelOpts
+)
+    conv_model = Flux.@autosize (size_tuple,) Chain(
+        # get_conv_layer(, 8, (3, 3), opts, first_layer=true),
+        Chain(
+            Chain(
+                DeepART.CCConv()
+            ),
+            Conv(
+                (3, 3), _ => 8,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+        Chain(
+            Chain(
+                MaxPool((2,2)),
+                sigmoid_fast,
+                DeepART.CCConv(),
+            ),
+            Conv(
+                (5,5), _ => 16,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+        Chain(
+            Chain(
+                Flux.AdaptiveMaxPool((4, 4)),
+                Flux.flatten,
+                sigmoid_fast,
+                DeepART.CC(),
+            ),
+            Dense(_, 32,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+        # Last layers
+        Chain(
+            Chain(
+                # identity,
+                sigmoid_fast,
+            ),
+            Chain(
+                Dense(
+                    _, head_dim,
+                    opts["final_sigmoid"] ? sigmoid_fast : identity,
+                    bias=opts["bias"],
+                ),
+                vec,
+            ),
+        ),
+    )
+    return conv_model
+end
 
 
 const MODEL_MAP = Dict(
     "fuzzy" => get_fuzzy_model,
     "conv" => get_conv_model,
-    "dense" => get_model,
-    "dense_new" => get_new_dense,
+    "dense" => get_dense_model,
+    "dense_new" => get_new_dense_model,
+    "fuzzy_new" => get_new_fuzzy_model,
+    "conv_new" => get_inc_conv_model,
 )
 
 function construct_model(
-    data,
+    data::DeepART.DataSplit,
     opts::ModelOpts,
 )
     # Sanitize model option
@@ -225,7 +379,7 @@ function construct_model(
     n_class = length(unique(data.train.y))
 
     # If the convolutional model is selected, create a convolution input tuple
-    local_input_size = if opts["model"] == "conv"
+    local_input_size = if opts["model"] in ["conv", "conv_new"]
         (size(data.train.x)[1:3]..., 1)
     else
         n_input
@@ -237,7 +391,6 @@ function construct_model(
         n_class,
         opts,
     )
-
 
     # Enforce positive weights if necessary
     if opts["positive_weights"]

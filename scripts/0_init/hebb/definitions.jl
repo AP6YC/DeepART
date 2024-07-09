@@ -18,8 +18,9 @@ using Flux
 using ProgressMeter
 using Random
 using CUDA
-using UnicodePlots
+# using UnicodePlots
 using StatsBase: mean
+using NumericalTypeAliases
 
 # -----------------------------------------------------------------------------
 # INCLUDES
@@ -36,7 +37,7 @@ function get_data(opts::SimOpts)
             n_train=opts["n_train"],
             n_test=opts["n_test"],
             # flatten=opts["flatten"],
-            flatten = opts["model"] != "conv",
+            flatten = !(opts["model_opts"]["model"] in ["conv", "conv_new"]),
         )
     else
         DeepART.load_one_dataset(
@@ -70,8 +71,11 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
-
-function get_incremental_activations(chain, x)
+function get_incremental_activations(
+    chain::Flux.Chain,
+    # x::RealVector,
+    x,
+)
     # params
     n_layers = length(chain)
 
@@ -99,6 +103,8 @@ function train_new_hebb(
 
     # Get the correct inputs and outputs for actuall learning
     ins, outs = get_incremental_activations(chain, x)
+
+    # @info "out sizes:" size(out)
 
     # Create the target vector
     target = zeros(Float32, size(outs[end]))
@@ -172,19 +178,16 @@ function fuzzyart_learn(x, W, beta)
 end
 
 function fuzzyart_learn_cast(x, W, beta)
+    # @info "raw sizes" size(x) size(W) size(beta)
     Wy, Wx = size(W)
-    # @info "sizes:" size(x) size(W) size(beta)
     _x = repeat(x', Wy, 1)
-    # @info _x
     # _x = repeat(x, 1, Wx)
     _beta = repeat(beta, 1, Wx)
 
     # result = beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
-    # @info "sizes" size(W) size(_x) size(_beta)
+    # @info "sizes" size(_x) size(W) size(_beta)
     result = beta .* min.(_x, W) + W .* (one(eltype(_beta)) .- _beta)
-    # @info "result is size" size(result)
-    # @info sum(result - W)
     return result
 end
 
@@ -202,8 +205,6 @@ function fuzzyart_learn_cast_cache(x, W, beta, cache)
     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
     # result = beta .* minimum(cache, dims=3) + W .* (one(eltype(_beta)) .- _beta)
     result = beta .* min.(_x, W) + W .* (one(eltype(_beta)) .- _beta)
-    # @info sum(beta .* minimum(cache, dims=3) - W .* (one(eltype(_beta)) .- _beta))
-    # @info sum(result - W)
     return result
 end
 
@@ -393,7 +394,7 @@ function train_hebb_immediate(
                 out,
                 weights,
                 target,
-                model.opts["eta"],
+                model.opts,
             )
         # Otherwise, use the unsupervised rule(s)
         else
@@ -401,7 +402,7 @@ function train_hebb_immediate(
                 input,
                 out,
                 weights,
-                model.opts["beta_d"],
+                model.opts,
             )
         end
     end
@@ -437,7 +438,7 @@ function train_loop(
 
         # Iteratively train
         for (x, y) in train_loader
-            if model.opts["model"] == "dense_new"
+            if model.opts["model"] in ["dense_new", "fuzzy_new", "conv_new"]
                 Hebb.train_new_hebb(model, x, y)
             elseif model.opts["immediate"]
                 train_hebb_immediate(model, x, y)
