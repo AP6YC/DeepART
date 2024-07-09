@@ -39,14 +39,14 @@ opts = Dict{String, Any}(
 
         "bias" => false,
         "eta" => 0.1,
-        "beta_d" => 0.0,
+        # "beta_d" => 0.0,
         # "beta_d" => 0.1,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
         # "beta_d" => 0.5,
         # "eta" => 1.0,
-        # "beta_d" => 1.0,
+        "beta_d" => 1.0,
         # "beta_d" => 0.001,
 
         "final_sigmoid" => false,
@@ -56,16 +56,18 @@ opts = Dict{String, Any}(
 
         # "model" => "dense",
         # "model" => "small_dense",
-        # "model" => "fuzzy",
+        "model" => "fuzzy",
         # "model" => "conv",
-        "model" => "dense_new",
+        # "model" => "dense_new",
 
-        # "init" => Flux.rand32,
-        "init" => Flux.glorot_uniform,
+        "init" => Flux.rand32,
+        # "init" => Flux.glorot_uniform,
 
         # "positive_weights" => true,
         "positive_weights" => false,
 
+        # "beta_normalize" => false,
+        "beta_normalize" => true,
         "beta_rule" => "wta",
         # "beta_rule" => "contrast",
         # "beta_rule" => "softmax",
@@ -121,7 +123,7 @@ datasets = Dict(
     ]
 )
 
-
+@info "------- Loading dataset -------"
 data = Hebb.get_data(opts)
 
 dev_x, dev_y = data.train[1]

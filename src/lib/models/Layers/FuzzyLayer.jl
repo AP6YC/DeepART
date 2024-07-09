@@ -123,13 +123,12 @@ function (a::Fuzzy)(x::AbstractVecOrMat)
     # a.cache["xw_norm"] = sum(min.(a.cache["_x"], a.cache["_weight"]), dims=1)
 
     a.cache["w_norm"] = sum(abs.(a.cache["_weight"]), dims=1)
-    M = a.activation(vec(a.cache["xw_norm"] ./ (ALPHA .+ a.cache["w_norm"])))
-    # @info M
-    return M
+    # M = a.activation(vec(a.cache["xw_norm"] ./ (ALPHA .+ a.cache["w_norm"])))
+    # return M
 
     # T = a.activation(vec(xw_norm ./ size(_weight, 1) ./ 2))
-    # T = a.activation(vec(a.cache["xw_norm"] ./ (size(a.cache["_weight"], 1) ./ 2)))
-    # return T
+    T = a.activation(vec(a.cache["xw_norm"] ./ (size(a.cache["_weight"], 1) ./ 2.0f0)))
+    return T
 end
 
 # Tell Flux that not every gosh darn cached parameter is trainable

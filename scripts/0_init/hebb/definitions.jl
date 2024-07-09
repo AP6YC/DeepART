@@ -1,11 +1,17 @@
+"""
+    definitions.jl
+
+# Description
+Definitions for the Hebbian learning module.
+"""
+
+module Hebb
 
 # -----------------------------------------------------------------------------
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
-module Hebb
-
-@info "------- Loading dependencies -------"
+# @info "------- Loading dependencies -------"
 using Revise
 using DeepART
 using Flux
@@ -15,9 +21,15 @@ using CUDA
 using UnicodePlots
 using StatsBase: mean
 
+# -----------------------------------------------------------------------------
+# INCLUDES
+# -----------------------------------------------------------------------------
 
-function get_data(opts)
-    @info "------- Loading dataset -------"
+include("models.jl")
+
+const SimOpts = Dict{String, Any}
+
+function get_data(opts::SimOpts)
     data = if opts["dataset"] in ["mnist", "usps"]
         DeepART.load_one_dataset(
             opts["dataset"],
@@ -31,69 +43,32 @@ function get_data(opts)
             opts["dataset"],
         )
     end
+    return data
 end
-
 
 # -----------------------------------------------------------------------------
 # TYPES
 # -----------------------------------------------------------------------------
 
 
+struct HebbModel{T <: Flux.Chain}
+    model::T
+    opts::ModelOpts
+end
 
-function get_dense_deepart_layer(
-    n_in::Integer,
-    n_out::Integer,
-    opts;
-    first_layer::Bool = false,
+function HebbModel(
+    data,
+    opts::ModelOpts,
 )
-    return Flux.@autosize (n_in,) Chain(
-        Chain(
-            first_layer ? identity : sigmoid_fast,
-            DeepART.CC(),
-        ),
-        Dense(
-            _, n_out,
-            # bias=bias,
-            bias = opts["bias"],
-            # init=Flux.identity_init
-            # init=rand,
-            init=opts["init"],
-        ),
+    return HebbModel(
+        construct_model(data, opts),
+        opts,
     )
 end
 
-function get_widrow_hoff_layer(
-    n_in::Integer,
-    n_out::Integer,
-    opts;
-    # bias::Bool = false,
-)
-    return Flux.@autosize (n_in,) Chain(
-        Chain(
-            # identity
-            sigmoid_fast,
-        ),
-        Dense(
-            _, n_out,
-            bias=opts["bias"],
-            # init=Flux.identity_init
-            # init=rand,
-            init=opts["init"],
-        ),
-    )
-end
-
-function get_new_dense(
-    n_input,
-    n_class,
-    opts,
-)
-    return Chain(
-        get_dense_deepart_layer(n_input, 64, opts, first_layer=true),
-        get_dense_deepart_layer(64, 32, opts),
-        get_widrow_hoff_layer(32, n_class, opts)
-    )
-end
+# -----------------------------------------------------------------------------
+# FUNCTIONS
+# -----------------------------------------------------------------------------
 
 
 function get_incremental_activations(chain, x)
@@ -116,19 +91,13 @@ function train_new_hebb(
     model,
     x,
     y;
-    # eta::Float32 = 0.1f0,
-    # beta_d::Float32 = 0.1f0,
 )
+    # Get the names for weights and iteration
     chain = model.model
     params = Flux.params(chain)
-
-    # # acts = Flux.activations(chain, x)
     n_layers = length(chain)
-    # n_acts = length(acts)
 
-    # ins = [acts[jx] for jx = 1:2:n_acts-1]
-    # outs = [acts[jx] for jx = 2:2:n_acts]
-
+    # Get the correct inputs and outputs for actuall learning
     ins, outs = get_incremental_activations(chain, x)
 
     # Create the target vector
@@ -144,12 +113,6 @@ function train_new_hebb(
         weights = params[ix]
         out = outs[ix]
         input = ins[ix]
-
-        # if ix == n_layers
-        #     widrow_hoff_learn!(input, out, weights, model.opts)
-        # else
-        #     deepart_learn!(input, out, weights, model.opts)
-        # end
 
         if ix == n_layers
             widrow_hoff_learn!(
@@ -172,226 +135,8 @@ function train_new_hebb(
     return
 end
 
-function get_conv_model(
-    size_tuple::Tuple,
-    head_dim::Integer,
-    opts;
-    # bias::Bool = false,
-    # final_sigmoid::Bool = false,
-)
-    conv_model = Flux.@autosize (size_tuple,) Chain(
-        # CC layer
-        Chain(DeepART.CCConv()),
 
-        # Conv layer
-        Chain(
-            Conv(
-                (3, 3), _ => 8,
-                # sigmoid_fast,
-                # bias=false,
-                bias=opts["bias"],
-                init=opts["init"],
-            ),
-        ),
-
-        # CC layer
-        Chain(
-            MaxPool((2,2)),
-            sigmoid_fast,
-            DeepART.CCConv(),
-        ),
-
-        # Conv layer
-        Chain(
-            Conv(
-                (5,5), _ => 16,
-                # sigmoid_fast,
-                bias=opts["bias"],
-                init=opts["init"],
-            ),
-        ),
-
-        # CC layer
-        Chain(
-            Flux.AdaptiveMaxPool((4, 4)),
-            Flux.flatten,
-            sigmoid_fast,
-            DeepART.CC(),
-        ),
-
-        # Dense layer
-        Dense(_, 32,
-            bias=opts["bias"],
-            init=opts["init"],
-        ),
-
-        # Last layers
-        Chain(identity),
-        Chain(
-            Dense(
-                _, head_dim,
-                # sigmoid_fast,
-                opts["final_sigmoid"] ? sigmoid_fast : identity,
-                bias=["bias"],
-                # init=opts["init"],
-            ),
-            vec,
-        ),
-        # DeepART.CC(),
-    )
-    return conv_model
-end
-
-function get_fuzzy_model(
-    n_input,
-    n_class,
-    opts;
-    # bias=false,
-    # final_sigmoid=false,
-)
-    model = Flux.@autosize (n_input,) Chain(
-        DeepART.CC(),
-        DeepART.Fuzzy(_, 40,),
-        Chain(sigmoid_fast, DeepART.CC()),
-        DeepART.Fuzzy(_, 20,
-            init=opts["init"],
-        ),
-        Chain(sigmoid_fast, DeepART.CC()),
-        DeepART.Fuzzy(_, 20),
-        Chain(identity),
-
-        # LAST LAYER
-        Chain(
-            sigmoid_fast,
-            Dense(
-                _, n_class,
-                # sigmoid_fast,
-                opts["final_sigmoid"] ? sigmoid_fast : identity,
-                bias=opts["bias"],
-            ),
-        ),
-    )
-    return model
-end
-
-function get_model(
-    n_input,
-    n_class,
-    # bias::Bool = false,
-    # final_sigmoid = false,
-    opts,
-)
-    model = Flux.@autosize (n_input,) Chain(
-        Chain(DeepART.CC()),
-        Dense(_, 64,
-            bias=opts["bias"],
-            # init=Flux.identity_init
-            # init=abs(Flux.identity_init)
-            # init=rand,
-            init=opts["init"],
-        ),
-
-        Chain(sigmoid_fast, DeepART.CC()),
-        Dense(_, 32,
-            bias=opts["bias"],
-            # init=Flux.identity_init
-            # init=rand,
-            init=opts["init"],
-        ),
-
-        # Chain(sigmoid_fast, DeepART.CC()),
-        # Dense(_, 32, bias=bias),
-
-        # LAST LAYER
-        Chain(
-            # identity
-            sigmoid_fast,
-        ),
-        Chain(
-            # sigmoid_fast,
-            Dense(
-                _, n_class,
-                # sigmoid_fast,
-                opts["final_sigmoid"] ? sigmoid_fast : identity,
-                bias=opts["bias"],
-                # init=Flux.identity_init,
-                # init=opts["init"],
-            ),
-        ),
-    )
-    return model
-end
-
-const ModelOpts = Dict{String, Any}
-
-struct HebbModel{T <: Flux.Chain}
-    model::T
-    opts::ModelOpts
-end
-
-
-const MODEL_MAP = Dict(
-    "fuzzy" => get_fuzzy_model,
-    "conv" => get_conv_model,
-    "dense" => get_model,
-    "dense_new" => get_new_dense,
-)
-
-function construct_model(
-    data,
-    opts::ModelOpts,
-)
-    # Sanitize model option
-    if !(opts["model"] in keys(MODEL_MAP))
-        error("Invalid model type")
-    end
-
-    # Get the shape of the dataset
-    dev_x, _ = data.train[1]
-    n_input = size(dev_x)[1]
-    n_class = length(unique(data.train.y))
-
-    # If the convolutional model is selected, create a convolution input tuple
-    local_input_size = if opts["model"] == "conv"
-        (size(data.train.x)[1:3]..., 1)
-    else
-        n_input
-    end
-
-    # Construct the model
-    model = MODEL_MAP[opts["model"]](
-        local_input_size,
-        n_class,
-        opts,
-    )
-
-
-    # Enforce positive weights if necessary
-    if opts["positive_weights"]
-        ps = Flux.params(model)
-        for p in ps
-            p .= abs.(p)
-            p .= p ./ maximum(p)
-        end
-    end
-
-
-    return model
-end
-
-function HebbModel(
-    data,
-    opts::ModelOpts,
-)
-    return HebbModel(
-        construct_model(data, opts),
-        opts,
-    )
-end
-
-
-
-@info "------- Defining test -------"
+# @info "------- Defining test -------"
 function test(model, data)
     n_test = length(data.test)
 
@@ -422,7 +167,6 @@ function test(model, data)
 end
 
 
-# @info "------- Defining fuzzyart_learn -------"
 function fuzzyart_learn(x, W, beta)
     return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
 end
@@ -444,6 +188,9 @@ function fuzzyart_learn_cast(x, W, beta)
     return result
 end
 
+"""
+FuzzyART learning rule with minor cachine. Probably deprecated.
+"""
 function fuzzyart_learn_cast_cache(x, W, beta, cache)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
@@ -459,7 +206,6 @@ function fuzzyart_learn_cast_cache(x, W, beta, cache)
     # @info sum(result - W)
     return result
 end
-
 
 function widrow_hoff_cast(weights, target, out, input, eta)
     Wy, Wx = size(weights)
@@ -489,17 +235,26 @@ function get_beta(out, opts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
         max_ind = argmax(out)
+        # @info max_ind
+        # @info maximum(out)
         beta[max_ind] = one(Float32)
     elseif opts["beta_rule"] == "contrast"
         max_ind = argmax(out)
         local_soft = Flux.softmax(out)
-        max_soft = maximum(local_soft)
+
+        max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
+
         local_soft = -local_soft
         local_soft[max_ind] = -local_soft[max_ind]
         beta = opts["beta_d"] .* local_soft ./ max_soft
+        # @info beta
+
     elseif opts["beta_rule"] == "softmax"
         local_soft = Flux.softmax(out)
-        beta = opts["beta_d"] .* local_soft ./ maximum(local_soft)
+
+        max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
+
+        beta = opts["beta_d"] .* local_soft ./ max_soft
         # beta = beta_d .* local_soft
     else
         error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
