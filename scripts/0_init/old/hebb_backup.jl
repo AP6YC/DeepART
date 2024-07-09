@@ -35,18 +35,18 @@ using StatsBase: mean
 # -----------------------------------------------------------------------------
 
 opts = Dict{String, Any}(
-    "n_epochs" => 1000,
+    # "n_epochs" => 1000,
     # "n_epochs" => 100,
-    # "n_epochs" => 10,
+    "n_epochs" => 10,
 
-    # "eta" => 0.1,
-    "beta_d" => 0.0,
-    # "beta_d" => 0.1,
+    "eta" => 0.1,
+    # "beta_d" => 0.0,
+    "beta_d" => 0.1,
     # "eta" => 0.2,
     # "beta_d" => 0.2,
     # "eta" => 0.5,
     # "beta_d" => 0.5,
-    "eta" => 1.0,
+    # "eta" => 1.0,
     # "beta_d" => 1.0,
     # "beta_d" => 0.001,
 
@@ -58,13 +58,13 @@ opts = Dict{String, Any}(
 
     "gpu" => false,
 
-    "profile" => false,
-    # "profile" => true,
+    # "profile" => false,
+    "profile" => true,
 
-    "model" => "dense",
+    # "model" => "dense",
     # "model" => "small_dense",
     # "model" => "fuzzy",
-    # "model" => "conv",
+    "model" => "conv",
 
     "init" => Flux.rand32,
     # "init" => Flux.glorot_uniform,
@@ -75,7 +75,7 @@ opts = Dict{String, Any}(
     # "wta" => true,
     "wta" => false,
 
-    "dataset" => "wine",
+    # "dataset" => "wine",
     # "dataset" => "iris",
     # "dataset" => "wave",
     # "dataset" => "face",
@@ -85,7 +85,7 @@ opts = Dict{String, Any}(
     # "dataset" => "ring",
     # "dataset" => "spiral",
     # "dataset" => "mnist",
-    # "dataset" => "usps",
+    "dataset" => "usps",
 
     "n_train" => 10000,
     "n_test" => 10000,
@@ -141,74 +141,26 @@ n_class = length(unique(data.train.y))
 # -----------------------------------------------------------------------------
 
 @info "------- Defining model -------"
-function get_conv_model(
-    size_tuple::Tuple,
-    head_dim::Integer,
-    bias::Bool = false,
-)
+function get_conv_model(size_tuple::Tuple, head_dim::Integer)
     conv_model = Flux.@autosize (size_tuple,) Chain(
-        # CC layer
-        Chain(DeepART.CCConv()),
-
-        # Conv layer
+        DeepART.CCConv(),
         Chain(
-            Conv(
-                (3, 3), _ => 8,
-                # sigmoid_fast,
-                bias=false,
-                init=opts["init"],
-            ),
+            Conv((3, 3), _ => 8, sigmoid_fast, bias=false),
         ),
-
-        # CC layer
         Chain(
-            sigmoid_fast,
             MaxPool((2,2)),
             DeepART.CCConv(),
         ),
-
-        # Conv layer
         Chain(
-            Conv(
-                (5,5), _ => 16,
-                # sigmoid_fast,
-                bias=false,
-                init=opts["init"],
-            ),
+            Conv((5,5), _ => 16, sigmoid_fast, bias=false),
         ),
-
-        # CC layer
         Chain(
             Flux.AdaptiveMaxPool((4, 4)),
             Flux.flatten,
-            DeepART.CC(),
+            # DeepART.CC(),
         ),
-
-        # Dense layer
-        Dense(_, 32,
-            bias=bias,
-            init=opts["init"],
-        ),
-
-        # Last layers
-        Chain(identity),
-        # Chain(
-        #     Dense(
-        #         _, head_dim,
-        #         sigmoid_fast,
-        #         bias=false,
-        #         init=opts["init"],
-        #     ),
-        #     vec,
-        # ),
         Chain(
-            Dense(
-                _, head_dim,
-                # sigmoid_fast,
-                final_sigmoid ? sigmoid_fast : identity,
-                bias=false,
-                # init=opts["init"],
-            ),
+            Dense(_, head_dim, sigmoid_fast, bias=false),
             vec,
         ),
         # DeepART.CC(),
@@ -219,23 +171,21 @@ end
 function get_model(
     n_input,
     n_class;
-    bias::Bool = false,
-    final_sigmoid = false,
+    bias=false,
+    final_sigmoid=false,
 )
     model = Flux.@autosize (n_input,) Chain(
         Chain(DeepART.CC()),
         Dense(_, 64, bias=bias,
             # init=Flux.identity_init
             # init=abs(Flux.identity_init)
-            # init=rand,
-            init=opts["init"],
+            init=rand,
         ),
 
         Chain(sigmoid_fast, DeepART.CC()),
         Dense(_, 32, bias=bias,
             # init=Flux.identity_init
-            # init=rand,
-            init=opts["init"],
+            init=rand,
         ),
 
         # Chain(sigmoid_fast, DeepART.CC()),
@@ -251,7 +201,7 @@ function get_model(
                 final_sigmoid ? sigmoid_fast : identity,
                 bias=bias,
                 # init=Flux.identity_init,
-                # init=opts["init"],
+                init=rand,
             ),
         ),
     )
@@ -562,6 +512,7 @@ function train_hebb_immediate(
             #     beta = beta_d .* local_soft ./ maximum(local_soft)
             #     weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
             # else
+            @info "doing the immediate one"
             if opts["wta"]
                 beta = zeros(Float32, size(out))
                 max_ind = argmax(out)
@@ -691,8 +642,7 @@ else
     if opts["dataset"] in datasets["high_dimensional"]
         view_weight(model, 1)
     else
-        # @info model[2].weight
-        # @info sum(model[2].weight)
+        @info model[2].weight
     end
 end
 
