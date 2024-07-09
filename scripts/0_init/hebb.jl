@@ -39,14 +39,14 @@ opts = Dict{String, Any}(
     # "n_epochs" => 100,
     # "n_epochs" => 10,
 
-    # "eta" => 0.1,
+    "eta" => 0.1,
     "beta_d" => 0.0,
     # "beta_d" => 0.1,
     # "eta" => 0.2,
     # "beta_d" => 0.2,
     # "eta" => 0.5,
     # "beta_d" => 0.5,
-    "eta" => 1.0,
+    # "eta" => 1.0,
     # "beta_d" => 1.0,
     # "beta_d" => 0.001,
 
@@ -75,9 +75,9 @@ opts = Dict{String, Any}(
     # "wta" => true,
     "wta" => false,
 
-    "dataset" => "wine",
+    # "dataset" => "wine",
     # "dataset" => "iris",
-    # "dataset" => "wave",
+    "dataset" => "wave",
     # "dataset" => "face",
     # "dataset" => "flag",
     # "dataset" => "halfring",
@@ -242,9 +242,12 @@ function get_model(
         # Dense(_, 32, bias=bias),
 
         # LAST LAYER
-        Chain(identity),
         Chain(
+            # identity
             sigmoid_fast,
+        ),
+        Chain(
+            # sigmoid_fast,
             Dense(
                 _, n_class,
                 # sigmoid_fast,
