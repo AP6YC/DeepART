@@ -38,6 +38,8 @@ end
 # TYPES
 # -----------------------------------------------------------------------------
 
+
+
 function get_dense_deepart_layer(
     n_in::Integer,
     n_out::Integer,
@@ -280,6 +282,14 @@ function get_model(
     return model
 end
 
+const ModelOpts = Dict{String, Any}
+
+struct HebbModel{T <: Flux.Chain}
+    model::T
+    opts::ModelOpts
+end
+
+
 const MODEL_MAP = Dict(
     "fuzzy" => get_fuzzy_model,
     "conv" => get_conv_model,
@@ -287,7 +297,10 @@ const MODEL_MAP = Dict(
     "dense_new" => get_new_dense,
 )
 
-function construct_model(data, opts)
+function construct_model(
+    data,
+    opts::ModelOpts,
+)
     # Sanitize model option
     if !(opts["model"] in keys(MODEL_MAP))
         error("Invalid model type")
@@ -312,7 +325,28 @@ function construct_model(data, opts)
         opts,
     )
 
+
+    # Enforce positive weights if necessary
+    if opts["positive_weights"]
+        ps = Flux.params(model)
+        for p in ps
+            p .= abs.(p)
+            p .= p ./ maximum(p)
+        end
+    end
+
+
     return model
+end
+
+function HebbModel(
+    data,
+    opts::ModelOpts,
+)
+    return HebbModel(
+        construct_model(data, opts),
+        opts,
+    )
 end
 
 end

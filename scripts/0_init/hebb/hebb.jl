@@ -32,42 +32,44 @@ opts = Dict{String, Any}(
     "n_epochs" => 1000,
     # "n_epochs" => 200,
     # "n_epochs" => 10,
-
-    "eta" => 0.1,
-    "beta_d" => 0.0,
-    # "beta_d" => 0.1,
-    # "eta" => 0.2,
-    # "beta_d" => 0.2,
-    # "eta" => 0.5,
-    # "beta_d" => 0.5,
-    # "eta" => 1.0,
-    # "beta_d" => 1.0,
-    # "beta_d" => 0.001,
-
-    "final_sigmoid" => false,
-    # "final_sigmoid" => true,
-
     # "immediate" => true,
     "immediate" => false,
 
-    "gpu" => false,
+    "model_opts" => Dict{String, Any}(
+        "bias" => false,
+        "eta" => 0.1,
+        "beta_d" => 0.0,
+        # "beta_d" => 0.1,
+        # "eta" => 0.2,
+        # "beta_d" => 0.2,
+        # "eta" => 0.5,
+        # "beta_d" => 0.5,
+        # "eta" => 1.0,
+        # "beta_d" => 1.0,
+        # "beta_d" => 0.001,
+
+        "final_sigmoid" => false,
+        # "final_sigmoid" => true,
+
+        "gpu" => false,
+
+        "model" => "dense",
+        # "model" => "small_dense",
+        # "model" => "fuzzy",
+        # "model" => "conv",
+
+        # "init" => Flux.rand32,
+        "init" => Flux.glorot_uniform,
+
+        # "positive_weights" => true,
+        "positive_weights" => false,
+
+        "wta" => true,
+        # "wta" => false,
+    ),
 
     "profile" => false,
     # "profile" => true,
-
-    "model" => "dense",
-    # "model" => "small_dense",
-    # "model" => "fuzzy",
-    # "model" => "conv",
-
-    # "init" => Flux.rand32,
-    "init" => Flux.glorot_uniform,
-
-    # "positive_weights" => true,
-    "positive_weights" => false,
-
-    "wta" => true,
-    # "wta" => false,
 
     # "dataset" => "wine",
     "dataset" => "iris",
@@ -85,12 +87,11 @@ opts = Dict{String, Any}(
     "n_test" => 10000,
     # "flatten" => true,
     "rng_seed" => 1235,
-    "bias" => false,
 )
 
 # Correct for Float32 types
-opts["eta"] = Float32(opts["eta"])
-opts["beta_d"] = Float32(opts["beta_d"])
+opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
+opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
 
 
 Random.seed!(opts["rng_seed"])
@@ -130,17 +131,8 @@ dev_x, dev_y = data.train[1]
 
 @info "------- Constructing model -------"
 
-model = Hebb.construct_model(data, opts)
-
-
-# Enforce positive weights if necessary
-if opts["positive_weights"]
-    ps = Flux.params(model)
-    for p in ps
-        p .= abs.(p)
-        p .= p ./ maximum(p)
-    end
-end
+# model = Hebb.construct_model(data, opts)
+model = Hebb.HebbModel(data, opts["model_opts"])
 
 # -----------------------------------------------------------------------------
 # DEFINITIONS
@@ -152,20 +144,20 @@ function test(model, data)
 
     y_hats = zeros(Int, n_test)
     test_loader = Flux.DataLoader(data.test, batchsize=-1)
-    if opts["gpu"]
+    if model.opts["gpu"]
         y_hats = y_hats |> gpu
         test_loader = test_loader |> gpu
     end
 
     ix = 1
     for (x, _) in test_loader
-        y_hats[ix] = argmax(model(x))
+        y_hats[ix] = argmax(model.model(x))
         ix += 1
     end
     # y_hats = model(data.test.x |> gpu) |> cpu  # first row is prob. of true, second row p(false)
     # y_hats = argmaxmodel(data.test.x)  # first row is prob. of true, second row p(false)
 
-    if opts["gpu"]
+    if model.opts["gpu"]
         y_hats = y_hats |> cpu
     end
 
@@ -177,10 +169,10 @@ function test(model, data)
 end
 
 @info "------- TESTING BEFORE TRAINING -------"
-test(model, data)
-if opts["gpu"]
-    model = model |> gpu
+if model.opts["gpu"]
+    model.model = model.model |> gpu
 end
+test(model, data)
 
 @info "------- Defining fuzzyart_learn -------"
 function fuzzyart_learn(x, W, beta)
@@ -234,12 +226,12 @@ function widrow_hoff_cast(weights, target, out, input, eta)
     return result
 end
 
-function widrow_hoff_learn!(input, out, weights, target, eta)
-    weights .+= widrow_hoff_cast(weights, target, out, input, eta)
+function widrow_hoff_learn!(input, out, weights, target, opts)
+    weights .+= widrow_hoff_cast(weights, target, out, input, opts["eta"])
     return
 end
 
-function deepart_learn!(input, out, weights, beta_d)
+function deepart_learn!(input, out, weights, opts)
     # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     if ndims(weights) == 4
         # full_size = size(weights[ix])
@@ -257,21 +249,16 @@ function deepart_learn!(input, out, weights, beta_d)
         local_weight = reshape(weights, :, n_kernels)'
 
         # Get the local learning parameter beta
-        # beta = Flux.softmax(local_out)
-        # local_soft = Flux.softmax(local_out)
-        # beta = beta_d .* local_soft ./ maximum(local_soft)
-
         if opts["wta"]
             beta = zeros(Float32, size(local_out))
             max_ind = argmax(local_out)
             beta[max_ind] = one(Float32)
         else
             local_soft = Flux.softmax(local_out)
-            beta = beta_d .* local_soft ./ maximum(local_soft)
+            beta = opts["beta_d"] .* local_soft ./ maximum(local_soft)
             # beta = beta_d .* local_soft
         end
 
-        # weights .= fuzzyart_learn_cast(local_in, local_weight, beta)
         local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
     else
         if opts["wta"]
@@ -280,7 +267,7 @@ function deepart_learn!(input, out, weights, beta_d)
             beta[max_ind] = one(Float32)
         else
             local_soft = Flux.softmax(out)
-            beta = beta_d .* local_soft ./ maximum(local_soft)
+            beta = opts["beta_d"] .* local_soft ./ maximum(local_soft)
             # beta = beta_d .* local_soft
         end
         weights .= fuzzyart_learn_cast(input, weights, beta)
@@ -291,13 +278,11 @@ end
 
 @info "------- Defining train -------"
 function train_hebb(
-    chain,
+    model,
     x,
     y;
-    # bias=false,
-    eta::Float32 = 0.1f0,
-    beta_d::Float32 = 0.1f0,
 )
+    chain = model.model
     params = Flux.params(chain)
     acts = Flux.activations(chain, x)
     n_layers = length(params)
@@ -323,7 +308,7 @@ function train_hebb(
     target = zeros(Float32, size(outs[end]))
     # target = -ones(Float32, size(outs[end]))
     target[y] = 1.0
-    if opts["gpu"]
+    if model.opts["gpu"]
         target = target |> gpu
     end
 
@@ -334,10 +319,20 @@ function train_hebb(
         # cache = caches[ix]
 
         if ix == n_layers
-            # weights .+= widrow_hoff_cast(weights, target, out, input, eta)
-            widrow_hoff_learn!(input, out, weights, target, eta)
+            widrow_hoff_learn!(
+                input,
+                out,
+                weights,
+                target,
+                model.opts,
+            )
         else
-            deepart_learn!(input, out, weights, beta_d)
+            deepart_learn!(
+                input,
+                out,
+                weights,
+                model.opts,
+            )
         end
     end
 
@@ -345,12 +340,11 @@ function train_hebb(
 end
 
 function train_hebb_immediate(
-    chain,
+    model,
     x,
     y;
-    eta::Float32 = 0.1f0,
-    beta_d::Float32 = 0.1f0,
 )
+    chain = model.model
     params = Flux.params(chain)
     n_layers = length(params)
 
@@ -378,10 +372,21 @@ function train_hebb_immediate(
 
         # If we are in the top supervised layer, use the supervised rule
         if ix == n_layers
-            widrow_hoff_learn!(input, out, weights, target, eta)
+            widrow_hoff_learn!(
+                input,
+                out,
+                weights,
+                target,
+                model.opts["eta"],
+            )
         # Otherwise, use the unsupervised rule(s)
         else
-            deepart_learn!(input, out, weights, beta_d)
+            deepart_learn!(
+                input,
+                out,
+                weights,
+                model.opts["beta_d"],
+            )
         end
     end
 
@@ -410,7 +415,7 @@ function train_loop(
     for ie = 1:n_epochs
         # train_loader = Flux.DataLoader(data.train, batchsize=-1, shuffle=true)
         train_loader = Flux.DataLoader(data.train, batchsize=-1)
-        if opts["gpu"]
+        if model.opts["gpu"]
             train_loader = train_loader |> gpu
         end
 
@@ -419,12 +424,12 @@ function train_loop(
             if opts["immediate"]
                 train_hebb_immediate(
                     model, x, y;
-                    kwargs...
+                    # kwargs...
                 )
             else
                 train_hebb(
                     model, x, y;
-                    kwargs...
+                    # kwargs...
                 )
             end
         end
@@ -450,7 +455,7 @@ function train_loop(
 end
 
 function view_weight(model, index)
-    weights = Flux.params(model)
+    weights = Flux.params(model.model)
     dim = Int(sqrt(size(weights[1])[2] / 2))
     local_weight = reshape(weights[1][index, :], dim, dim*2)
     lmax = maximum(local_weight)
@@ -488,8 +493,8 @@ else
         model,
         data,
         n_epochs=opts["n_epochs"],
-        eta=opts["eta"],
-        beta_d=opts["beta_d"],
+        # eta=opts["eta"],
+        # beta_d=opts["beta_d"],
     )
 
     local_plot = lineplot(
@@ -505,219 +510,3 @@ else
         # @info sum(model[2].weight)
     end
 end
-
-
-# -----------------------------------------------------------------------------
-# SCRATCH SPACE
-# -----------------------------------------------------------------------------
-
-
-# OLD MODEL DEFINITION:
-# function get_model(
-#     n_input,
-#     n_class,
-#     bias=false,
-# )
-#     model = Flux.@autosize (n_input,) Chain(
-#         # DeepART.CC(),
-#         # Dense(
-#         #     # _, 20,
-#         #     _, 40,
-#         #     sigmoid_fast,
-#         #     bias=bias,
-#         # ),
-
-#         DeepART.CC(),
-#         Dense(
-#             _, 128,
-#             sigmoid_fast,
-#             bias=bias,
-#         ),
-
-#         # DeepART.CC(),
-#         # Dense(
-#         #     _, 64,
-#         #     sigmoid_fast,
-#         #     bias=bias,
-#         # ),
-
-#         # DeepART.CC(),
-#         # Dense(
-#         #     _, 20,
-#         #     # _, 20,
-#         #     sigmoid_fast,
-#         #     bias=bias,
-#         # ),
-
-#         # DeepART.CC(),
-#         # Dense(
-#         #     _, 10,
-#         #     # _, 20,
-#         #     sigmoid_fast,
-#         #     bias=bias,
-#         # ),
-
-#         # DeepART.CC(),
-#         # Dense(
-#         #     _, 10,
-#         #     # _, 20,
-#         #     sigmoid_fast,
-#         #     bias=bias,
-#         # ),
-
-#         # LAST LAYER
-#         Dense(
-#             _, n_class,
-#             sigmoid_fast,
-#             bias=bias,
-#         )
-#     )
-#     return model
-# end
-
-
-
-# OLD TRAIN LOOP:
-# n_weight = size(weights)[1]
-# if ix == n_layers
-#     # for iw = 1:n_weight
-#     #     # (target - out)*input
-#     #     # weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* (input - weights[iw, :])
-#     #     weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* input
-#     #     # @info (target[iw] .- out[iw])
-#     #     # weights[iw, :] .+= eta .* target[iw] .* (input - weights[iw, :])
-#     # end
-#     weights .+= widrow_hoff_cast(weights, target, out, input, eta)
-# else
-#     beta = Flux.softmax(out)
-#     # for iw = 1:n_weight
-#     #     weights[iw, :] = fuzzyart_learn(input, weights[iw, :], beta[iw])
-#     # end
-#     weights .= fuzzyart_learn_cast(input, weights, beta)
-# end
-
-
-
-# @info "------- Post-training analysis -------"
-# dev_x, dev_y = data.test[22]
-# p = Flux.params(model)
-# acts = Flux.activations(model, dev_x)
-# n_layers = length(p)
-# @info "acts" acts
-# @info "inference:" dev_y model(dev_x)
-# @info "params:" p
-
-
-# n_layers = length(p)
-# n_acts = length(acts)
-# ins = push!([acts[jx] for jx = 1:2:((n_acts-1))], acts[n_acts-1])
-# outs = push!([acts[jx] for jx = 2:2:((n_acts-1))], acts[n_acts])
-
-# using DeepART
-
-# head_dim = 10
-# model = DeepART.get_rep_fia_dense(n_input, head_dim)
-# model = Flux.@autosize (n_input,) Chain(
-#     DeepART.CC(),
-#     # Dense(_, 512, sigmoid_fast, bias=false),
-#     # DeepART.CC(),
-#     Dense(_, 256, sigmoid_fast, bias=false),
-#     DeepART.CC(),
-#     Dense(_, head_dim, sigmoid_fast, bias=false),
-# )
-
-
-
-
-
-
-
-# @info "------- Defining train -------"
-# function train_hebb(
-#     chain,
-#     x,
-#     y;
-#     bias=false,
-#     eta = 0.001,
-#     log_epoch = 0,
-#     log_ix = 0,
-#     # decay = 0.01,
-# )
-#     params = Flux.params(chain)
-#     # n_layers = length(params)
-#     acts = Flux.activations(chain, x)
-
-#     if any(isnan.(acts[1])) && !(GOTNAN)
-#         @warn "NAN"
-#         @warn acts
-#         @warn params[1]
-#         @warn "epoch:" log_epoch
-#         @warn "ix:" log_ix
-#         # @warn "weights" weights
-#         # @warn "input" input
-#         # @warn "out" outs
-#         # @warn "target" target
-#         global GOTNAN = true
-#     end
-
-#     if bias
-#         n_layers = Int(length(params) / 2)
-#     else
-#         n_layers = length(params)
-#         ins = [x, acts[1:end-1]...]
-#         outs = [acts...]
-#     end
-
-#     # target = zeros(Float32, size(outs[end]))
-#     target = -ones(Float32, size(outs[end]))
-#     target[y] = 1.0
-
-#     # target = ones(Float32, size(outs[end])).*0.25
-#     # target[y] = 0.75
-#     # @info target
-
-#     # @info "sizes" length(params) size(params[1]) size(params[2]) size(ins[1]) size(ins[2]) size(outs[1]) size(outs[2])
-#     for ix = 1:n_layers
-#         weights = params[ix]
-#         out = outs[ix]
-#         input = ins[ix]
-#         # @info "sizes:" size(weights) size(out) size(input)
-#         n_weight = size(weights)[1]
-#         # beta = Flux.softmax(out)
-#         if ix == n_layers
-#             # (target - out)*input
-#             for iw = 1:n_weight
-#                 # weights[iw, :] .+= input .* (target[iw] .- out[iw]) .* eta .- decay .* (target[iw] .- out[iw])
-
-#                 # Instar
-#                 # weights[ix, :] .+= eta .* (out[iw] .- target[iw]) .* (input .- weights[ix, :])
-
-#                 # @info sum(update)
-#                 # update = eta .* (target[iw] .- out[iw]) .* (input - weights[ix, :])
-#                 # weights[iw, :] .*= update
-#                 # weights[iw, :] .+= eta .* (target[iw] .- out[iw]) .* (input - weights[iw, :])
-#                 weights[iw, :] .+= input .* out[iw] .* eta
-#                 # weights[iw, :] .+= eta .* out[iw] .* (input .- weights[iw, :])
-
-#                 # @info sum(eta .* out[iw] .* (input .- weights[ix, :]))
-#                 # weights[ix, :] .+= eta .* out[iw] .* (input .- weights[ix, :])
-#                 # weights[ix, :] .+= eta .* (out[iw] .- target[iw]) .* (input - weights[ix, :])
-#                 # weights[ix, :] .+= eta .* target[iw] .* (input .- weights[ix, :])
-#             end
-#         else
-#             for iw = 1:n_weight
-#                 # Hebb
-#                 # weights[iw, :] .+= input .* out[iw] .* eta .- decay .* weights[iw, :]
-#                 # weights[iw, :] .+= input .* out[iw] .* eta .- decay .* out[iw]
-#                 weights[iw, :] .+= input .* out[iw] .* eta
-
-#                 # Instar
-#                 # weights[ix, :] .+= eta .* out[iw] .* (input .- weights[ix, :])
-#                 # weights[iw, :] .+= eta .* out[iw] .* (input .- weights[iw, :])
-
-#                 # ART
-#                 # weights[iw, :] = beta[iw] .* min.(input, weights[iw, :]) + weights[iw, :] .* (one(eltype(beta[iw])) .- beta[iw])
-#             end
-#         end
-#     end
-# end
