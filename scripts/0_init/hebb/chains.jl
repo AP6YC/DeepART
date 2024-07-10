@@ -46,7 +46,7 @@ function get_conv_model(
     conv_model = Flux.@autosize (size_tuple,) Chain(
         # CC layer
         Chain(
-            DeepART.CCConv()
+            opts["cc"] ? DeepART.CCConv() : identity,
         ),
 
         # Conv layer
@@ -63,7 +63,7 @@ function get_conv_model(
         Chain(
             MaxPool((2,2)),
             sigmoid_fast,
-            DeepART.CCConv(),
+            opts["cc"] ? DeepART.CCConv() : identity,
         ),
 
         # Conv layer
@@ -81,7 +81,7 @@ function get_conv_model(
             Flux.AdaptiveMaxPool((4, 4)),
             Flux.flatten,
             sigmoid_fast,
-            DeepART.CC(),
+            opts["cc"] ? DeepART.CC() : identity,
         ),
 
         # Dense layer
@@ -115,14 +115,14 @@ function get_fuzzy_model(
     opts::ModelOpts
 )::AlternatingCCChain
     model = Flux.@autosize (n_input,) Chain(
-        DeepART.CC(),
+        opts["cc"] ? DeepART.CC() : identity,
         DeepART.Fuzzy(
             _, 40,
             init=opts["init"],
         ),
         Chain(
             sigmoid_fast,
-            DeepART.CC()
+            opts["cc"] ? DeepART.CC() : identity,
         ),
         DeepART.Fuzzy(
             _, 20,
@@ -153,13 +153,13 @@ function get_dense_model(
     opts::ModelOpts,
 )::AlternatingCCChain
     model = Flux.@autosize (n_input,) Chain(
-        Chain(DeepART.CC()),
+        Chain(opts["cc"] ? DeepART.CC() : identity,),
         Dense(_, 64,
             bias=opts["bias"],
             init=opts["init"],
         ),
 
-        Chain(sigmoid_fast, DeepART.CC()),
+        Chain(sigmoid_fast, opts["cc"] ? DeepART.CC() : identity,),
         Dense(_, 32,
             bias=opts["bias"],
             init=opts["init"],
@@ -199,7 +199,7 @@ function get_dense_deepart_layer(
     return Flux.@autosize (n_in,) Chain(
         Chain(
             first_layer ? identity : sigmoid_fast,
-            DeepART.CC(),
+            opts["cc"] ? DeepART.CC() : identity,
         ),
         Dense(
             _, n_out,
@@ -238,7 +238,7 @@ function get_fuzzy_deepart_layer(
         Chain(
             # RandomTransform(_, 8),
             first_layer ? identity : sigmoid_fast,
-            DeepART.CC(),
+            opts["cc"] ? DeepART.CC() : identity,
         ),
         DeepART.Fuzzy(
             _, n_out,
@@ -335,7 +335,7 @@ function get_inc_conv_model(
         # get_conv_layer(, 8, (3, 3), opts, first_layer=true),
         Chain(
             Chain(
-                DeepART.CCConv()
+                opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
                 (3, 3), _ => 8,
@@ -347,7 +347,7 @@ function get_inc_conv_model(
             Chain(
                 MaxPool((2,2)),
                 sigmoid_fast,
-                DeepART.CCConv(),
+                opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
                 (5,5), _ => 16,
@@ -360,7 +360,7 @@ function get_inc_conv_model(
                 Flux.AdaptiveMaxPool((4, 4)),
                 Flux.flatten,
                 sigmoid_fast,
-                DeepART.CC(),
+                opts["cc"] ? DeepART.CC() : identity,
             ),
             Dense(_, 32,
                 bias=opts["bias"],

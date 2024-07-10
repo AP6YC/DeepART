@@ -37,9 +37,9 @@ import .Hebb
 
 @info "------- Setting options -------"
 opts = Dict{String, Any}(
-    # "n_epochs" => 1000,
+    "n_epochs" => 1000,
     # "n_epochs" => 200,
-    "n_epochs" => 10,
+    # "n_epochs" => 10,
     # "n_epochs" => 50,
 
     "model_opts" => Dict{String, Any}(
@@ -49,7 +49,7 @@ opts = Dict{String, Any}(
         "bias" => false,
         "eta" => 0.05,
         # "beta_d" => 0.0,
-        "beta_d" => 0.1,
+        "beta_d" => 0.05,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
@@ -67,21 +67,29 @@ opts = Dict{String, Any}(
         # "model" => "small_dense",
         # "model" => "fuzzy",
         # "model" => "conv",
-        "model" => "fuzzy_new",
-        # "model" => "dense_new",
+        # "model" => "fuzzy_new",
+        "model" => "dense_new",
         # "model" => "conv_new",
 
-        "init" => Flux.rand32,
-        # "init" => Flux.glorot_uniform,
+        # "learning_rule" => "hebb",
+        # "learning_rule" => "oja",
+        "learning_rule" => "instar",
+        # "learning_rule" => "fuzzyart",
+
+        # "init" => Flux.rand32,
+        "init" => Flux.glorot_uniform,
 
         # "positive_weights" => true,
         "positive_weights" => false,
 
-        # "beta_normalize" => false,
-        "beta_normalize" => true,
+        "beta_normalize" => false,
+        # "beta_normalize" => true,
         # "beta_rule" => "wta",
-        # "beta_rule" => "contrast",
-        "beta_rule" => "softmax",
+        "beta_rule" => "contrast",
+        # "beta_rule" => "softmax",
+
+        # "cc" => true,
+        "cc" => false,
     ),
 
     "profile" => false,

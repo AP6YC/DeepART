@@ -105,13 +105,11 @@ function test(
     return perf
 end
 
-
-function fuzzyart_learn(x, W, beta::Real)
+function fuzzyart_learn(x, W, beta)
     return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
 end
 
-function fuzzyart_learn_cast(x, W, beta::Real)
-    # @info "raw sizes" size(x) size(W) size(beta)
+function fuzzyart_learn_cast(x, W, beta)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
     # _x = repeat(x, 1, Wx)
@@ -119,8 +117,21 @@ function fuzzyart_learn_cast(x, W, beta::Real)
 
     # result = beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
-    # @info "sizes" size(_x) size(W) size(_beta)
     result = beta .* min.(_x, W) + W .* (one(eltype(_beta)) .- _beta)
+    return result
+end
+
+function instar_cast(x, W, y, beta)
+    Wy, Wx = size(W)
+    _x = repeat(x', Wy, 1)
+    _beta = repeat(beta, 1, Wx)
+    _y = repeat(y, 1, Wx)
+
+    # dW = beta .* y .* (x .- y .* W)
+    # @info "sizes" size(y), size(_x), size(W) size(_beta)
+    # @info "sizes" size(_y), size(_x), size(W) size(_beta)
+    result = _beta .* _y .* (_x .- _y .* W)
+    # result = _beta .* _y .* (_x .- W)
     return result
 end
 
@@ -169,8 +180,6 @@ function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
         max_ind = argmax(out)
-        # @info max_ind
-        # @info maximum(out)
         beta[max_ind] = one(Float32)
     elseif opts["beta_rule"] == "contrast"
         max_ind = argmax(out)
@@ -181,15 +190,10 @@ function get_beta(out, opts::ModelOpts)
         local_soft = -local_soft
         local_soft[max_ind] = -local_soft[max_ind]
         beta = opts["beta_d"] .* local_soft ./ max_soft
-        # @info beta
-
     elseif opts["beta_rule"] == "softmax"
         local_soft = Flux.softmax(out)
-
         max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
-
         beta = opts["beta_d"] .* local_soft ./ max_soft
-        # beta = beta_d .* local_soft
     else
         error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
     end
@@ -214,15 +218,24 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
         # Reshape the weights to be (n_kernels, n_features)
         local_weight = reshape(weights, :, n_kernels)'
 
-        # Get the local learning parameter beta
-        beta = get_beta(local_out, opts)
-        local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
     else
-        # Get the local learning parameter beta
-        beta = get_beta(out, opts)
-        weights .= fuzzyart_learn_cast(input, weights, beta)
-        # weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
+        local_out = out
+        local_weight = weights
+        local_in = input
     end
+
+    # Get the local learning parameter beta
+    beta = get_beta(local_out, opts)
+    if opts["learning_rule"] == "fuzzyart"
+        local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+    elseif opts["learning_rule"] == "instar"
+        # local_weight .+= opts["eta"] .* (beta .- local_out) .* local_in
+        # local_weight .+= beta .* local_out .* (local_in .- local_out .* local_weight)
+        local_weight .+= instar_cast(local_in, local_weight, local_out, beta)
+    else
+        error("Incorrect learning rule option ($(opts["learning_rule"])), must be in LEARNING_RULES")
+    end
+    # weights .= fuzzyart_learn_cast_cache(input, weights, beta, cache)
     return
 end
 
