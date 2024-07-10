@@ -51,14 +51,38 @@ end
 # TYPES
 # -----------------------------------------------------------------------------
 
+# struct ChainContainer{T <: Flux.Chain}
+#     chain::T
+# end
 
-struct HebbModel{T <: Flux.Chain}
+abstract type CCChain end
+
+"""
+Chains that group alternate CC and non-CC chain layers.
+"""
+struct GroupedCCChain{T <: Flux.Chain} <: CCChain
+    chain::T
+end
+
+"""
+Chains that simply alternate between CC and non-CC layers.
+"""
+struct AlternatingCCChain{T <: Flux.Chain} <: CCChain
+    chain::T
+end
+
+# struct HebbModel{T <: Flux.Chain}
+#     model::T
+#     opts::ModelOpts
+# end
+
+struct HebbModel{T <: CCChain}
     model::T
     opts::ModelOpts
 end
 
 function HebbModel(
-    data,
+    data::DeepART.DataSplit,
     opts::ModelOpts,
 )
     return HebbModel(
@@ -67,83 +91,43 @@ function HebbModel(
     )
 end
 
+function get_weights(model::HebbModel)
+    return Flux.params(model.model.chain)
+end
+
+function get_activations(model::HebbModel, x)
+    return Flux.activations(model.model.chain, x)
+end
+
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
 function get_incremental_activations(
-    chain::Flux.Chain,
+    # chain::Flux.Chain,
+    chain::GroupedCCChain,
     # x::RealVector,
     x,
 )
     # params
-    n_layers = length(chain)
+    n_layers = length(chain.chain)
 
     ins = []
     outs = []
 
     for ix = 1:n_layers
         pre_input = (ix == 1) ? x : outs[end]
-        local_acts = Flux.activations(chain[ix], pre_input)
+        local_acts = Flux.activations(chain.chain[ix], pre_input)
         push!(ins, local_acts[1])
         push!(outs, local_acts[2])
     end
     return ins, outs
 end
 
-function train_new_hebb(
-    model,
-    x,
-    y;
+function test(
+    model::HebbModel,
+    data::DeepART.DataSplit,
 )
-    # Get the names for weights and iteration
-    chain = model.model
-    params = Flux.params(chain)
-    n_layers = length(chain)
-
-    # Get the correct inputs and outputs for actuall learning
-    ins, outs = get_incremental_activations(chain, x)
-
-    # @info "out sizes:" size(out)
-
-    # Create the target vector
-    target = zeros(Float32, size(outs[end]))
-    # target = -ones(Float32, size(outs[end]))
-    target[y] = 1.0
-
-    if model.opts["gpu"]
-        target = target |> gpu
-    end
-
-    for ix = 1:n_layers
-        weights = params[ix]
-        out = outs[ix]
-        input = ins[ix]
-
-        if ix == n_layers
-            widrow_hoff_learn!(
-                input,
-                out,
-                weights,
-                target,
-                model.opts,
-            )
-        else
-            deepart_learn!(
-                input,
-                out,
-                weights,
-                model.opts,
-            )
-        end
-    end
-
-    return
-end
-
-
-# @info "------- Defining test -------"
-function test(model, data)
     n_test = length(data.test)
 
     y_hats = zeros(Int, n_test)
@@ -155,9 +139,10 @@ function test(model, data)
 
     ix = 1
     for (x, _) in test_loader
-        y_hats[ix] = argmax(model.model(x))
+        y_hats[ix] = argmax(model.model.chain(x))
         ix += 1
     end
+
     # y_hats = model(data.test.x |> gpu) |> cpu  # first row is prob. of true, second row p(false)
     # y_hats = argmaxmodel(data.test.x)  # first row is prob. of true, second row p(false)
 
@@ -165,10 +150,7 @@ function test(model, data)
         y_hats = y_hats |> cpu
     end
 
-    # @info y_hats
-    # @info "unique y_hats:" unique(y_hats)
     perf = DeepART.AdaptiveResonance.performance(y_hats, data.test.y)
-    # @info "perf = $perf"
     return perf
 end
 
@@ -295,13 +277,16 @@ end
 
 @info "------- Defining train -------"
 function train_hebb(
-    model,
+    model::HebbModel{T},
     x,
     y;
-)
-    chain = model.model
-    params = Flux.params(chain)
-    acts = Flux.activations(chain, x)
+) where T <: AlternatingCCChain
+    # chain = model.model.chain
+    # params = Flux.params(chain)
+    # acts = Flux.activations(chain, x)
+
+    params = get_weights(model)
+    acts = get_activations(model, x)
     n_layers = length(params)
     n_acts = length(acts)
 
@@ -356,8 +341,56 @@ function train_hebb(
     return
 end
 
+
+function train_hebb(
+    model::HebbModel{T},
+    x,
+    y;
+) where T <: GroupedCCChain
+    # Get the names for weights and iteration
+    params = get_weights(model)
+    n_layers = length(params)
+
+    # Get the correct inputs and outputs for actuall learning
+    ins, outs = get_incremental_activations(model.model, x)
+
+    # Create the target vector
+    target = zeros(Float32, size(outs[end]))
+    # target = -ones(Float32, size(outs[end]))
+    target[y] = 1.0
+
+    if model.opts["gpu"]
+        target = target |> gpu
+    end
+
+    for ix = 1:n_layers
+        weights = params[ix]
+        out = outs[ix]
+        input = ins[ix]
+
+        if ix == n_layers
+            widrow_hoff_learn!(
+                input,
+                out,
+                weights,
+                target,
+                model.opts,
+            )
+        else
+            deepart_learn!(
+                input,
+                out,
+                weights,
+                model.opts,
+            )
+        end
+    end
+
+    return
+end
+
 function train_hebb_immediate(
-    model,
+    model::HebbModel{AlternatingCCChain},
     x,
     y;
 )
@@ -412,7 +445,7 @@ end
 
 @info "------- Defining loop -------"
 function train_loop(
-    model,
+    model::HebbModel,
     data;
     n_vals = 100,
     n_epochs = 10,
@@ -438,13 +471,18 @@ function train_loop(
 
         # Iteratively train
         for (x, y) in train_loader
-            if model.opts["model"] in ["dense_new", "fuzzy_new", "conv_new"]
-                Hebb.train_new_hebb(model, x, y)
-            elseif model.opts["immediate"]
+            if model.opts["immediate"]
                 train_hebb_immediate(model, x, y)
             else
                 train_hebb(model, x, y)
             end
+            # if model.opts["model"] in ["dense_new", "fuzzy_new", "conv_new"]
+            #     Hebb.train_new_hebb(model, x, y)
+            # elseif model.opts["immediate"]
+            #     train_hebb_immediate(model, x, y)
+            # else
+            #     train_hebb(model, x, y)
+            # end
         end
 
         # Compute validation performance
@@ -467,8 +505,12 @@ function train_loop(
     return vals
 end
 
-function view_weight(model, index)
-    weights = Flux.params(model.model)
+function view_weight(
+    model::HebbModel,
+    index::Integer,
+)
+    # weights = Flux.params(model.model.chain)
+    weights = get_weights(model)
     dim = Int(sqrt(size(weights[1])[2] / 2))
     local_weight = reshape(weights[1][index, :], dim, dim*2)
     lmax = maximum(local_weight)

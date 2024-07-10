@@ -83,7 +83,7 @@ function get_conv_model(
             vec,
         ),
     )
-    return conv_model
+    return AlternatingCCChain(conv_model)
 end
 
 function get_fuzzy_model(
@@ -121,7 +121,7 @@ function get_fuzzy_model(
             ),
         ),
     )
-    return model
+    return AlternatingCCChain(model)
 end
 
 function get_dense_model(
@@ -160,7 +160,7 @@ function get_dense_model(
             ),
         ),
     )
-    return model
+    return AlternatingCCChain(model)
 end
 
 
@@ -210,8 +210,8 @@ function get_fuzzy_deepart_layer(
 )
     return Flux.@autosize (n_in,) Chain(
         Chain(
-            RandomTransform(_, 16),
-            # first_layer ? identity : sigmoid_fast,
+            # RandomTransform(_, 16),
+            first_layer ? identity : sigmoid_fast,
             DeepART.CC(),
         ),
         DeepART.Fuzzy(
@@ -244,11 +244,12 @@ function get_new_dense_model(
     n_class::Integer,
     opts::ModelOpts,
 )
-    return Chain(
+    model = Chain(
         get_dense_deepart_layer(n_input, 64, opts, first_layer=true),
         get_dense_deepart_layer(64, 32, opts),
         get_widrow_hoff_layer(32, n_class, opts)
     )
+    return GroupedCCChain(model)
 end
 
 function get_new_fuzzy_model(
@@ -256,11 +257,12 @@ function get_new_fuzzy_model(
     n_class::Integer,
     opts::ModelOpts,
 )
-    return Chain(
+    model = Chain(
         get_fuzzy_deepart_layer(n_input, 64, opts, first_layer=true),
         get_fuzzy_deepart_layer(64, 32, opts),
         get_widrow_hoff_layer(32, n_class, opts)
     )
+    return GroupedCCChain(model)
 end
 
 function get_conv_layer(
@@ -351,9 +353,9 @@ function get_inc_conv_model(
             ),
         ),
     )
-    return conv_model
-end
 
+    return GroupedCCChain(conv_model)
+end
 
 const MODEL_MAP = Dict(
     "fuzzy" => get_fuzzy_model,
@@ -363,6 +365,15 @@ const MODEL_MAP = Dict(
     "fuzzy_new" => get_new_fuzzy_model,
     "conv_new" => get_inc_conv_model,
 )
+
+
+# # "model" => "dense",
+# # "model" => "small_dense",
+# # "model" => "fuzzy",
+# # "model" => "conv",
+# # "model" => "fuzzy_new",
+# # "model" => "dense_new",
+# "model" => "conv_new",
 
 function construct_model(
     data::DeepART.DataSplit,
@@ -400,7 +411,6 @@ function construct_model(
             p .= p ./ maximum(p)
         end
     end
-
 
     return model
 end

@@ -35,10 +35,11 @@ import .Hebb
 # OPTIONS
 # -----------------------------------------------------------------------------
 
+@info "------- Setting options -------"
 opts = Dict{String, Any}(
-    # "n_epochs" => 1000,
+    "n_epochs" => 1000,
     # "n_epochs" => 200,
-    "n_epochs" => 10,
+    # "n_epochs" => 10,
     # "n_epochs" => 50,
 
     "model_opts" => Dict{String, Any}(
@@ -48,13 +49,13 @@ opts = Dict{String, Any}(
         "bias" => false,
         "eta" => 0.05,
         # "beta_d" => 0.0,
-        # "beta_d" => 0.1,
+        "beta_d" => 0.1,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
         # "beta_d" => 0.5,
         # "eta" => 1.0,
-        "beta_d" => 1.0,
+        # "beta_d" => 1.0,
         # "beta_d" => 0.001,
 
         "final_sigmoid" => false,
@@ -67,11 +68,11 @@ opts = Dict{String, Any}(
         # "model" => "fuzzy",
         # "model" => "conv",
         # "model" => "fuzzy_new",
-        # "model" => "dense_new",
-        "model" => "conv_new",
+        "model" => "dense_new",
+        # "model" => "conv_new",
 
-        # "init" => Flux.rand32,
-        "init" => Flux.glorot_uniform,
+        "init" => Flux.rand32,
+        # "init" => Flux.glorot_uniform,
 
         # "positive_weights" => true,
         "positive_weights" => false,
@@ -87,7 +88,7 @@ opts = Dict{String, Any}(
     # "profile" => true,
 
     # "dataset" => "wine",
-    # "dataset" => "iris",
+    "dataset" => "iris",
     # "dataset" => "wave",
     # "dataset" => "face",
     # "dataset" => "flag",
@@ -96,7 +97,7 @@ opts = Dict{String, Any}(
     # "dataset" => "ring",
     # "dataset" => "spiral",
     # "dataset" => "mnist",
-    "dataset" => "usps",
+    # "dataset" => "usps",
 
     "n_train" => 50000,
     "n_test" => 10000,
@@ -104,10 +105,11 @@ opts = Dict{String, Any}(
     "rng_seed" => 1235,
 )
 
+@info "------- Options post-processing -------"
+
 # Correct for Float32 types
 opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
 opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
-
 Random.seed!(opts["rng_seed"])
 
 # -----------------------------------------------------------------------------
