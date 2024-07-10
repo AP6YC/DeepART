@@ -108,7 +108,6 @@ Flux.@layer Fuzzy
 #     return norm(min.(x, W), 1) / (1e-3 + norm(W, 1))
 # end
 
-
 function (a::Fuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
 #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
@@ -172,3 +171,75 @@ end
 #     # return eval(art.opts.update)(art, x, get_sample(art.W, index))
 #     return BETA * min.(x, W) + W * (1.0 - art.opts.beta)
 # end
+
+
+# -----------------------------------------------------------------------------
+# Random Fuzzy Matrix
+# -----------------------------------------------------------------------------
+
+# struct Dense{F, M<:AbstractMatrix, B}
+# struct Fuzzy{M<:AbstractMatrix}
+struct RandFuzzy{F, M<:AbstractMatrix}
+    rand_weight::M
+    weight::M
+    activation::F
+    cache::Dict{String, Any}
+end
+
+function RandFuzzy(
+    in::Integer, out::Integer,
+    # init = Flux.glorot_uniform
+    activation=identity;
+    init = Flux.rand32,
+    rand_dim = 16,
+)
+    RandFuzzy(
+        # init(out, in),
+        init(rand_dim, in),
+        init(out, rand_dim),
+        activation,
+        Dict{String, Any}(),
+    )
+end
+
+Flux.@layer RandFuzzy
+
+# Tell Flux that not every gosh darn cached parameter is trainable
+Flux.trainable(a::RandFuzzy) = (; W=a.weight)
+
+function (a::RandFuzzy)(x::AbstractVecOrMat)
+    # Flux._size_check(a, x, 1 => size(a.weight, 2))
+#   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
+    # a.cache["xT"] = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
+    # @info typeof(x)
+    # a.cache["xT"] = x * a.rand_weight
+#   return σ.(a.weight * xT .+ a.bias)
+    a.cache["_weight"] = a.weight'
+    # a.cache["_x"] = repeat(a.cache["xT"], 1, size(a.cache["_weight"], 2))
+    a.cache["_x"] = a.rand_weight * x
+
+    # Flux._size_check(a, a.cache["_x"], 1 => size(a.weight, 2))
+
+    a.cache["xw_norm"] = sum(abs.(min.(a.cache["_x"], a.cache["_weight"])), dims=1)
+    # a.cache["xw_norm"] = sum(min.(a.cache["_x"], a.cache["_weight"]), dims=1)
+
+    a.cache["w_norm"] = sum(abs.(a.cache["_weight"]), dims=1)
+    # M = a.activation(vec(a.cache["xw_norm"] ./ (ALPHA .+ a.cache["w_norm"])))
+    # return M
+
+    # T = a.activation(vec(xw_norm ./ size(_weight, 1) ./ 2))
+    T = a.activation(vec(a.cache["xw_norm"] ./ (size(a.cache["_weight"], 1) ./ 2.0f0)))
+    return T
+end
+
+function (a::RandFuzzy)(x::AbstractArray)
+    Flux._size_check(a, x, 1 => size(a.weight, 2))
+    reshape(a(reshape(x, size(x,1), :)), :, size(x)[2:end]...)
+end
+
+function Base.show(io::IO, l::Fuzzy)
+    print(io, "Fuzzy(", size(l.weight, 2), " => ", size(l.weight, 1))
+    # l.σ == identity || print(io, ", ", l.σ)
+    # l.bias == false && print(io, "; bias=false")
+    print(io, ")")
+end

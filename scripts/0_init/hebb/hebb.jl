@@ -37,9 +37,9 @@ import .Hebb
 
 @info "------- Setting options -------"
 opts = Dict{String, Any}(
-    "n_epochs" => 1000,
+    # "n_epochs" => 1000,
     # "n_epochs" => 200,
-    # "n_epochs" => 10,
+    "n_epochs" => 10,
     # "n_epochs" => 50,
 
     "model_opts" => Dict{String, Any}(
@@ -67,8 +67,8 @@ opts = Dict{String, Any}(
         # "model" => "small_dense",
         # "model" => "fuzzy",
         # "model" => "conv",
-        # "model" => "fuzzy_new",
-        "model" => "dense_new",
+        "model" => "fuzzy_new",
+        # "model" => "dense_new",
         # "model" => "conv_new",
 
         "init" => Flux.rand32,
@@ -180,8 +180,6 @@ else
         model,
         data,
         n_epochs=opts["n_epochs"],
-        # eta=opts["eta"],
-        # beta_d=opts["beta_d"],
     )
 
     local_plot = lineplot(
@@ -192,7 +190,7 @@ else
     # Only visualize the weights if we are working with a computer vision dataset
     if opts["dataset"] in datasets["high_dimensional"]
         Hebb.view_weight(model, 1)
-    else
+    # else
         # @info model[2].weight
         # @info sum(model[2].weight)
     end

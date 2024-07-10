@@ -26,7 +26,7 @@ using NumericalTypeAliases
 # INCLUDES
 # -----------------------------------------------------------------------------
 
-include("models.jl")
+include("chains.jl")
 
 const SimOpts = Dict{String, Any}
 
@@ -51,26 +51,6 @@ end
 # TYPES
 # -----------------------------------------------------------------------------
 
-# struct ChainContainer{T <: Flux.Chain}
-#     chain::T
-# end
-
-abstract type CCChain end
-
-"""
-Chains that group alternate CC and non-CC chain layers.
-"""
-struct GroupedCCChain{T <: Flux.Chain} <: CCChain
-    chain::T
-end
-
-"""
-Chains that simply alternate between CC and non-CC layers.
-"""
-struct AlternatingCCChain{T <: Flux.Chain} <: CCChain
-    chain::T
-end
-
 # struct HebbModel{T <: Flux.Chain}
 #     model::T
 #     opts::ModelOpts
@@ -91,38 +71,9 @@ function HebbModel(
     )
 end
 
-function get_weights(model::HebbModel)
-    return Flux.params(model.model.chain)
-end
-
-function get_activations(model::HebbModel, x)
-    return Flux.activations(model.model.chain, x)
-end
-
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
-
-function get_incremental_activations(
-    # chain::Flux.Chain,
-    chain::GroupedCCChain,
-    # x::RealVector,
-    x,
-)
-    # params
-    n_layers = length(chain.chain)
-
-    ins = []
-    outs = []
-
-    for ix = 1:n_layers
-        pre_input = (ix == 1) ? x : outs[end]
-        local_acts = Flux.activations(chain.chain[ix], pre_input)
-        push!(ins, local_acts[1])
-        push!(outs, local_acts[2])
-    end
-    return ins, outs
-end
 
 function test(
     model::HebbModel,
@@ -155,11 +106,11 @@ function test(
 end
 
 
-function fuzzyart_learn(x, W, beta)
+function fuzzyart_learn(x, W, beta::Real)
     return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
 end
 
-function fuzzyart_learn_cast(x, W, beta)
+function fuzzyart_learn_cast(x, W, beta::Real)
     # @info "raw sizes" size(x) size(W) size(beta)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
@@ -176,7 +127,7 @@ end
 """
 FuzzyART learning rule with minor cachine. Probably deprecated.
 """
-function fuzzyart_learn_cast_cache(x, W, beta, cache)
+function fuzzyart_learn_cast_cache(x, W, beta::Real, cache)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
     _beta = repeat(beta, 1, Wx)
@@ -190,7 +141,7 @@ function fuzzyart_learn_cast_cache(x, W, beta, cache)
     return result
 end
 
-function widrow_hoff_cast(weights, target, out, input, eta)
+function widrow_hoff_cast(weights, target, out, input, eta::Real)
     Wy, Wx = size(weights)
     _input = repeat(input', Wy, 1)
     # _target = repeat(target, 1, Wx)
@@ -203,7 +154,7 @@ function widrow_hoff_cast(weights, target, out, input, eta)
     return result
 end
 
-function widrow_hoff_learn!(input, out, weights, target, opts)
+function widrow_hoff_learn!(input, out, weights, target, opts::ModelOpts)
     weights .+= widrow_hoff_cast(weights, target, out, input, opts["eta"])
     return
 end
@@ -214,7 +165,7 @@ const BETA_RULES = [
     "softmax",
 ]
 
-function get_beta(out, opts)
+function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
         max_ind = argmax(out)
@@ -246,7 +197,7 @@ function get_beta(out, opts)
     return beta
 end
 
-function deepart_learn!(input, out, weights, opts)
+function deepart_learn!(input, out, weights, opts::ModelOpts)
     # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     if ndims(weights) == 4
         # full_size = size(weights[ix])
@@ -285,8 +236,8 @@ function train_hebb(
     # params = Flux.params(chain)
     # acts = Flux.activations(chain, x)
 
-    params = get_weights(model)
-    acts = get_activations(model, x)
+    params = get_weights(model.model)
+    acts = get_activations(model.model, x)
     n_layers = length(params)
     n_acts = length(acts)
 
@@ -348,7 +299,7 @@ function train_hebb(
     y;
 ) where T <: GroupedCCChain
     # Get the names for weights and iteration
-    params = get_weights(model)
+    params = get_weights(model.model)
     n_layers = length(params)
 
     # Get the correct inputs and outputs for actuall learning
@@ -447,8 +398,8 @@ end
 function train_loop(
     model::HebbModel,
     data;
-    n_vals = 100,
-    n_epochs = 10,
+    n_vals::Integer = 100,
+    n_epochs::Integer = 10,
     kwargs...
 )
     # Set up the validation intervals
@@ -518,8 +469,8 @@ function view_weight(
     DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
 end
 
-function profile_test(n_epochs)
-    vals = train_loop(
+function profile_test(n_epochs::Integer)
+    _ = train_loop(
         model,
         data,
         n_epochs=n_epochs,

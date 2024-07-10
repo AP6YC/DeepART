@@ -1,8 +1,8 @@
 """
-    models.jl
+    chains.jl
 
 # Description
-Collection of model definitions for the Hebb module.
+Collection of chain model definitions for the Hebb module.
 """
 
 # -----------------------------------------------------------------------------
@@ -12,14 +12,37 @@ Collection of model definitions for the Hebb module.
 const ModelOpts = Dict{String, Any}
 
 # -----------------------------------------------------------------------------
-# MODEL CONSTRUCTORS
+# TYPES
+# -----------------------------------------------------------------------------
+
+"""
+Abstract type for containers of Flux.Chain containing CC and non-CC layers.
+"""
+abstract type CCChain end
+
+"""
+Chains that group alternate CC and non-CC chain layers.
+"""
+struct GroupedCCChain{T <: Flux.Chain} <: CCChain
+    chain::T
+end
+
+"""
+Chains that simply alternate between CC and non-CC layers.
+"""
+struct AlternatingCCChain{T <: Flux.Chain} <: CCChain
+    chain::T
+end
+
+# -----------------------------------------------------------------------------
+# ALTERNATING CHAIN CONSTRUCTORS
 # -----------------------------------------------------------------------------
 
 function get_conv_model(
     size_tuple::Tuple,
     head_dim::Integer,
     opts::ModelOpts
-)
+)::AlternatingCCChain
     conv_model = Flux.@autosize (size_tuple,) Chain(
         # CC layer
         Chain(
@@ -90,7 +113,7 @@ function get_fuzzy_model(
     n_input::Integer,
     n_class::Integer,
     opts::ModelOpts
-)
+)::AlternatingCCChain
     model = Flux.@autosize (n_input,) Chain(
         DeepART.CC(),
         DeepART.Fuzzy(
@@ -128,7 +151,7 @@ function get_dense_model(
     n_input::Integer,
     n_class::Integer,
     opts::ModelOpts,
-)
+)::AlternatingCCChain
     model = Flux.@autosize (n_input,) Chain(
         Chain(DeepART.CC()),
         Dense(_, 64,
@@ -163,6 +186,9 @@ function get_dense_model(
     return AlternatingCCChain(model)
 end
 
+# -----------------------------------------------------------------------------
+# GROUPED CHAIN LAYERS
+# -----------------------------------------------------------------------------
 
 function get_dense_deepart_layer(
     n_in::Integer,
@@ -191,7 +217,7 @@ function RandomTransform(
     n_in::Integer,
     n_out::Integer,
 )
-    return RandomTransform(Dense(n_in, n_out, bias=false))
+    return RandomTransform(Dense(n_in, n_out, sigmoid_fast, bias=false))
 end
 
 function (m::RandomTransform)(x)
@@ -210,7 +236,7 @@ function get_fuzzy_deepart_layer(
 )
     return Flux.@autosize (n_in,) Chain(
         Chain(
-            # RandomTransform(_, 16),
+            # RandomTransform(_, 8),
             first_layer ? identity : sigmoid_fast,
             DeepART.CC(),
         ),
@@ -239,11 +265,15 @@ function get_widrow_hoff_layer(
     )
 end
 
-function get_new_dense_model(
+# -----------------------------------------------------------------------------
+# GROUPED CHAIN CONSTRUCTORS
+# -----------------------------------------------------------------------------
+
+function get_inc_dense_model(
     n_input::Integer,
     n_class::Integer,
     opts::ModelOpts,
-)
+)::GroupedCCChain
     model = Chain(
         get_dense_deepart_layer(n_input, 64, opts, first_layer=true),
         get_dense_deepart_layer(64, 32, opts),
@@ -252,11 +282,11 @@ function get_new_dense_model(
     return GroupedCCChain(model)
 end
 
-function get_new_fuzzy_model(
+function get_inc_fuzzy_model(
     n_input::Integer,
     n_class::Integer,
     opts::ModelOpts,
-)
+)::GroupedCCChain
     model = Chain(
         get_fuzzy_deepart_layer(n_input, 64, opts, first_layer=true),
         get_fuzzy_deepart_layer(64, 32, opts),
@@ -265,42 +295,42 @@ function get_new_fuzzy_model(
     return GroupedCCChain(model)
 end
 
-function get_conv_layer(
-    n_in::Integer,
-    n_out::Integer,
-    kernel::Tuple,
-    opts::ModelOpts;
-    first_layer::Bool = false,
-    n_pool::Tuple = (),
-)
-    return Flux.@autosize (n_in,) Chain(
-        # CC layer
-        Chain(
-            first_layer ? identity :
-                Chain(
-                    MaxPool(n_pool),
-                    sigmoid_fast,
-                ),
-            DeepART.CCConv()
-        ),
+# function get_conv_layer(
+#     n_in::Integer,
+#     n_out::Integer,
+#     kernel::Tuple,
+#     opts::ModelOpts;
+#     first_layer::Bool = false,
+#     n_pool::Tuple = (),
+# )
+#     return Flux.@autosize (n_in,) Chain(
+#         # CC layer
+#         Chain(
+#             first_layer ? identity :
+#                 Chain(
+#                     MaxPool(n_pool),
+#                     sigmoid_fast,
+#                 ),
+#             DeepART.CCConv()
+#         ),
 
-        # Conv layer
-        Chain(
-            Conv(
-                kernel, _ => n_out,
-                # sigmoid_fast,
-                bias=opts["bias"],
-                init=opts["init"],
-            ),
-        ),
-    )
-end
+#         # Conv layer
+#         Chain(
+#             Conv(
+#                 kernel, _ => n_out,
+#                 # sigmoid_fast,
+#                 bias=opts["bias"],
+#                 init=opts["init"],
+#             ),
+#         ),
+#     )
+# end
 
 function get_inc_conv_model(
     size_tuple::Tuple,
     head_dim::Integer,
     opts::ModelOpts
-)
+)::GroupedCCChain
     conv_model = Flux.@autosize (size_tuple,) Chain(
         # get_conv_layer(, 8, (3, 3), opts, first_layer=true),
         Chain(
@@ -357,23 +387,21 @@ function get_inc_conv_model(
     return GroupedCCChain(conv_model)
 end
 
+# -----------------------------------------------------------------------------
+# HIGH-LEVEL CONSTRUCTORS
+# -----------------------------------------------------------------------------
+
+"""
+Dispatcher for model construction.
+"""
 const MODEL_MAP = Dict(
     "fuzzy" => get_fuzzy_model,
     "conv" => get_conv_model,
     "dense" => get_dense_model,
-    "dense_new" => get_new_dense_model,
-    "fuzzy_new" => get_new_fuzzy_model,
+    "dense_new" => get_inc_dense_model,
+    "fuzzy_new" => get_inc_fuzzy_model,
     "conv_new" => get_inc_conv_model,
 )
-
-
-# # "model" => "dense",
-# # "model" => "small_dense",
-# # "model" => "fuzzy",
-# # "model" => "conv",
-# # "model" => "fuzzy_new",
-# # "model" => "dense_new",
-# "model" => "conv_new",
 
 function construct_model(
     data::DeepART.DataSplit,
@@ -413,4 +441,35 @@ function construct_model(
     end
 
     return model
+end
+
+# -----------------------------------------------------------------------------
+# CHAIN BEHAVIOR
+# -----------------------------------------------------------------------------
+
+function get_weights(model::CCChain)
+    return Flux.params(model.chain)
+end
+
+function get_activations(model::CCChain, x)
+    return Flux.activations(model.chain, x)
+end
+
+function get_incremental_activations(
+    chain::GroupedCCChain,
+    x,
+)
+    # params
+    n_layers = length(chain.chain)
+
+    ins = []
+    outs = []
+
+    for ix = 1:n_layers
+        pre_input = (ix == 1) ? x : outs[end]
+        local_acts = Flux.activations(chain.chain[ix], pre_input)
+        push!(ins, local_acts[1])
+        push!(outs, local_acts[2])
+    end
+    return ins, outs
 end
