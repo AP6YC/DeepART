@@ -134,11 +134,19 @@ function instar_cast(x, W, y, beta)
     _beta = repeat(beta, 1, Wx)
     _y = repeat(y, 1, Wx)
 
+    # dW = beta .* y .* (x .- W)
+    result = _beta .* _y .* (_x .- W)
+    return result
+end
+
+function oja_cast(x, W, y, beta)
+    Wy, Wx = size(W)
+    _x = repeat(x', Wy, 1)
+    _beta = repeat(beta, 1, Wx)
+    _y = repeat(y, 1, Wx)
+
     # dW = beta .* y .* (x .- y .* W)
-    # @info "sizes" size(y), size(_x), size(W) size(_beta)
-    # @info "sizes" size(_y), size(_x), size(W) size(_beta)
     result = _beta .* _y .* (_x .- _y .* W)
-    # result = _beta .* _y .* (_x .- W)
     return result
 end
 
@@ -239,6 +247,8 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
         # local_weight .+= opts["eta"] .* (beta .- local_out) .* local_in
         # local_weight .+= beta .* local_out .* (local_in .- local_out .* local_weight)
         local_weight .+= instar_cast(local_in, local_weight, local_out, beta)
+    elseif opts["learning_rule"] == "oja"
+        local_weight .+= oja_cast(local_in, local_weight, local_out, beta)
     else
         error("Incorrect learning rule option ($(opts["learning_rule"])), must be in LEARNING_RULES")
     end
@@ -482,8 +492,15 @@ function view_weight(
 )
     # weights = Flux.params(model.model.chain)
     weights = get_weights(model.model)
-    dim = Int(sqrt(size(weights[1])[2] / 2))
-    local_weight = reshape(weights[1][index, :], dim, dim*2)
+    dim = Int(sqrt(size(weights[1])[2]))
+    if model.opts["cc"]
+        dim = Int(dim / 2)
+    end
+    local_weight = reshape(
+        weights[1][index, :],
+        dim,
+        model.opts["cc"] ? dim*2 : dim,
+    )
     lmax = maximum(local_weight)
     lmin = minimum(local_weight)
     DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))

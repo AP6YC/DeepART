@@ -39,7 +39,8 @@ import .Hebb
 opts = Dict{String, Any}(
     # "n_epochs" => 2000,
     # "n_epochs" => 200,
-    "n_epochs" => 1,
+    # "n_epochs" => 1,
+    "n_epochs" => 10,
     # "n_epochs" => 50,
 
     "model_opts" => Dict{String, Any}(
@@ -48,8 +49,10 @@ opts = Dict{String, Any}(
 
         "bias" => false,
         "eta" => 0.05,
-        "beta_d" => 0.0,
-        # "beta_d" => 0.01,
+        # "beta_d" => 0.0,
+        # "beta_d" => 0.001,    # The good one
+        # "beta_d" => 0.005,
+        "beta_d" => 0.006,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
@@ -68,16 +71,20 @@ opts = Dict{String, Any}(
         # "model" => "fuzzy",
         # "model" => "conv",
         # "model" => "fuzzy_new",
-        "model" => "dense_new",
-        # "model" => "conv_new",
+        # "model" => "dense_new",
+        "model" => "conv_new",
 
         # "learning_rule" => "hebb",
-        # "learning_rule" => "oja",
-        "learning_rule" => "instar",
+        "learning_rule" => "oja",
+        # "learning_rule" => "instar",
         # "learning_rule" => "fuzzyart",
 
         # "init" => Flux.rand32,
         "init" => Flux.glorot_uniform,
+
+        # "middle_activation" => sigmoid_fast,
+        "middle_activation" => Flux.tanh_fast,
+        # "middle_activation" => Flux.celu,
 
         # "positive_weights" => true,
         "positive_weights" => false,
@@ -97,7 +104,7 @@ opts = Dict{String, Any}(
     # "profile" => true,
 
     # "dataset" => "wine",
-    "dataset" => "iris",
+    # "dataset" => "iris",
     # "dataset" => "wave",
     # "dataset" => "face",
     # "dataset" => "flag",
@@ -106,7 +113,7 @@ opts = Dict{String, Any}(
     # "dataset" => "ring",
     # "dataset" => "spiral",
     # "dataset" => "mnist",
-    # "dataset" => "usps",
+    "dataset" => "usps",
 
     "n_train" => 50000,
     "n_test" => 10000,

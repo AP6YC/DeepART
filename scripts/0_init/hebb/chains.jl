@@ -62,7 +62,8 @@ function get_conv_model(
         # CC layer
         Chain(
             MaxPool((2,2)),
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
             opts["cc"] ? DeepART.CCConv() : identity,
         ),
 
@@ -80,7 +81,8 @@ function get_conv_model(
         Chain(
             Flux.AdaptiveMaxPool((4, 4)),
             Flux.flatten,
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
             opts["cc"] ? DeepART.CC() : identity,
         ),
 
@@ -93,7 +95,8 @@ function get_conv_model(
         # Last layers
         Chain(
             # identity,
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
         ),
         Chain(
             Dense(
@@ -121,7 +124,8 @@ function get_fuzzy_model(
             init=opts["init"],
         ),
         Chain(
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
             opts["cc"] ? DeepART.CC() : identity,
         ),
         DeepART.Fuzzy(
@@ -132,7 +136,8 @@ function get_fuzzy_model(
         # LAST LAYER
         Chain(
             # identity,
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
         ),
         Chain(
             # sigmoid_fast,
@@ -159,7 +164,11 @@ function get_dense_model(
             init=opts["init"],
         ),
 
-        Chain(sigmoid_fast, opts["cc"] ? DeepART.CC() : identity,),
+        Chain(
+            # sigmoid_fast,
+            opts["middle_activation"],
+            opts["cc"] ? DeepART.CC() : identity,
+        ),
         Dense(_, 32,
             bias=opts["bias"],
             init=opts["init"],
@@ -171,7 +180,8 @@ function get_dense_model(
         # LAST LAYER
         Chain(
             # identity
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
         ),
         Chain(
             Dense(
@@ -198,7 +208,8 @@ function get_dense_deepart_layer(
 )
     return Flux.@autosize (n_in,) Chain(
         Chain(
-            first_layer ? identity : sigmoid_fast,
+            # first_layer ? identity : sigmoid_fast,
+            first_layer ? identity : opts["middle_activation"],
             opts["cc"] ? DeepART.CC() : identity,
         ),
         Dense(
@@ -217,7 +228,15 @@ function RandomTransform(
     n_in::Integer,
     n_out::Integer,
 )
-    return RandomTransform(Dense(n_in, n_out, sigmoid_fast, bias=false))
+    return RandomTransform(
+        Dense(
+            n_in,
+            n_out,
+            # sigmoid_fast,
+            opts["middle_activation"],
+            bias=false
+        )
+    )
 end
 
 function (m::RandomTransform)(x)
@@ -237,7 +256,8 @@ function get_fuzzy_deepart_layer(
     return Flux.@autosize (n_in,) Chain(
         Chain(
             # RandomTransform(_, 8),
-            first_layer ? identity : sigmoid_fast,
+            # first_layer ? identity : sigmoid_fast,
+            first_layer ? identity : opts["middle_activation"],
             opts["cc"] ? DeepART.CC() : identity,
         ),
         DeepART.Fuzzy(
@@ -255,7 +275,8 @@ function get_widrow_hoff_layer(
     return Flux.@autosize (n_in,) Chain(
         Chain(
             # identity
-            sigmoid_fast,
+            # sigmoid_fast,
+            opts["middle_activation"],
         ),
         Dense(
             _, n_out,
@@ -346,7 +367,8 @@ function get_inc_conv_model(
         Chain(
             Chain(
                 MaxPool((2,2)),
-                sigmoid_fast,
+                # sigmoid_fast,
+                opts["middle_activation"],
                 opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
@@ -359,7 +381,8 @@ function get_inc_conv_model(
             Chain(
                 Flux.AdaptiveMaxPool((4, 4)),
                 Flux.flatten,
-                sigmoid_fast,
+                # sigmoid_fast,
+                opts["middle_activation"],
                 opts["cc"] ? DeepART.CC() : identity,
             ),
             Dense(_, 32,
@@ -371,7 +394,8 @@ function get_inc_conv_model(
         Chain(
             Chain(
                 # identity,
-                sigmoid_fast,
+                # sigmoid_fast,
+                opts["middle_activation"],
             ),
             Chain(
                 Dense(
