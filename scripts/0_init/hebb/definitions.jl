@@ -75,6 +75,13 @@ end
 # FUNCTIONS
 # -----------------------------------------------------------------------------
 
+function inspect_weights(model::HebbModel, layer::Integer)
+    # weights = get_weights(model.model)
+    # return weights[layer]
+    return model.model.chain[layer][2].weight
+end
+
+
 function test(
     model::HebbModel,
     data::DeepART.DataSplit,
@@ -474,7 +481,7 @@ function view_weight(
     index::Integer,
 )
     # weights = Flux.params(model.model.chain)
-    weights = get_weights(model)
+    weights = get_weights(model.model)
     dim = Int(sqrt(size(weights[1])[2] / 2))
     local_weight = reshape(weights[1][index, :], dim, dim*2)
     lmax = maximum(local_weight)

@@ -37,9 +37,9 @@ import .Hebb
 
 @info "------- Setting options -------"
 opts = Dict{String, Any}(
-    "n_epochs" => 1000,
+    # "n_epochs" => 2000,
     # "n_epochs" => 200,
-    # "n_epochs" => 10,
+    "n_epochs" => 1,
     # "n_epochs" => 50,
 
     "model_opts" => Dict{String, Any}(
@@ -48,8 +48,8 @@ opts = Dict{String, Any}(
 
         "bias" => false,
         "eta" => 0.05,
-        # "beta_d" => 0.0,
-        "beta_d" => 0.05,
+        "beta_d" => 0.0,
+        # "beta_d" => 0.01,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
@@ -58,8 +58,8 @@ opts = Dict{String, Any}(
         # "beta_d" => 1.0,
         # "beta_d" => 0.001,
 
-        "final_sigmoid" => false,
-        # "final_sigmoid" => true,
+        # "final_sigmoid" => false,
+        "final_sigmoid" => true,
 
         "gpu" => false,
 
@@ -84,12 +84,13 @@ opts = Dict{String, Any}(
 
         "beta_normalize" => false,
         # "beta_normalize" => true,
+
         # "beta_rule" => "wta",
         "beta_rule" => "contrast",
         # "beta_rule" => "softmax",
 
-        # "cc" => true,
-        "cc" => false,
+        "cc" => true,
+        # "cc" => false,
     ),
 
     "profile" => false,
@@ -166,7 +167,8 @@ model = Hebb.HebbModel(data, opts["model_opts"])
 if model.opts["gpu"]
     model.model = model.model |> gpu
 end
-Hebb.test(model, data)
+old_perf = Hebb.test(model, data)
+@info "OLD PERF: $old_perf"
 
 # -----------------------------------------------------------------------------
 # TRAIN/TEST
