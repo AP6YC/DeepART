@@ -50,9 +50,9 @@ opts = Dict{String, Any}(
 
         "bias" => false,
         "eta" => 0.05,
-        "beta_d" => 0.0,
+        # "beta_d" => 0.0,
         # "beta_d" => 0.001,    # The good one
-        # "beta_d" => 0.003,
+        "beta_d" => 0.003,
         # "beta_d" => 0.005,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
@@ -90,12 +90,15 @@ opts = Dict{String, Any}(
         # "positive_weights" => true,
         "positive_weights" => false,
 
-        "beta_normalize" => false,
-        # "beta_normalize" => true,
+        # "beta_normalize" => false,
+        "beta_normalize" => true,
 
         # "beta_rule" => "wta",
         "beta_rule" => "contrast",
         # "beta_rule" => "softmax",
+        # "beta_rule" => "wavelet",
+        # "sigma" => 1.0f0,
+        "sigma" => 0.2,
 
         "cc" => true,
         # "cc" => false,
@@ -129,7 +132,21 @@ opts = Dict{String, Any}(
 # Correct for Float32 types
 opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
 opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
+opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
 Random.seed!(opts["rng_seed"])
+
+if opts["model_opts"]["beta_rule"] == "wavelet"
+    n_samples = 10000
+    plot_range = -0.5
+
+    x = range(-plot_range, plot_range, length=n_samples)
+    y = ricker_wavelet.(x, opts["model_opts"]["sigma"])
+
+    min_y = minimum(y)
+    inds = findall(x -> x == min_y, y)
+    # @info x[inds]
+    opts["model_opts"]["wavelet_offset"] = Float32(abs(x[inds][1]))
+end
 
 # -----------------------------------------------------------------------------
 # DATA

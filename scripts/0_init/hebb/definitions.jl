@@ -191,6 +191,11 @@ const BETA_RULES = [
     "softmax",
 ]
 
+function ricker_wavelet(t, sigma)
+    # sigma = 1.0f0
+    return 2.0f0 / (sqrt(3.0f0 * sigma) * pi^(1.0f0 / 4.0f0)) * (1.0f0 - (t / sigma)^2) * exp(-t^2 / (2.0f0 * sigma^2))
+end
+
 function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
@@ -209,6 +214,27 @@ function get_beta(out, opts::ModelOpts)
         local_soft = Flux.softmax(out)
         max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
         beta = opts["beta_d"] .* local_soft ./ max_soft
+    elseif opts["beta_rule"] == "wavelet"
+        # Ricker wavelet
+        # local_soft = Flux.softmax(out)
+        # wavelet_inputs = out .- local_soft
+        # wavelet = ricker_wavelet.(wavelet_inputs, opts["sigma"])
+        # beta = opts["beta_d"] .* wavelet
+
+        # local_soft = Flux.softmax(out)
+        local_soft=out
+
+        wavelet_inputs = abs.(out .- local_soft)
+        ind_max = argmax(wavelet_inputs)
+        for ix in eachindex(wavelet_inputs)
+            if ix != ind_max
+                wavelet_inputs[ix] = abs(wavelet_inputs[ix]) + opts["wavelet_offset"]
+            end
+        end
+        wavelet = ricker_wavelet.(wavelet_inputs, opts["sigma"])
+
+        max_wave = opts["beta_normalize"] ? maximum(wavelet) : 1.0f0
+        beta = opts["beta_d"] .* wavelet ./ max_wave
     else
         error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
     end
