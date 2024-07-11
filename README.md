@@ -1,4 +1,4 @@
-# DeepART
+[![deepart-header](https://github.com/AP6YC/FileStorage/blob/main/DeepART/header.png?raw=true)][docs-url]
 
 A repository containing implementations and experiments for the upcoming paper _Deep Adaptive Resonance Theory_.
 
@@ -17,14 +17,13 @@ A repository containing implementations and experiments for the upcoming paper _
 
 ## Table of Contents
 
-- [DeepART](#deepart)
-  - [Table of Contents](#table-of-contents)
-  - [Basic Usage](#basic-usage)
-  - [Attribution](#attribution)
-    - [Authors](#authors)
-    - [Datasets](#datasets)
-    - [Assets](#assets)
-    - [Quotes](#quotes)
+- [Table of Contents](#table-of-contents)
+- [Basic Usage](#basic-usage)
+- [Attribution](#attribution)
+  - [Authors](#authors)
+  - [Datasets](#datasets)
+  - [Assets](#assets)
+  - [Quotes](#quotes)
 
 [julia-lang]: https://julialang.org/
 [julia-docs]: https://docs.julialang.org/en/v1/
