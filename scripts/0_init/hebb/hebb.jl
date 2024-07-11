@@ -38,10 +38,11 @@ import .Hebb
 @info "------- Setting options -------"
 opts = Dict{String, Any}(
     # "n_epochs" => 2000,
-    # "n_epochs" => 200,
+    # "n_epochs" => 100,
     # "n_epochs" => 1,
     "n_epochs" => 10,
     # "n_epochs" => 50,
+    "n_vals" => 100,
 
     "model_opts" => Dict{String, Any}(
         # "immediate" => true,
@@ -49,10 +50,10 @@ opts = Dict{String, Any}(
 
         "bias" => false,
         "eta" => 0.05,
-        # "beta_d" => 0.0,
+        "beta_d" => 0.0,
         # "beta_d" => 0.001,    # The good one
+        # "beta_d" => 0.003,
         # "beta_d" => 0.005,
-        "beta_d" => 0.006,
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
@@ -71,8 +72,8 @@ opts = Dict{String, Any}(
         # "model" => "fuzzy",
         # "model" => "conv",
         # "model" => "fuzzy_new",
-        # "model" => "dense_new",
-        "model" => "conv_new",
+        "model" => "dense_new",
+        # "model" => "conv_new",
 
         # "learning_rule" => "hebb",
         "learning_rule" => "oja",
@@ -98,6 +99,8 @@ opts = Dict{String, Any}(
 
         "cc" => true,
         # "cc" => false,
+
+        # "model_spec" => []
     ),
 
     "profile" => false,
@@ -196,7 +199,8 @@ else
     vals = Hebb.train_loop(
         model,
         data,
-        n_epochs=opts["n_epochs"],
+        n_epochs = opts["n_epochs"],
+        n_vals = opts["n_vals"],
     )
 
     local_plot = lineplot(

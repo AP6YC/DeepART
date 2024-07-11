@@ -290,7 +290,7 @@ end
 # GROUPED CHAIN CONSTRUCTORS
 # -----------------------------------------------------------------------------
 
-function get_inc_dense_model(
+function get_dense_groupedccchain(
     n_input::Integer,
     n_class::Integer,
     opts::ModelOpts,
@@ -303,7 +303,7 @@ function get_inc_dense_model(
     return GroupedCCChain(model)
 end
 
-function get_inc_fuzzy_model(
+function get_fuzzy_groupedccchain(
     n_input::Integer,
     n_class::Integer,
     opts::ModelOpts,
@@ -312,6 +312,41 @@ function get_inc_fuzzy_model(
         get_fuzzy_deepart_layer(n_input, 64, opts, first_layer=true),
         get_fuzzy_deepart_layer(64, 32, opts),
         get_widrow_hoff_layer(32, n_class, opts)
+    )
+    return GroupedCCChain(model)
+end
+
+function get_spec_dense_groupedccchain(
+    n_neurons::Vector{Int},
+    opts::ModelOpts,
+)::GroupedCCChain
+
+    n_layers = length(n_neurons)
+
+    model = Chain(
+        # Input layer
+        get_dense_deepart_layer(n_neurons[1], n_neurons[2], opts, first_layer=true),
+        # Hidden layers
+        (get_dense_deepart_layer(n_neurons[ix], n_neurons[ix + 1], opts)
+        for ix = 2:n_layers - 2)...,
+        # Output layer
+        get_widrow_hoff_layer(n_neurons[n_layers-1], n_neurons[n_layers], opts)
+    )
+    return GroupedCCChain(model)
+end
+
+function get_spec_fuzzy_groupedccchain(
+    n_neurons::Vector{Int},
+    opts::ModelOpts,
+)::GroupedCCChain
+
+    n_layers = length(n_neurons)
+
+    model = Chain(
+        get_fuzzy_deepart_layer(n_neurons[1], n_neurons[2], opts, first_layer=true),
+        (get_fuzzy_deepart_layer(n_neurons[ix], n_neurons[ix + 1], opts)
+        for ix = 2:n_layers - 2)...,
+        get_widrow_hoff_layer(n_neurons[n_layers-1], n_neurons[n_layers], opts)
     )
     return GroupedCCChain(model)
 end
@@ -422,8 +457,8 @@ const MODEL_MAP = Dict(
     "fuzzy" => get_fuzzy_model,
     "conv" => get_conv_model,
     "dense" => get_dense_model,
-    "dense_new" => get_inc_dense_model,
-    "fuzzy_new" => get_inc_fuzzy_model,
+    "dense_new" => get_dense_groupedccchain,
+    "fuzzy_new" => get_fuzzy_groupedccchain,
     "conv_new" => get_inc_conv_model,
 )
 

@@ -430,7 +430,6 @@ function train_loop(
     data;
     n_vals::Integer = 100,
     n_epochs::Integer = 10,
-    kwargs...
 )
     # Set up the validation intervals
     local_n_vals = min(n_vals, n_epochs)
@@ -517,3 +516,4 @@ function profile_test(n_epochs::Integer)
 end
 
 end
+
