@@ -20,7 +20,7 @@ Deep Hebbian learning experiment drafting script.
 @info "------- Loading dependencies -------"
 using Flux
 using Random
-using UnicodePlots
+# using UnicodePlots
 
 @info "------- Loading definitions -------"
 include("definitions.jl")
@@ -39,21 +39,27 @@ import .Hebb
 opts = Dict{String, Any}(
     # "n_epochs" => 2000,
     # "n_epochs" => 100,
-    # "n_epochs" => 1,
-    "n_epochs" => 10,
+    "n_epochs" => 5,
+    # "n_epochs" => 10,
     # "n_epochs" => 50,
-    "n_vals" => 100,
+    # "n_vals" => 100,
+    "n_vals" => 50,
+    "val_epoch" => true,
 
     "model_opts" => Dict{String, Any}(
         # "immediate" => true,
         "immediate" => false,
 
         "bias" => false,
-        "eta" => 0.05,
+        # "eta" => 0.05,
+        "eta" => 0.005,     # The good one
+        # "eta" => 0.001,
         # "beta_d" => 0.0,
+        # "beta_d" => 0.0001,    # The good one
         # "beta_d" => 0.001,    # The good one
-        "beta_d" => 0.003,
-        # "beta_d" => 0.005,
+        # "beta_d" => 0.004,
+        "beta_d" => 0.005,
+        # "beta_d" => 0.01,       # Divergence
         # "eta" => 0.2,
         # "beta_d" => 0.2,
         # "eta" => 0.5,
@@ -72,8 +78,14 @@ opts = Dict{String, Any}(
         # "model" => "fuzzy",
         # "model" => "conv",
         # "model" => "fuzzy_new",
-        "model" => "dense_new",
+        # "model" => "dense_new",
+        "model" => "dense_spec",
         # "model" => "conv_new",
+
+        # "n_neurons" => [128, 64, 32],
+        # "n_neurons" => [64, 128, 32, 64, 16],
+        "n_neurons" => [64],
+
 
         # "learning_rule" => "hebb",
         "learning_rule" => "oja",
@@ -87,11 +99,11 @@ opts = Dict{String, Any}(
         "middle_activation" => Flux.tanh_fast,
         # "middle_activation" => Flux.celu,
 
-        # "positive_weights" => true,
-        "positive_weights" => false,
+        "positive_weights" => true,
+        # "positive_weights" => false,
 
-        # "beta_normalize" => false,
-        "beta_normalize" => true,
+        "beta_normalize" => false,
+        # "beta_normalize" => true,
 
         # "beta_rule" => "wta",
         "beta_rule" => "contrast",
@@ -100,8 +112,8 @@ opts = Dict{String, Any}(
         # "sigma" => 1.0f0,
         "sigma" => 0.2,
 
-        "cc" => true,
-        # "cc" => false,
+        # "cc" => true,
+        "cc" => false,
 
         # "model_spec" => []
     ),
@@ -119,6 +131,7 @@ opts = Dict{String, Any}(
     # "dataset" => "ring",
     # "dataset" => "spiral",
     # "dataset" => "mnist",
+    # "dataset" => "fashionmnist",
     "dataset" => "usps",
 
     "n_train" => 50000,
@@ -151,24 +164,6 @@ end
 # -----------------------------------------------------------------------------
 # DATA
 # -----------------------------------------------------------------------------
-
-datasets = Dict(
-    "high_dimensional" => [
-        "mnist",
-        "usps",
-    ],
-    "low_dimensional" => [
-        "wine",
-        "iris",
-        "wave",
-        "face",
-        "flag",
-        "halfring",
-        "moon",
-        "ring",
-        "spiral",
-    ]
-)
 
 @info "------- Loading dataset -------"
 data = Hebb.get_data(opts)
@@ -218,15 +213,16 @@ else
         data,
         n_epochs = opts["n_epochs"],
         n_vals = opts["n_vals"],
+        val_epoch = opts["val_epoch"],
     )
 
-    local_plot = lineplot(
-        vals,
-    )
-    show(local_plot)
+    # local_plot = lineplot(
+    #     vals,
+    # )
+    # show(local_plot)
 
     # Only visualize the weights if we are working with a computer vision dataset
-    if opts["dataset"] in datasets["high_dimensional"]
+    if opts["dataset"] in Hebb.datasets["high_dimensional"]
         Hebb.view_weight(model, 1)
     # else
         # @info model[2].weight

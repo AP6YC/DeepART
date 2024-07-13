@@ -22,6 +22,8 @@ using CUDA
 using StatsBase: mean
 using NumericalTypeAliases
 
+using UnicodePlots
+
 # -----------------------------------------------------------------------------
 # INCLUDES
 # -----------------------------------------------------------------------------
@@ -30,8 +32,27 @@ include("chains.jl")
 
 const SimOpts = Dict{String, Any}
 
+datasets = Dict(
+    "high_dimensional" => [
+        "fashionmnist",
+        "mnist",
+        "usps",
+    ],
+    "low_dimensional" => [
+        "wine",
+        "iris",
+        "wave",
+        "face",
+        "flag",
+        "halfring",
+        "moon",
+        "ring",
+        "spiral",
+    ]
+)
+
 function get_data(opts::SimOpts)
-    data = if opts["dataset"] in ["mnist", "usps"]
+    data = if opts["dataset"] in datasets["high_dimensional"]
         DeepART.load_one_dataset(
             opts["dataset"],
             n_train=opts["n_train"],
@@ -228,7 +249,7 @@ function get_beta(out, opts::ModelOpts)
         ind_max = argmax(wavelet_inputs)
         for ix in eachindex(wavelet_inputs)
             if ix != ind_max
-                wavelet_inputs[ix] = abs(wavelet_inputs[ix]) + opts["wavelet_offset"]
+                wavelet_inputs[ix] = wavelet_inputs[ix] + opts["wavelet_offset"]
             end
         end
         wavelet = ricker_wavelet.(wavelet_inputs, opts["sigma"])
@@ -282,7 +303,7 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
     return
 end
 
-@info "------- Defining train -------"
+# @info "------- Defining train -------"
 function train_hebb(
     model::HebbModel{T},
     x,
@@ -450,22 +471,65 @@ function train_hebb_immediate(
     return
 end
 
+generate_showvalues(val) = () -> [(:val, val)]
+
+function update_view_progress!(
+    # ix_iter,
+    # interval_vals,
+    # ix_vals,
+    # vals,
+    p,
+    loop_dict,
+    model,
+    data,
+)
+    if loop_dict["ix_iter"] % loop_dict["interval_vals"] == 0
+        loop_dict["vals"][loop_dict["ix_vals"]] = test(model, data)
+        loop_dict["ix_vals"] += 1
+    end
+
+    # Update progress bar
+    report_value = if loop_dict["ix_vals"] > 1
+        loop_dict["vals"][loop_dict["ix_vals"] - 1]
+    else
+        0.0
+    end
+
+    loop_dict["ix_iter"] += 1
+
+    next!(p; showvalues=generate_showvalues(report_value))
+
+    # next!(p; showvalues=generate_showvalues(report_value))
+    # return report_value
+    return
+end
+
 @info "------- Defining loop -------"
 function train_loop(
     model::HebbModel,
     data;
     n_vals::Integer = 100,
     n_epochs::Integer = 10,
+    val_epoch::Bool = false,
 )
-    # Set up the validation intervals
-    local_n_vals = min(n_vals, n_epochs)
-    interval_vals = Int(floor(n_epochs / local_n_vals))
-    ix_vals = 1
-    vals = zeros(Float32, local_n_vals)
+    loop_dict = Dict{String, Any}()
 
     # Set up the epochs progress bar
-    p = Progress(n_epochs)
-    generate_showvalues(val) = () -> [(:val, val)]
+    n_iter = if val_epoch
+        length(data.train)
+    else
+        n_epochs
+    end
+
+    # Set up the validation intervals
+    local_n_vals = min(n_vals, n_iter)
+    loop_dict["interval_vals"] = Int(floor(n_iter / local_n_vals))
+
+    loop_dict["ix_vals"] = 1
+    loop_dict["ix_iter"] = 1
+    loop_dict["vals"] = zeros(Float32, local_n_vals)
+
+    p = Progress(n_iter)
 
     # Iterate over each epoch
     for ie = 1:n_epochs
@@ -482,33 +546,44 @@ function train_loop(
             else
                 train_hebb(model, x, y)
             end
-            # if model.opts["model"] in ["dense_new", "fuzzy_new", "conv_new"]
-            #     Hebb.train_new_hebb(model, x, y)
-            # elseif model.opts["immediate"]
-            #     train_hebb_immediate(model, x, y)
-            # else
-            #     train_hebb(model, x, y)
-            # end
+            # if single_epoch
+            if val_epoch
+                update_view_progress!(
+                    p,
+                    loop_dict,
+                    model,
+                    data,
+                )
+            end
         end
 
         # Compute validation performance
-        if ie % interval_vals == 0
-            vals[ix_vals] = test(model, data)
-            ix_vals += 1
-        end
-
-        # Update progress bar
-        report_value = if ix_vals > 1
-            vals[ix_vals - 1]
+        # if !single_epoch
+        if !val_epoch
+            update_view_progress!(
+                p,
+                loop_dict,
+                model,
+                data,
+            )
+            # next!(p; showvalues=generate_showvalues(report_value))
         else
-            0.0
+            # Reset incrementers
+            p = Progress(n_iter)
+            loop_dict["ix_vals"] = 1
+            loop_dict["ix_iter"] = 1
+            local_plot = lineplot(
+                loop_dict["vals"],
+            )
+            show(local_plot)
+            println("\n")
         end
-        next!(p; showvalues=generate_showvalues(report_value))
     end
 
+    # @info "iter:" ix_iter
     perf = test(model, data)
     @info "perf = $perf"
-    return vals
+    return loop_dict["vals"]
 end
 
 function view_weight(
@@ -517,10 +592,12 @@ function view_weight(
 )
     # weights = Flux.params(model.model.chain)
     weights = get_weights(model.model)
-    dim = Int(sqrt(size(weights[1])[2]))
+    @info size(weights[1])
+    dim = Int(size(weights[1])[2])
     if model.opts["cc"]
         dim = Int(dim / 2)
     end
+    dim = Int(sqrt(dim))
     local_weight = reshape(
         weights[1][index, :],
         dim,

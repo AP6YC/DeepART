@@ -317,9 +317,13 @@ function get_fuzzy_groupedccchain(
 end
 
 function get_spec_dense_groupedccchain(
-    n_neurons::Vector{Int},
+    # n_neurons::Vector{Int},
+    n_input::Integer,
+    n_class::Integer,
     opts::ModelOpts,
 )::GroupedCCChain
+
+    n_neurons = [n_input, opts["n_neurons"]..., n_class]
 
     n_layers = length(n_neurons)
 
@@ -460,6 +464,7 @@ const MODEL_MAP = Dict(
     "dense_new" => get_dense_groupedccchain,
     "fuzzy_new" => get_fuzzy_groupedccchain,
     "conv_new" => get_inc_conv_model,
+    "dense_spec" => get_spec_dense_groupedccchain,
 )
 
 function construct_model(
@@ -484,6 +489,19 @@ function construct_model(
     end
 
     # Construct the model
+    # model = if opts["model_spec"] == "dense_spec"
+    #     get_spec_dense_groupedccchain(
+    #         [local_input_size, opts["n_neurons"]..., n_class],
+    #         opts,
+    #     )
+    # else
+    #     MODEL_MAP[opts["model"]](
+    #         local_input_size,
+    #         n_class,
+    #         opts,
+    #     )
+    # end
+
     model = MODEL_MAP[opts["model"]](
         local_input_size,
         n_class,
