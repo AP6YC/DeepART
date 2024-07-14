@@ -18,6 +18,8 @@ Deep Hebbian learning experiment drafting script.
 # -----------------------------------------------------------------------------
 
 @info "------- Loading dependencies -------"
+using Revise
+using DeepART
 using Flux
 using Random
 # using UnicodePlots
@@ -36,124 +38,132 @@ import .Hebb
 # -----------------------------------------------------------------------------
 
 @info "------- Setting options -------"
-opts = Dict{String, Any}(
-    # "n_epochs" => 2000,
-    # "n_epochs" => 100,
-    # "n_epochs" => 50,
-    # "n_epochs" => 10,
-    # "n_epochs" => 5,
-    "n_epochs" => 1,
-    "n_vals" => 50,
-    "val_epoch" => true,
+# opts = Dict{String, Any}(
+#     # "n_epochs" => 2000,
+#     # "n_epochs" => 100,
+#     # "n_epochs" => 50,
+#     # "n_epochs" => 10,
+#     "n_epochs" => 5,
+#     # "n_epochs" => 1,
+#     "n_vals" => 50,
+#     "val_epoch" => true,
 
-    "model_opts" => Dict{String, Any}(
-        # "immediate" => true,
-        "immediate" => false,
+#     "model_opts" => Dict{String, Any}(
+#         # "immediate" => true,
+#         "immediate" => false,
 
-        "bias" => false,
-        # "eta" => 0.001,
-        "eta" => 0.005,     # The good one
-        # "eta" => 0.05,
-        # "eta" => 0.2,
-        # "eta" => 0.5,
-        # "eta" => 1.0,
+#         "bias" => false,
+#         # "eta" => 0.001,
+#         "eta" => 0.005,     # The good one
+#         # "eta" => 0.05,
+#         # "eta" => 0.2,
+#         # "eta" => 0.5,
+#         # "eta" => 1.0,
 
-        # "beta_d" => 0.0,
-        # "beta_d" => 0.0001,    # The good one
-        # "beta_d" => 0.001,    # The good one
-        # "beta_d" => 0.004,
-        "beta_d" => 0.005,
-        # "beta_d" => 0.01,       # Divergence
-        # "beta_d" => 0.1,
-        # "beta_d" => 0.5,
-        # "beta_d" => 1.0,
-        # "beta_d" => 0.001,
+#         # "beta_d" => 0.0,
+#         # "beta_d" => 0.0001,
+#         # "beta_d" => 0.001,    # The good one
+#         # "beta_d" => 0.004,
+#         # "beta_d" => 0.005,
+#         "beta_d" => 0.01,       # Divergence
+#         # "beta_d" => 0.011,       # Divergence
+#         # "beta_d" => 0.02,       # Divergence
+#         # "beta_d" => 0.1,
+#         # "beta_d" => 0.5,
+#         # "beta_d" => 1.0,
+#         # "beta_d" => 0.001,
 
-        # "final_sigmoid" => false,
-        "final_sigmoid" => true,
+#         "final_sigmoid" => false,
+#         # "final_sigmoid" => true,
 
-        "gpu" => false,
+#         "gpu" => false,
 
-        # "model" => "dense",
-        # "model" => "small_dense",
-        # "model" => "fuzzy",
-        # "model" => "conv",
-        # "model" => "fuzzy_new",
-        # "model" => "dense_new",
-        # "model" => "dense_spec",
-        "model" => "conv_new",
+#         # "model" => "dense",
+#         # "model" => "small_dense",
+#         # "model" => "fuzzy",
+#         # "model" => "conv",
+#         # "model" => "fuzzy_new",
+#         # "model" => "dense_new",
+#         "model" => "dense_spec",
+#         # "model" => "conv_new",
 
-        # "n_neurons" => [128, 64, 32],
-        # "n_neurons" => [64, 128, 32, 64, 16],
-        # "n_neurons" => [128, 64],
-        "n_neurons" => [256, 128, 64],
+#         # "n_neurons" => [128, 64, 32],
+#         # "n_neurons" => [64, 128, 32, 64, 16],
+#         # "n_neurons" => [128, 64],
+#         "n_neurons" => [20],
+#         # "n_neurons" => [256, 128, 64],
 
 
-        # "learning_rule" => "hebb",
-        "learning_rule" => "oja",
-        # "learning_rule" => "instar",
-        # "learning_rule" => "fuzzyart",
+#         # "learning_rule" => "hebb",
+#         "learning_rule" => "oja",
+#         # "learning_rule" => "instar",
+#         # "learning_rule" => "fuzzyart",
 
-        # "post_synaptic" => true,
-        "post_synaptic" => false,
+#         # "post_synaptic" => true,
+#         "post_synaptic" => false,
 
-        # "init" => Flux.rand32,
-        "init" => Flux.glorot_uniform,
+#         # "init" => Flux.rand32,
+#         "init" => Flux.glorot_uniform,
 
-        # "middle_activation" => sigmoid_fast,
-        "middle_activation" => Flux.tanh_fast,
-        # "middle_activation" => Flux.relu,
-        # "middle_activation" => Flux.celu,
+#         # "middle_activation" => sigmoid_fast,
+#         "middle_activation" => Flux.tanh_fast,
+#         # "middle_activation" => Flux.relu,
+#         # "middle_activation" => Flux.celu,
 
-        "positive_weights" => true,
-        # "positive_weights" => false,
+#         # "positive_weights" => true,
+#         "positive_weights" => false,
 
-        "beta_normalize" => false,
-        # "beta_normalize" => true,
+#         # "beta_normalize" => false,
+#         "beta_normalize" => true,
 
-        # "beta_rule" => "wta",
-        # "beta_rule" => "contrast",
-        # "beta_rule" => "softmax",
-        # "beta_rule" => "wavelet",
-        "beta_rule" => "gaussian",
-        # "sigma" => 1.0,
-        # "sigma" => 0.2,
-        "sigma" => 0.5,
+#         # "beta_rule" => "wta",
+#         # "beta_rule" => "contrast",
+#         # "beta_rule" => "softmax",
+#         # "beta_rule" => "wavelet",
+#         "beta_rule" => "gaussian",
 
-        # "cc" => true,
-        "cc" => false,
+#         # "sigma" => 0.05,
+#         # "sigma" => 0.1,
+#         "sigma" => 0.2,
+#         # "sigma" => 0.5,
+#         # "sigma" => 1.0,
 
-        # "model_spec" => []
-    ),
+#         # "cc" => true,
+#         "cc" => false,
 
-    "profile" => false,
-    # "profile" => true,
+#         # "model_spec" => []
+#     ),
 
-    # "dataset" => "wine",
-    # "dataset" => "iris",
-    # "dataset" => "wave",
-    # "dataset" => "face",
-    # "dataset" => "flag",
-    # "dataset" => "halfring",
-    # "dataset" => "moon",
-    # "dataset" => "ring",
-    # "dataset" => "spiral",
-    # "dataset" => "mnist",
-    "dataset" => "fashionmnist",
-    # "dataset" => "usps",
+#     "profile" => false,
+#     # "profile" => true,
 
-    "n_train" => 50000,
-    "n_test" => 10000,
-    # "flatten" => true,
-    "rng_seed" => 1235,
-)
+#     # "dataset" => "wine",
+#     # "dataset" => "iris",
+#     # "dataset" => "wave",
+#     # "dataset" => "face",
+#     # "dataset" => "flag",
+#     # "dataset" => "halfring",
+#     # "dataset" => "moon",
+#     # "dataset" => "ring",
+#     # "dataset" => "spiral",
+#     # "dataset" => "mnist",
+#     # "dataset" => "fashionmnist",
+#     "dataset" => "usps",
+
+#     "n_train" => 50000,
+#     "n_test" => 10000,
+#     # "flatten" => true,
+#     "rng_seed" => 1235,
+# )
+
+opts = Hebb.load_opts("base.yml")
 
 @info "------- Options post-processing -------"
 
 # Correct for Float32 types
-opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
-opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
-opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
+# opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
+# opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
+# opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
 Random.seed!(opts["rng_seed"])
 
 if opts["model_opts"]["beta_rule"] == "wavelet"
@@ -185,8 +195,6 @@ n_class = length(unique(data.train.y))
 # -----------------------------------------------------------------------------
 
 @info "------- Constructing model -------"
-
-# model = Hebb.construct_model(data, opts)
 model = Hebb.HebbModel(data, opts["model_opts"])
 
 # -----------------------------------------------------------------------------
@@ -215,6 +223,15 @@ if opts["profile"]
         @profview Hebb.profile_test(10)
     end
 else
+    if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
+        @info "weights before:"
+        old_weights = deepcopy(model.model.chain[1][2].weight)
+        Hebb.view_weight(model, 1)
+    # else
+        # @info model[2].weight
+        # @info sum(model[2].weight)
+    end
+
     @info "------- Training -------"
     vals = Hebb.train_loop(
         model,
@@ -231,9 +248,41 @@ else
 
     # Only visualize the weights if we are working with a computer vision dataset
     if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
+        @info "Weights after:"
+        new_weights = deepcopy(model.model.chain[1][2].weight)
+        @info "Weights difference:" sum(new_weights .- old_weights)
         Hebb.view_weight(model, 1)
     # else
         # @info model[2].weight
         # @info sum(model[2].weight)
     end
 end
+
+function view_weight_grid(model::Hebb.HebbModel, n_grid::Int)
+    a = Hebb.view_weight(model, 16)
+    (dim_x, dim_y) = size(a)
+    out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
+    for ix = 1:n_grid
+        for jx = 1:n_grid
+            local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
+            out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
+                     (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
+        end
+    end
+    return out_grid
+end
+
+# a = Hebb.view_weight(model, 16)
+# (dim_x, dim_y) = size(a)
+# n_grid = 6
+# out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
+# for ix = 1:n_grid
+#     for jx = 1:n_grid
+#         local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
+#         out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
+#                  (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
+#     end
+# end
+# display(out_grid)
+
+view_weight_grid(model, 4)
