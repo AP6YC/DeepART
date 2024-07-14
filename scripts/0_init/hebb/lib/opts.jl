@@ -45,9 +45,6 @@ function sanitize_opts!(opts::SimOpts)
             opts["model_opts"][key] = Float32(opts["model_opts"][key])
         end
     end
-    # opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
-    # opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
-    # opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
 
     # Convert to Flux functions
     for key in keys(opts["model_opts"])

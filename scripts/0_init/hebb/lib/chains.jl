@@ -519,20 +519,7 @@ function construct_model(
         n_input
     end
 
-    # Construct the model
-    # model = if opts["model_spec"] == "dense_spec"
-    #     get_spec_dense_groupedccchain(
-    #         [local_input_size, opts["n_neurons"]..., n_class],
-    #         opts,
-    #     )
-    # else
-    #     MODEL_MAP[opts["model"]](
-    #         local_input_size,
-    #         n_class,
-    #         opts,
-    #     )
-    # end
-
+    # Construct the model from the model function map
     model = MODEL_MAP[opts["model"]](
         local_input_size,
         n_class,
