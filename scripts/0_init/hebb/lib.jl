@@ -1,5 +1,5 @@
 """
-    definitions.jl
+    lib.jl
 
 # Description
 Definitions for the Hebbian learning module.
@@ -11,14 +11,12 @@ module Hebb
 # DEPENDENCIES
 # -----------------------------------------------------------------------------
 
-# @info "------- Loading dependencies -------"
 using Revise
 using DeepART
 using Flux
 using ProgressMeter
 using Random
 using CUDA
-# using UnicodePlots
 using StatsBase: mean
 using NumericalTypeAliases
 
@@ -217,17 +215,20 @@ function ricker_wavelet(t, sigma)
     return 2.0f0 / (sqrt(3.0f0 * sigma) * pi^(1.0f0 / 4.0f0)) * (1.0f0 - (t / sigma)^2) * exp(-t^2 / (2.0f0 * sigma^2))
 end
 
+function gaussian(t, sigma)
+    return exp(-t^2 / (2.0f0 * sigma^2))
+end
+
 function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
         max_ind = argmax(out)
         beta[max_ind] = one(Float32)
     elseif opts["beta_rule"] == "contrast"
+        # Krotov / contrastive learning
         max_ind = argmax(out)
         local_soft = Flux.softmax(out)
-
         max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
-
         local_soft = -local_soft
         local_soft[max_ind] = -local_soft[max_ind]
         beta = opts["beta_d"] .* local_soft ./ max_soft
@@ -237,16 +238,8 @@ function get_beta(out, opts::ModelOpts)
         beta = opts["beta_d"] .* local_soft ./ max_soft
     elseif opts["beta_rule"] == "wavelet"
         # Ricker wavelet
-        # local_soft = Flux.softmax(out)
-        # wavelet_inputs = out .- local_soft
-        # wavelet = ricker_wavelet.(wavelet_inputs, opts["sigma"])
-        # beta = opts["beta_d"] .* wavelet
-
-        # local_soft = Flux.softmax(out)
-        local_soft=out
-
-        wavelet_inputs = abs.(out .- local_soft)
-        ind_max = argmax(wavelet_inputs)
+        ind_max = argmax(out)
+        wavelet_inputs = abs.(out .- out[ind_max])
         for ix in eachindex(wavelet_inputs)
             if ix != ind_max
                 wavelet_inputs[ix] = wavelet_inputs[ix] + opts["wavelet_offset"]
@@ -256,6 +249,15 @@ function get_beta(out, opts::ModelOpts)
 
         max_wave = opts["beta_normalize"] ? maximum(wavelet) : 1.0f0
         beta = opts["beta_d"] .* wavelet ./ max_wave
+    elseif opts["beta_rule"] == "gaussian"
+        # Gaussian
+        ind_max = argmax(out)
+        gaussian_inputs = abs.(out .- out[ind_max])
+        gaussian_outs = gaussian.(gaussian_inputs, opts["sigma"])
+        max_gaussian_outs = opts["beta_normalize"] ? maximum(gaussian_outs) : 1.0f0
+        gaussian_outs = -gaussian_outs
+        gaussian_outs[ind_max] = -gaussian_outs[ind_max]
+        beta = opts["beta_d"] .* gaussian_outs ./ max_gaussian_outs
     else
         error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
     end
@@ -303,7 +305,6 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
     return
 end
 
-# @info "------- Defining train -------"
 function train_hebb(
     model::HebbModel{T},
     x,
@@ -504,7 +505,25 @@ function update_view_progress!(
     return
 end
 
-@info "------- Defining loop -------"
+const LoopDict = Dict{String, Any}
+
+function init_progress(loop_dict::LoopDict)
+    loop_dict["ix_vals"] = 1
+    loop_dict["ix_iter"] = 1
+
+    p = Progress(loop_dict["n_iter"])
+    return p
+end
+
+function show_val_unicode_plot(loop_dict::LoopDict)
+    local_plot = lineplot(
+        loop_dict["vals"],
+    )
+    show(local_plot)
+    println("\n")
+    return
+end
+
 function train_loop(
     model::HebbModel,
     data;
@@ -512,24 +531,22 @@ function train_loop(
     n_epochs::Integer = 10,
     val_epoch::Bool = false,
 )
-    loop_dict = Dict{String, Any}()
+    loop_dict = LoopDict()
 
     # Set up the epochs progress bar
-    n_iter = if val_epoch
+    loop_dict["n_iter"] = if val_epoch
         length(data.train)
     else
         n_epochs
     end
 
     # Set up the validation intervals
-    local_n_vals = min(n_vals, n_iter)
-    loop_dict["interval_vals"] = Int(floor(n_iter / local_n_vals))
-
-    loop_dict["ix_vals"] = 1
-    loop_dict["ix_iter"] = 1
+    local_n_vals = min(n_vals, loop_dict["n_iter"])
+    loop_dict["interval_vals"] = Int(floor(loop_dict["n_iter"] / local_n_vals))
     loop_dict["vals"] = zeros(Float32, local_n_vals)
 
-    p = Progress(n_iter)
+    # Init the progress bar and loop tracking variables
+    p = init_progress(loop_dict)
 
     # Iterate over each epoch
     for ie = 1:n_epochs
@@ -546,7 +563,6 @@ function train_loop(
             else
                 train_hebb(model, x, y)
             end
-            # if single_epoch
             if val_epoch
                 update_view_progress!(
                     p,
@@ -558,7 +574,6 @@ function train_loop(
         end
 
         # Compute validation performance
-        # if !single_epoch
         if !val_epoch
             update_view_progress!(
                 p,
@@ -566,12 +581,10 @@ function train_loop(
                 model,
                 data,
             )
-            # next!(p; showvalues=generate_showvalues(report_value))
         else
             # Reset incrementers
-            p = Progress(n_iter)
-            loop_dict["ix_vals"] = 1
-            loop_dict["ix_iter"] = 1
+            p = init_progress(loop_dict)
+
             local_plot = lineplot(
                 loop_dict["vals"],
             )
@@ -580,7 +593,6 @@ function train_loop(
         end
     end
 
-    # @info "iter:" ix_iter
     perf = test(model, data)
     @info "perf = $perf"
     return loop_dict["vals"]
@@ -592,7 +604,6 @@ function view_weight(
 )
     # weights = Flux.params(model.model.chain)
     weights = get_weights(model.model)
-    @info size(weights[1])
     dim = Int(size(weights[1])[2])
     if model.opts["cc"]
         dim = Int(dim / 2)
@@ -619,4 +630,3 @@ function profile_test(n_epochs::Integer)
 end
 
 end
-

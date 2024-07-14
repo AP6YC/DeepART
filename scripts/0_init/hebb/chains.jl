@@ -54,6 +54,7 @@ function get_conv_model(
             Conv(
                 (3, 3), _ => 8,
                 # sigmoid_fast,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
@@ -63,7 +64,8 @@ function get_conv_model(
         Chain(
             MaxPool((2,2)),
             # sigmoid_fast,
-            opts["middle_activation"],
+            # opts["middle_activation"],
+            opts["post_synaptic"] ? identity : opts["middle_activation"],
             opts["cc"] ? DeepART.CCConv() : identity,
         ),
 
@@ -72,6 +74,7 @@ function get_conv_model(
             Conv(
                 (5,5), _ => 16,
                 # sigmoid_fast,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
@@ -82,12 +85,14 @@ function get_conv_model(
             Flux.AdaptiveMaxPool((4, 4)),
             Flux.flatten,
             # sigmoid_fast,
-            opts["middle_activation"],
+            # opts["middle_activation"],
+            opts["post_synaptic"] ? identity : opts["middle_activation"],
             opts["cc"] ? DeepART.CC() : identity,
         ),
 
         # Dense layer
         Dense(_, 32,
+            opts["post_synaptic"] ? opts["middle_activation"] : identity,
             bias=opts["bias"],
             init=opts["init"],
         ),
@@ -96,7 +101,8 @@ function get_conv_model(
         Chain(
             # identity,
             # sigmoid_fast,
-            opts["middle_activation"],
+            # opts["middle_activation"],
+            opts["post_synaptic"] ? identity : opts["middle_activation"],
         ),
         Chain(
             Dense(
@@ -206,14 +212,25 @@ function get_dense_deepart_layer(
     opts::ModelOpts;
     first_layer::Bool = false,
 )
+    first_activation = if first_layer
+        identity
+    elseif opts["post_synaptic"]
+        identity
+    else
+        opts["middle_activation"]
+    end
+
     return Flux.@autosize (n_in,) Chain(
         Chain(
+            # RandomTransform(_, 16, opts),
             # first_layer ? identity : sigmoid_fast,
-            first_layer ? identity : opts["middle_activation"],
+            # first_layer ? identity : opts["middle_activation"],
+            first_activation,
             opts["cc"] ? DeepART.CC() : identity,
         ),
         Dense(
             _, n_out,
+            opts["post_synaptic"] ? opts["middle_activation"] : identity,
             bias = opts["bias"],
             init = opts["init"],
         ),
@@ -227,6 +244,7 @@ end
 function RandomTransform(
     n_in::Integer,
     n_out::Integer,
+    opts::ModelOpts,
 )
     return RandomTransform(
         Dense(
@@ -253,15 +271,25 @@ function get_fuzzy_deepart_layer(
     opts::ModelOpts;
     first_layer::Bool = false,
 )
+    first_activation = if first_layer
+        identity
+    elseif opts["post_synaptic"]
+        identity
+    else
+        opts["middle_activation"]
+    end
+
     return Flux.@autosize (n_in,) Chain(
         Chain(
             # RandomTransform(_, 8),
             # first_layer ? identity : sigmoid_fast,
-            first_layer ? identity : opts["middle_activation"],
+            # first_layer ? identity : opts["middle_activation"],
+            first_activation,
             opts["cc"] ? DeepART.CC() : identity,
         ),
         DeepART.Fuzzy(
             _, n_out,
+            opts["post_synaptic"] ? opts["middle_activation"] : identity,
             init = opts["init"],
         ),
     )

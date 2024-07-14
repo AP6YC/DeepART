@@ -23,7 +23,7 @@ using Random
 # using UnicodePlots
 
 @info "------- Loading definitions -------"
-include("definitions.jl")
+include("lib.jl")
 
 @info "------- Loading Hebb module -------"
 import .Hebb
@@ -39,10 +39,10 @@ import .Hebb
 opts = Dict{String, Any}(
     # "n_epochs" => 2000,
     # "n_epochs" => 100,
-    "n_epochs" => 5,
-    # "n_epochs" => 10,
     # "n_epochs" => 50,
-    # "n_vals" => 100,
+    # "n_epochs" => 10,
+    # "n_epochs" => 5,
+    "n_epochs" => 1,
     "n_vals" => 50,
     "val_epoch" => true,
 
@@ -51,20 +51,21 @@ opts = Dict{String, Any}(
         "immediate" => false,
 
         "bias" => false,
-        # "eta" => 0.05,
-        "eta" => 0.005,     # The good one
         # "eta" => 0.001,
+        "eta" => 0.005,     # The good one
+        # "eta" => 0.05,
+        # "eta" => 0.2,
+        # "eta" => 0.5,
+        # "eta" => 1.0,
+
         # "beta_d" => 0.0,
         # "beta_d" => 0.0001,    # The good one
         # "beta_d" => 0.001,    # The good one
         # "beta_d" => 0.004,
         "beta_d" => 0.005,
         # "beta_d" => 0.01,       # Divergence
-        # "eta" => 0.2,
-        # "beta_d" => 0.2,
-        # "eta" => 0.5,
+        # "beta_d" => 0.1,
         # "beta_d" => 0.5,
-        # "eta" => 1.0,
         # "beta_d" => 1.0,
         # "beta_d" => 0.001,
 
@@ -79,12 +80,13 @@ opts = Dict{String, Any}(
         # "model" => "conv",
         # "model" => "fuzzy_new",
         # "model" => "dense_new",
-        "model" => "dense_spec",
-        # "model" => "conv_new",
+        # "model" => "dense_spec",
+        "model" => "conv_new",
 
         # "n_neurons" => [128, 64, 32],
         # "n_neurons" => [64, 128, 32, 64, 16],
-        "n_neurons" => [64],
+        # "n_neurons" => [128, 64],
+        "n_neurons" => [256, 128, 64],
 
 
         # "learning_rule" => "hebb",
@@ -92,11 +94,15 @@ opts = Dict{String, Any}(
         # "learning_rule" => "instar",
         # "learning_rule" => "fuzzyart",
 
+        # "post_synaptic" => true,
+        "post_synaptic" => false,
+
         # "init" => Flux.rand32,
         "init" => Flux.glorot_uniform,
 
         # "middle_activation" => sigmoid_fast,
         "middle_activation" => Flux.tanh_fast,
+        # "middle_activation" => Flux.relu,
         # "middle_activation" => Flux.celu,
 
         "positive_weights" => true,
@@ -106,11 +112,13 @@ opts = Dict{String, Any}(
         # "beta_normalize" => true,
 
         # "beta_rule" => "wta",
-        "beta_rule" => "contrast",
+        # "beta_rule" => "contrast",
         # "beta_rule" => "softmax",
         # "beta_rule" => "wavelet",
-        # "sigma" => 1.0f0,
-        "sigma" => 0.2,
+        "beta_rule" => "gaussian",
+        # "sigma" => 1.0,
+        # "sigma" => 0.2,
+        "sigma" => 0.5,
 
         # "cc" => true,
         "cc" => false,
@@ -131,8 +139,8 @@ opts = Dict{String, Any}(
     # "dataset" => "ring",
     # "dataset" => "spiral",
     # "dataset" => "mnist",
-    # "dataset" => "fashionmnist",
-    "dataset" => "usps",
+    "dataset" => "fashionmnist",
+    # "dataset" => "usps",
 
     "n_train" => 50000,
     "n_test" => 10000,
@@ -153,7 +161,7 @@ if opts["model_opts"]["beta_rule"] == "wavelet"
     plot_range = -0.5
 
     x = range(-plot_range, plot_range, length=n_samples)
-    y = ricker_wavelet.(x, opts["model_opts"]["sigma"])
+    y = Hebb.ricker_wavelet.(x, opts["model_opts"]["sigma"])
 
     min_y = minimum(y)
     inds = findall(x -> x == min_y, y)
