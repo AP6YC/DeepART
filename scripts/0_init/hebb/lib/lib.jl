@@ -28,9 +28,13 @@ using UnicodePlots
 
 include("chains.jl")
 
+# -----------------------------------------------------------------------------
+# CONSTANTS
+# -----------------------------------------------------------------------------
+
 const SimOpts = Dict{String, Any}
 
-datasets = Dict(
+const DATASETS = Dict(
     "high_dimensional" => [
         "fashionmnist",
         "mnist",
@@ -50,7 +54,7 @@ datasets = Dict(
 )
 
 function get_data(opts::SimOpts)
-    data = if opts["dataset"] in datasets["high_dimensional"]
+    data = if opts["dataset"] in DATASETS["high_dimensional"]
         DeepART.load_one_dataset(
             opts["dataset"],
             n_train=opts["n_train"],

@@ -23,7 +23,7 @@ using Random
 # using UnicodePlots
 
 @info "------- Loading definitions -------"
-include("lib.jl")
+include("lib/lib.jl")
 
 @info "------- Loading Hebb module -------"
 import .Hebb
@@ -230,7 +230,7 @@ else
     # show(local_plot)
 
     # Only visualize the weights if we are working with a computer vision dataset
-    if opts["dataset"] in Hebb.datasets["high_dimensional"]
+    if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
         Hebb.view_weight(model, 1)
     # else
         # @info model[2].weight
