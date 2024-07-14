@@ -27,6 +27,8 @@ using UnicodePlots
 # INCLUDES
 # -----------------------------------------------------------------------------
 
+include("opts.jl")
+
 include("data.jl")
 
 include("chains.jl")
@@ -36,7 +38,5 @@ include("learn.jl")
 include("hebbmodel.jl")
 
 include("loop.jl")
-
-include("opts.jl")
 
 end

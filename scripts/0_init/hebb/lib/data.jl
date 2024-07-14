@@ -3,8 +3,6 @@
 # CONSTANTS
 # -----------------------------------------------------------------------------
 
-const SimOpts = Dict{String, Any}
-
 const DATASETS = Dict(
     "high_dimensional" => [
         "fashionmnist",

@@ -22,7 +22,6 @@ using Revise
 using DeepART
 using Flux
 using Random
-# using UnicodePlots
 
 @info "------- Loading definitions -------"
 include("lib/lib.jl")
@@ -38,6 +37,111 @@ import .Hebb
 # -----------------------------------------------------------------------------
 
 @info "------- Setting options -------"
+opts = Hebb.load_opts("base.yml")
+
+@info "------- Options post-processing -------"
+
+# Correct for Float32 types
+# opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
+# opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
+# opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
+Random.seed!(opts["rng_seed"])
+
+if opts["model_opts"]["beta_rule"] == "wavelet"
+    n_samples = 10000
+    plot_range = -0.5
+
+    x = range(-plot_range, plot_range, length=n_samples)
+    y = Hebb.ricker_wavelet.(x, opts["model_opts"]["sigma"])
+
+    min_y = minimum(y)
+    inds = findall(x -> x == min_y, y)
+    # @info x[inds]
+    opts["model_opts"]["wavelet_offset"] = Float32(abs(x[inds][1]))
+end
+
+# -----------------------------------------------------------------------------
+# DATA
+# -----------------------------------------------------------------------------
+
+@info "------- Loading dataset -------"
+data = Hebb.get_data(opts)
+
+dev_x, dev_y = data.train[1]
+n_input = size(dev_x)[1]
+n_class = length(unique(data.train.y))
+
+# -----------------------------------------------------------------------------
+# MODEL
+# -----------------------------------------------------------------------------
+
+@info "------- Constructing model -------"
+model = Hebb.HebbModel(data, opts["model_opts"])
+
+# -----------------------------------------------------------------------------
+# DEFINITIONS
+# -----------------------------------------------------------------------------
+
+@info "------- TESTING BEFORE TRAINING -------"
+if model.opts["gpu"]
+    model.model = model.model |> gpu
+end
+old_perf = Hebb.test(model, data)
+@info "OLD PERF: $old_perf"
+
+# -----------------------------------------------------------------------------
+# TRAIN/TEST
+# -----------------------------------------------------------------------------
+
+# CUDA.@time train_loop(
+# CUDA.@profile train_loop(
+if opts["profile"]
+    @info "------- Profiling -------"
+    @static if Sys.iswindows()
+        # compilation
+        @profview Hebb.profile_test(3)
+        # pure runtime
+        @profview Hebb.profile_test(10)
+    end
+else
+    if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
+        @info "weights before:"
+        old_weights = deepcopy(model.model.chain[1][2].weight)
+        Hebb.view_weight(model, 1)
+    # else
+        # @info model[2].weight
+        # @info sum(model[2].weight)
+    end
+
+    @info "------- Training -------"
+    vals = Hebb.train_loop(
+        model,
+        data,
+        n_epochs = opts["n_epochs"],
+        n_vals = opts["n_vals"],
+        val_epoch = opts["val_epoch"],
+    )
+
+    # local_plot = lineplot(
+    #     vals,
+    # )
+    # show(local_plot)
+
+    # Only visualize the weights if we are working with a computer vision dataset
+    if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
+        @info "Weights after:"
+        new_weights = deepcopy(model.model.chain[1][2].weight)
+        @info "Weights difference:" sum(new_weights .- old_weights)
+        Hebb.view_weight(model, 1)
+    # else
+        # @info model[2].weight
+        # @info sum(model[2].weight)
+    end
+end
+
+Hebb.view_weight_grid(model, 4)
+
+
 # opts = Dict{String, Any}(
 #     # "n_epochs" => 2000,
 #     # "n_epochs" => 100,
@@ -155,134 +259,3 @@ import .Hebb
 #     # "flatten" => true,
 #     "rng_seed" => 1235,
 # )
-
-opts = Hebb.load_opts("base.yml")
-
-@info "------- Options post-processing -------"
-
-# Correct for Float32 types
-# opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
-# opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
-# opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
-Random.seed!(opts["rng_seed"])
-
-if opts["model_opts"]["beta_rule"] == "wavelet"
-    n_samples = 10000
-    plot_range = -0.5
-
-    x = range(-plot_range, plot_range, length=n_samples)
-    y = Hebb.ricker_wavelet.(x, opts["model_opts"]["sigma"])
-
-    min_y = minimum(y)
-    inds = findall(x -> x == min_y, y)
-    # @info x[inds]
-    opts["model_opts"]["wavelet_offset"] = Float32(abs(x[inds][1]))
-end
-
-# -----------------------------------------------------------------------------
-# DATA
-# -----------------------------------------------------------------------------
-
-@info "------- Loading dataset -------"
-data = Hebb.get_data(opts)
-
-dev_x, dev_y = data.train[1]
-n_input = size(dev_x)[1]
-n_class = length(unique(data.train.y))
-
-# -----------------------------------------------------------------------------
-# MODEL
-# -----------------------------------------------------------------------------
-
-@info "------- Constructing model -------"
-model = Hebb.HebbModel(data, opts["model_opts"])
-
-# -----------------------------------------------------------------------------
-# DEFINITIONS
-# -----------------------------------------------------------------------------
-
-@info "------- TESTING BEFORE TRAINING -------"
-if model.opts["gpu"]
-    model.model = model.model |> gpu
-end
-old_perf = Hebb.test(model, data)
-@info "OLD PERF: $old_perf"
-
-# -----------------------------------------------------------------------------
-# TRAIN/TEST
-# -----------------------------------------------------------------------------
-
-# CUDA.@time train_loop(
-# CUDA.@profile train_loop(
-if opts["profile"]
-    @info "------- Profiling -------"
-    @static if Sys.iswindows()
-        # compilation
-        @profview Hebb.profile_test(3)
-        # pure runtime
-        @profview Hebb.profile_test(10)
-    end
-else
-    if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
-        @info "weights before:"
-        old_weights = deepcopy(model.model.chain[1][2].weight)
-        Hebb.view_weight(model, 1)
-    # else
-        # @info model[2].weight
-        # @info sum(model[2].weight)
-    end
-
-    @info "------- Training -------"
-    vals = Hebb.train_loop(
-        model,
-        data,
-        n_epochs = opts["n_epochs"],
-        n_vals = opts["n_vals"],
-        val_epoch = opts["val_epoch"],
-    )
-
-    # local_plot = lineplot(
-    #     vals,
-    # )
-    # show(local_plot)
-
-    # Only visualize the weights if we are working with a computer vision dataset
-    if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
-        @info "Weights after:"
-        new_weights = deepcopy(model.model.chain[1][2].weight)
-        @info "Weights difference:" sum(new_weights .- old_weights)
-        Hebb.view_weight(model, 1)
-    # else
-        # @info model[2].weight
-        # @info sum(model[2].weight)
-    end
-end
-
-function view_weight_grid(model::Hebb.HebbModel, n_grid::Int)
-    a = Hebb.view_weight(model, 16)
-    (dim_x, dim_y) = size(a)
-    out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
-    for ix = 1:n_grid
-        for jx = 1:n_grid
-            local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
-            out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
-                     (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
-        end
-    end
-    return out_grid
-end
-
-# a = Hebb.view_weight(model, 16)
-# (dim_x, dim_y) = size(a)
-# n_grid = 6
-# out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
-# for ix = 1:n_grid
-#     for jx = 1:n_grid
-#         local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
-#         out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
-#                  (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
-#     end
-# end
-# display(out_grid)
-
-view_weight_grid(model, 4)

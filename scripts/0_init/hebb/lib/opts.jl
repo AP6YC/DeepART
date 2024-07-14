@@ -5,25 +5,40 @@
 Definitions for loading options.
 """
 
+# -----------------------------------------------------------------------------
+# TYPE ALIASES
+# -----------------------------------------------------------------------------
+
+"""
+Alias for the simulation options dictionary.
+"""
+const SimOpts = Dict{String, Any}
+
+# -----------------------------------------------------------------------------
+# CONSTANTS
+# -----------------------------------------------------------------------------
+
+"""
+Elements of "model_opts" that should be converted to Float32.
+"""
 const TO_FLOAT32 = [
     "eta",
     "beta_d",
     "sigma",
 ]
 
-# const FLUX_MAP = Dict(
-#     "glorot_uniform" => Flux.glorot_uniform,
-#     "sigmoid_fast" => Flux.sigmoid_fast,
-#     "tanh_fast" => Flux.tanh_fast,
-#     "relu" => Flux.relu,
-# )
-
+"""
+Elements of "model_opts" that should be converted to Flux functions.
+"""
 const TO_FLUX = [
     "init",
     "middle_activation",
 ]
 
-function sanitize_opts!(opts)
+"""
+Sanitize the options dictionary.
+"""
+function sanitize_opts!(opts::SimOpts)
     # Convert to Float32
     for key in keys(opts["model_opts"])
         if key in TO_FLOAT32
@@ -43,10 +58,11 @@ function sanitize_opts!(opts)
     end
 end
 
-function load_opts(name::AbstractString)
+"""
+Load the options from a YAML file.
+"""
+function load_opts(name::AbstractString)::SimOpts
     opts = YAML.load_file(
-        # joinpath("opts", name * ".yml");
-        # joinpath(pwd(), "opts", name);
         joinpath(@__FILE__, "..", "..", "opts", name);
         dicttype=Dict{String, Any}
     )

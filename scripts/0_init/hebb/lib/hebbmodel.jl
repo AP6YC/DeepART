@@ -54,6 +54,25 @@ function view_weight(
     return DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
 end
 
+
+function view_weight_grid(model::Hebb.HebbModel, n_grid::Int)
+    a = Hebb.view_weight(model, 16)
+    (dim_x, dim_y) = size(a)
+    out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
+    for ix = 1:n_grid
+        for jx = 1:n_grid
+            local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
+            out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
+                     (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
+        end
+    end
+    return out_grid
+end
+
+# -----------------------------------------------------------------------------
+# TRAINING FUNCTIONS
+# -----------------------------------------------------------------------------
+
 function train_hebb(
     model::HebbModel{T},
     x,

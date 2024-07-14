@@ -9,6 +9,9 @@ Collection of chain model definitions for the Hebb module.
 # TYPE ALIASES
 # -----------------------------------------------------------------------------
 
+"""
+Alias for the model options dictionary.
+"""
 const ModelOpts = Dict{String, Any}
 
 # -----------------------------------------------------------------------------
