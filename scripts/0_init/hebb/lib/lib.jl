@@ -31,7 +31,7 @@ include("opts.jl")
 
 include("data.jl")
 
-include("chains.jl")
+include("chains/lib.jl")
 
 include("learn.jl")
 
