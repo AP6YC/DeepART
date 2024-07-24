@@ -1,6 +1,6 @@
 [![deepart-header](https://github.com/AP6YC/FileStorage/blob/main/DeepART/header.png?raw=true)][docs-url]
 
-A repository containing implementations and experiments for the upcoming paper _Deep Adaptive Resonance Theory_.
+A repository containing implementations and experiments for the upcoming paper _Deep Adaptive Resonance_.
 
 | **Documentation** | **Testing Status** | **Zenodo DOI** |
 |:-----------------:|:------------------:|:--------------:|
