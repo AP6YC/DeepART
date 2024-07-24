@@ -1,3 +1,9 @@
+"""
+    fuzzy.jl
+
+# Desription
+Definitions for fuzzy-logic-based models.
+"""
 
 function get_fuzzy_groupedccchain(
     n_input::Integer,

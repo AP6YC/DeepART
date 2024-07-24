@@ -1,3 +1,9 @@
+"""
+    layers.jl
+
+# Desription
+Definitions for layers for each type of model.
+"""
 
 function get_dense_deepart_layer(
     n_in::Integer,
