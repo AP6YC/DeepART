@@ -11,9 +11,7 @@ model_opts:
   # immediate: true
   immediate: false
 
-  # bias: false
-  bias: true
-
+  bias: false
   # eta: 0.001
   # eta: 0.005     # The good one
   eta: 0.01
@@ -63,22 +61,22 @@ model_opts:
 
   # learning_rule: hebb
   # learning_rule: oja
-  learning_rule: instar
-  # learning_rule: fuzzyart
+  # learning_rule: instar
+  learning_rule: fuzzyart
 
   # post_synaptic: true
   post_synaptic: false
 
-  # init: rand32
-  init: glorot_uniform
+  init: rand32
+  # init: glorot_uniform
 
   # middle_activation: sigmoid_fast
   middle_activation: tanh_fast
   # middle_activation: relu
   # middle_activation: celu
 
-  # positive_weights: true
-  positive_weights: false
+  positive_weights: true
+  # positive_weights: false
 
   # beta_normalize: false
   beta_normalize: true
@@ -89,15 +87,15 @@ model_opts:
   # beta_rule: wavelet
   # beta_rule: gaussian
 
-  sigma: 0.01
+  # sigma: 0.01
   # sigma: 0.05
-  # sigma: 0.1
+  sigma: 0.1
   # sigma: 0.2
   # sigma: 0.5
   # sigma: 1.0
 
-  # cc: true
-  cc: false
+  cc: true
+  # cc: false
 
   # model_spec: []
 
