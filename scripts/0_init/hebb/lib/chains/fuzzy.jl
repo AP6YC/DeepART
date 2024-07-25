@@ -20,9 +20,15 @@ end
 
 
 function get_spec_fuzzy_groupedccchain(
-    n_neurons::Vector{Int},
+    # n_neurons::Vector{Int},
+    n_input::Integer,
+    n_class::Integer,
     opts::ModelOpts,
 )::GroupedCCChain
+
+    # n_layers = length(n_neurons)
+
+    n_neurons = [n_input, opts["n_neurons"]..., n_class]
 
     n_layers = length(n_neurons)
 

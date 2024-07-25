@@ -1,3 +1,9 @@
+"""
+    hebbmodel.jl
+
+# Description
+
+"""
 
 # -----------------------------------------------------------------------------
 # TYPES
@@ -35,23 +41,24 @@ end
 
 function view_weight(
     model::HebbModel,
-    index::Integer,
+    index::Integer;
+    layer::Integer=1
 )
-    if model.model.chain[1][2] isa Flux.Conv
-        weights = model.model.chain[1][2].weight
+    if model.model.chain[layer][2] isa Flux.Conv
+        weights = model.model.chain[layer][2].weight
         lmax = maximum(weights)
         lmin = minimum(weights)
-        img = DeepART.Gray.(weights[index, :, :, 1] .- lmin ./ (lmax - lmin))
+        img = DeepART.Gray.(weights[:, :, 1, index] .- lmin ./ (lmax - lmin))
     else
         # weights = Flux.params(model.model.chain)
         weights = get_weights(model.model)
-        dim = Int(size(weights[1])[2])
+        dim = Int(size(weights[layer])[2])
         if model.opts["cc"]
             dim = Int(dim / 2)
         end
         dim = Int(sqrt(dim))
         local_weight = reshape(
-            weights[1][index, :],
+            weights[layer][index, :],
             dim,
             model.opts["cc"] ? dim*2 : dim,
         )
@@ -64,18 +71,25 @@ function view_weight(
 end
 
 
-function view_weight_grid(model::Hebb.HebbModel, n_grid::Int)
-    a = Hebb.view_weight(model, 16)
+function view_weight_grid(model::Hebb.HebbModel, n_grid::Int; layer=1)
+    # Infer the size of the weight matrix
+    a = Hebb.view_weight(model, 1, layer=layer)
     (dim_x, dim_y) = size(a)
+
+    # Create the output grid
     out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
+
+    # Populate the grid iteratively
     for ix = 1:n_grid
         for jx = 1:n_grid
-            local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
+            local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx, layer=layer)
             out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
                      (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
         end
     end
-    return out_grid
+
+    # Return the tranpose for visualization
+    return out_grid'
 end
 
 # -----------------------------------------------------------------------------

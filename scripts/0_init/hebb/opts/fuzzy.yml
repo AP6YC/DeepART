@@ -20,9 +20,9 @@ model_opts:
   # eta: 0.5
   # eta: 1.0
 
-  # beta_d: 0.0
+  beta_d: 0.0
   # beta_d: 0.00001
-  beta_d: 0.001    # The good one
+  # beta_d: 0.001    # The good one
   # beta_d: 0.004
   # beta_d: 0.005
   # beta_d: 0.01       # Divergence
@@ -44,9 +44,9 @@ model_opts:
   # model: conv
   # model: fuzzy_new
   # model: dense_new
-  # model: dense_spec
+  model: dense_spec
   # model: fuzzy_spec
-  model: conv_new
+  # model: conv_new
 
   conv_strategy: "unfold"
   # conv_strategy: "patchwise"
@@ -54,29 +54,29 @@ model_opts:
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
   # n_neurons: [128, 64]
-  n_neurons: [16, 64]
+  n_neurons: [16, 32]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
 
 
   # learning_rule: hebb
-  learning_rule: oja
+  # learning_rule: oja
   # learning_rule: instar
-  # learning_rule: fuzzyart
+  learning_rule: fuzzyart
 
   # post_synaptic: true
   post_synaptic: false
 
-  # init: Flux.rand32
-  init: glorot_uniform
+  init: rand32
+  # init: glorot_uniform
 
   # middle_activation: sigmoid_fast
   middle_activation: tanh_fast
   # middle_activation: relu
   # middle_activation: celu
 
-  # positive_weights: true
-  positive_weights: false
+  positive_weights: true
+  # positive_weights: false
 
   # beta_normalize: false
   beta_normalize: true
@@ -92,10 +92,10 @@ model_opts:
   sigma: 0.1
   # sigma: 0.2
   # sigma: 0.5
-  # sigma: 1.0
+  # sigma: 2.0
 
-  # cc: true
-  cc: false
+  cc: true
+  # cc: false
 
   # model_spec: []
 

@@ -47,23 +47,6 @@ function oja_cast(x, W, y, beta)
     return result
 end
 
-# """
-# FuzzyART learning rule with minor caching. Probably deprecated.
-# """
-# function fuzzyart_learn_cast_cache(x, W, beta::Real, cache)
-#     Wy, Wx = size(W)
-#     _x = repeat(x', Wy, 1)
-#     _beta = repeat(beta, 1, Wx)
-
-#     cache[:, :, 1] .= _x
-#     cache[:, :, 2] .= W
-
-#     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
-#     # result = beta .* minimum(cache, dims=3) + W .* (one(eltype(_beta)) .- _beta)
-#     result = beta .* min.(_x, W) + W .* (one(eltype(_beta)) .- _beta)
-#     return result
-# end
-
 function widrow_hoff_cast(weights, target, out, input, eta::Real)
     Wy, Wx = size(weights)
     _input = repeat(input', Wy, 1)
@@ -82,14 +65,6 @@ function widrow_hoff_learn!(input, out, weights, target, opts::ModelOpts)
     return
 end
 
-# const BETA_RULES = [
-#     "wta",
-#     "contrast",
-#     "softmax",
-#     "wavelet",
-#     "gaussian",
-# ]
-
 function ricker_wavelet(t, sigma)
     # sigma = 1.0f0
     return 2.0f0 / (sqrt(3.0f0 * sigma) * pi^(1.0f0 / 4.0f0)) * (1.0f0 - (t / sigma)^2) * exp(-t^2 / (2.0f0 * sigma^2))
@@ -103,7 +78,7 @@ function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
         max_ind = argmax(out)
-        beta[max_ind] = one(Float32)
+        beta[max_ind] = opts["beta_d"] * one(Float32)
     elseif opts["beta_rule"] == "contrast"
         # Krotov / contrastive learning
         max_ind = argmax(out)
@@ -113,6 +88,7 @@ function get_beta(out, opts::ModelOpts)
         local_soft[max_ind] = -local_soft[max_ind]
         beta = opts["beta_d"] .* local_soft ./ max_soft
     elseif opts["beta_rule"] == "softmax"
+        # Softmax
         local_soft = Flux.softmax(out)
         max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
         beta = opts["beta_d"] .* local_soft ./ max_soft

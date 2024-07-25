@@ -36,6 +36,7 @@ import .Hebb
 
 @info "------- Setting options -------"
 opts = Hebb.load_opts("base.yml")
+# opts = Hebb.load_opts("fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])
@@ -47,9 +48,11 @@ Random.seed!(opts["rng_seed"])
 @info "------- Loading dataset -------"
 data = Hebb.get_data(opts)
 
-dev_x, dev_y = data.train[1]
-n_input = size(dev_x)[1]
-n_class = length(unique(data.train.y))
+n_preview = 2
+
+# dev_x, dev_y = data.train[1]
+# n_input = size(dev_x)[1]
+# n_class = length(unique(data.train.y))
 
 # -----------------------------------------------------------------------------
 # MODEL
@@ -57,6 +60,7 @@ n_class = length(unique(data.train.y))
 
 @info "------- Constructing model -------"
 model = Hebb.HebbModel(data, opts["model_opts"])
+display(Hebb.view_weight_grid(model, n_preview))
 
 # -----------------------------------------------------------------------------
 # DEFINITIONS
@@ -87,7 +91,7 @@ else
     if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
         @info "weights before:"
         old_weights = deepcopy(model.model.chain[1][2].weight)
-        Hebb.view_weight(model, 1)
+        # Hebb.view_weight(model, 1)
     # else
         # @info model[2].weight
         # @info sum(model[2].weight)
@@ -119,123 +123,5 @@ else
     end
 end
 
-Hebb.view_weight_grid(model, 4)
-
-
-# opts = Dict{String, Any}(
-#     # "n_epochs" => 2000,
-#     # "n_epochs" => 100,
-#     # "n_epochs" => 50,
-#     # "n_epochs" => 10,
-#     "n_epochs" => 5,
-#     # "n_epochs" => 1,
-#     "n_vals" => 50,
-#     "val_epoch" => true,
-
-#     "model_opts" => Dict{String, Any}(
-#         # "immediate" => true,
-#         "immediate" => false,
-
-#         "bias" => false,
-#         # "eta" => 0.001,
-#         "eta" => 0.005,     # The good one
-#         # "eta" => 0.05,
-#         # "eta" => 0.2,
-#         # "eta" => 0.5,
-#         # "eta" => 1.0,
-
-#         # "beta_d" => 0.0,
-#         # "beta_d" => 0.0001,
-#         # "beta_d" => 0.001,    # The good one
-#         # "beta_d" => 0.004,
-#         # "beta_d" => 0.005,
-#         "beta_d" => 0.01,       # Divergence
-#         # "beta_d" => 0.011,       # Divergence
-#         # "beta_d" => 0.02,       # Divergence
-#         # "beta_d" => 0.1,
-#         # "beta_d" => 0.5,
-#         # "beta_d" => 1.0,
-#         # "beta_d" => 0.001,
-
-#         "final_sigmoid" => false,
-#         # "final_sigmoid" => true,
-
-#         "gpu" => false,
-
-#         # "model" => "dense",
-#         # "model" => "small_dense",
-#         # "model" => "fuzzy",
-#         # "model" => "conv",
-#         # "model" => "fuzzy_new",
-#         # "model" => "dense_new",
-#         "model" => "dense_spec",
-#         # "model" => "conv_new",
-
-#         # "n_neurons" => [128, 64, 32],
-#         # "n_neurons" => [64, 128, 32, 64, 16],
-#         # "n_neurons" => [128, 64],
-#         "n_neurons" => [20],
-#         # "n_neurons" => [256, 128, 64],
-
-
-#         # "learning_rule" => "hebb",
-#         "learning_rule" => "oja",
-#         # "learning_rule" => "instar",
-#         # "learning_rule" => "fuzzyart",
-
-#         # "post_synaptic" => true,
-#         "post_synaptic" => false,
-
-#         # "init" => Flux.rand32,
-#         "init" => Flux.glorot_uniform,
-
-#         # "middle_activation" => sigmoid_fast,
-#         "middle_activation" => Flux.tanh_fast,
-#         # "middle_activation" => Flux.relu,
-#         # "middle_activation" => Flux.celu,
-
-#         # "positive_weights" => true,
-#         "positive_weights" => false,
-
-#         # "beta_normalize" => false,
-#         "beta_normalize" => true,
-
-#         # "beta_rule" => "wta",
-#         # "beta_rule" => "contrast",
-#         # "beta_rule" => "softmax",
-#         # "beta_rule" => "wavelet",
-#         "beta_rule" => "gaussian",
-
-#         # "sigma" => 0.05,
-#         # "sigma" => 0.1,
-#         "sigma" => 0.2,
-#         # "sigma" => 0.5,
-#         # "sigma" => 1.0,
-
-#         # "cc" => true,
-#         "cc" => false,
-
-#         # "model_spec" => []
-#     ),
-
-#     "profile" => false,
-#     # "profile" => true,
-
-#     # "dataset" => "wine",
-#     # "dataset" => "iris",
-#     # "dataset" => "wave",
-#     # "dataset" => "face",
-#     # "dataset" => "flag",
-#     # "dataset" => "halfring",
-#     # "dataset" => "moon",
-#     # "dataset" => "ring",
-#     # "dataset" => "spiral",
-#     # "dataset" => "mnist",
-#     # "dataset" => "fashionmnist",
-#     "dataset" => "usps",
-
-#     "n_train" => 50000,
-#     "n_test" => 10000,
-#     # "flatten" => true,
-#     "rng_seed" => 1235,
-# )
+Hebb.view_weight_grid(model, n_preview, layer=1)
+# Hebb.view_weight_grid(model, 5, layer=2)

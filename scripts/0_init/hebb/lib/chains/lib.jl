@@ -61,6 +61,7 @@ const MODEL_MAP = Dict(
     "fuzzy_new" => get_fuzzy_groupedccchain,
     "conv_new" => get_inc_conv_model,
     "dense_spec" => get_spec_dense_groupedccchain,
+    "fuzzy_spec" => get_spec_fuzzy_groupedccchain,
 )
 
 function construct_model(

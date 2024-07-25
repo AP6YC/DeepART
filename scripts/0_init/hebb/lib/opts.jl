@@ -40,6 +40,9 @@ const TO_FLUX = [
     "middle_activation",
 ]
 
+"""
+All valid string options for the model.
+"""
 const SWITCHES = Dict{String, Any}(
     "model" => [
         "dense",
@@ -48,8 +51,9 @@ const SWITCHES = Dict{String, Any}(
         "conv",
         "fuzzy_new",
         "dense_new",
-        "dense_spec",
         "conv_new",
+        "dense_spec",
+        "fuzzy_spec",
     ],
 
     "conv_strategy" => [
