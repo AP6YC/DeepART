@@ -1,3 +1,9 @@
+"""
+    learn.jl
+
+# Description
+Definitions for local learning rules.
+"""
 
 # -----------------------------------------------------------------------------
 # LEARNING FUNCTIONS
@@ -76,13 +82,13 @@ function widrow_hoff_learn!(input, out, weights, target, opts::ModelOpts)
     return
 end
 
-const BETA_RULES = [
-    "wta",
-    "contrast",
-    "softmax",
-    "wavelet",
-    "gaussian",
-]
+# const BETA_RULES = [
+#     "wta",
+#     "contrast",
+#     "softmax",
+#     "wavelet",
+#     "gaussian",
+# ]
 
 function ricker_wavelet(t, sigma)
     # sigma = 1.0f0
@@ -132,8 +138,8 @@ function get_beta(out, opts::ModelOpts)
         gaussian_outs = -gaussian_outs
         gaussian_outs[ind_max] = -gaussian_outs[ind_max]
         beta = opts["beta_d"] .* gaussian_outs ./ max_gaussian_outs
-    else
-        error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
+    # else
+    #     error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
     end
 
     return beta
@@ -142,20 +148,25 @@ end
 function deepart_learn!(input, out, weights, opts::ModelOpts)
     # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     if ndims(weights) == 4
-        # full_size = size(weights[ix])
-        full_size = size(weights)
-        n_kernels = full_size[4]
-        kernel_shape = full_size[1:3]
+        if opts["conv_strategy"] == "unfold"
+            # full_size = size(weights[ix])
+            full_size = size(weights)
+            n_kernels = full_size[4]
+            kernel_shape = full_size[1:3]
 
-        unfolded = Flux.NNlib.unfold(input, full_size)
-        local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
+            unfolded = Flux.NNlib.unfold(input, full_size)
+            local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
 
-        # Get the averaged and reshaped local output
-        local_out = reshape(mean(out, dims=(1, 2)), n_kernels)
+            # Get the averaged and reshaped local output
+            local_out = reshape(mean(out, dims=(1, 2)), n_kernels)
 
-        # Reshape the weights to be (n_kernels, n_features)
-        local_weight = reshape(weights, :, n_kernels)'
-
+            # Reshape the weights to be (n_kernels, n_features)
+            local_weight = reshape(weights, :, n_kernels)'
+        elseif opts["conv_strategy"] == "patchwise"
+            local_out = out
+            local_weight = weights
+            local_in = input
+        end
     else
         local_out = out
         local_weight = weights

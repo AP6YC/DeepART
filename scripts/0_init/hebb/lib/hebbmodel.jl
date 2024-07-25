@@ -37,21 +37,30 @@ function view_weight(
     model::HebbModel,
     index::Integer,
 )
-    # weights = Flux.params(model.model.chain)
-    weights = get_weights(model.model)
-    dim = Int(size(weights[1])[2])
-    if model.opts["cc"]
-        dim = Int(dim / 2)
+    if model.model.chain[1][2] isa Flux.Conv
+        weights = model.model.chain[1][2].weight
+        lmax = maximum(weights)
+        lmin = minimum(weights)
+        img = DeepART.Gray.(weights[index, :, :, 1] .- lmin ./ (lmax - lmin))
+    else
+        # weights = Flux.params(model.model.chain)
+        weights = get_weights(model.model)
+        dim = Int(size(weights[1])[2])
+        if model.opts["cc"]
+            dim = Int(dim / 2)
+        end
+        dim = Int(sqrt(dim))
+        local_weight = reshape(
+            weights[1][index, :],
+            dim,
+            model.opts["cc"] ? dim*2 : dim,
+        )
+        lmax = maximum(local_weight)
+        lmin = minimum(local_weight)
+        img = DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
     end
-    dim = Int(sqrt(dim))
-    local_weight = reshape(
-        weights[1][index, :],
-        dim,
-        model.opts["cc"] ? dim*2 : dim,
-    )
-    lmax = maximum(local_weight)
-    lmin = minimum(local_weight)
-    return DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
+
+    return img
 end
 
 

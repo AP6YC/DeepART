@@ -19,7 +19,6 @@ function get_fuzzy_groupedccchain(
 end
 
 
-
 function get_spec_fuzzy_groupedccchain(
     n_neurons::Vector{Int},
     opts::ModelOpts,

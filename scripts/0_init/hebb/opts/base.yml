@@ -2,8 +2,8 @@
 # n_epochs: 100
 # n_epochs: 50
 # n_epochs: 10
-n_epochs: 5
-# n_epochs: 1
+# n_epochs: 5
+n_epochs: 1
 n_vals: 50
 val_epoch: true
 
@@ -43,13 +43,17 @@ model_opts:
   # model: conv
   # model: fuzzy_new
   # model: dense_new
-  model: dense_spec
-  # model: conv_new
+  # model: dense_spec
+  model: conv_new
+
+  conv_strategy: "unfold"
+  # conv_strategy: "patchwise"
 
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
-  # n_neurons: [128 64]
-  n_neurons: [20]
+  # n_neurons: [128, 64]
+  n_neurons: [256, 64]
+  # n_neurons: [20]
   # n_neurons: [256 128 64]
 
 
@@ -66,8 +70,8 @@ model_opts:
 
   # middle_activation: sigmoid_fast
   middle_activation: tanh_fast
-  # middle_activation: Flux.relu
-  # middle_activation: Flux.celu
+  # middle_activation: relu
+  # middle_activation: celu
 
   # positive_weights: true
   positive_weights: false
@@ -82,8 +86,8 @@ model_opts:
   beta_rule: gaussian
 
   # sigma: 0.05
-  # sigma: 0.1
-  sigma: 0.2
+  sigma: 0.1
+  # sigma: 0.2
   # sigma: 0.5
   # sigma: 1.0
 

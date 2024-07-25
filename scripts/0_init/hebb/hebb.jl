@@ -38,25 +38,7 @@ import .Hebb
 opts = Hebb.load_opts("base.yml")
 
 @info "------- Options post-processing -------"
-
-# Correct for Float32 types
-# opts["model_opts"]["eta"] = Float32(opts["model_opts"]["eta"])
-# opts["model_opts"]["beta_d"] = Float32(opts["model_opts"]["beta_d"])
-# opts["model_opts"]["sigma"] = Float32(opts["model_opts"]["sigma"])
 Random.seed!(opts["rng_seed"])
-
-if opts["model_opts"]["beta_rule"] == "wavelet"
-    n_samples = 10000
-    plot_range = -0.5
-
-    x = range(-plot_range, plot_range, length=n_samples)
-    y = Hebb.ricker_wavelet.(x, opts["model_opts"]["sigma"])
-
-    min_y = minimum(y)
-    inds = findall(x -> x == min_y, y)
-    # @info x[inds]
-    opts["model_opts"]["wavelet_offset"] = Float32(abs(x[inds][1]))
-end
 
 # -----------------------------------------------------------------------------
 # DATA
