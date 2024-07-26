@@ -1,3 +1,9 @@
+"""
+    hebbmodel.jl
+
+# Description
+
+"""
 
 # -----------------------------------------------------------------------------
 # TYPES
@@ -33,40 +39,109 @@ function inspect_weights(model::HebbModel, layer::Integer)
     return model.model.chain[layer][2].weight
 end
 
-function view_weight(
+# function get_weights(model::HebbModel)
+#     return Flux.params(model.model)
+# end
+
+function get_weight_slice(
     model::HebbModel,
+    layer::Integer,
     index::Integer,
 )
+
+    # weights = get_weights(model.model)
+
     # weights = Flux.params(model.model.chain)
     weights = get_weights(model.model)
-    dim = Int(size(weights[1])[2])
+    dim = Int(size(weights[layer])[2])
+
+    if model.opts["bias"]
+        dim -= 1
+        local_weights = weights[layer][index, 2:end]
+    else
+        local_weights = weights[layer][index, :]
+    end
+
     if model.opts["cc"]
         dim = Int(dim / 2)
     end
+
     dim = Int(sqrt(dim))
     local_weight = reshape(
-        weights[1][index, :],
+        # weights[layer][index, :],
+        local_weights,
         dim,
         model.opts["cc"] ? dim*2 : dim,
     )
-    lmax = maximum(local_weight)
-    lmin = minimum(local_weight)
-    return DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
+
+    return local_weight
 end
 
+function view_weight(
+    model::HebbModel,
+    index::Integer;
+    layer::Integer=1
+)
+    # if model.opts["bias"]
+    #     dim_x -= 1
+    # end
 
-function view_weight_grid(model::Hebb.HebbModel, n_grid::Int)
-    a = Hebb.view_weight(model, 16)
+    if model.model.chain[layer][2] isa Flux.Conv
+        weights = model.model.chain[layer][2].weight
+        lmax = maximum(weights)
+        lmin = minimum(weights)
+        img = DeepART.Gray.(weights[:, :, 1, index] .- lmin ./ (lmax - lmin))
+    else
+        # # weights = Flux.params(model.model.chain)
+        # weights = get_weights(model.model)
+        # dim = Int(size(weights[layer])[2])
+        # if model.opts["cc"]
+        #     dim = Int(dim / 2)
+        # end
+
+        # dim = Int(sqrt(dim))
+        # local_weight = reshape(
+        #     weights[layer][index, :],
+        #     dim,
+        #     model.opts["cc"] ? dim*2 : dim,
+        # )
+        local_weight = get_weight_slice(model, layer, index)
+
+        lmax = maximum(local_weight)
+        lmin = minimum(local_weight)
+        img = DeepART.Gray.(local_weight .- lmin ./ (lmax - lmin))
+    end
+
+    return img
+end
+
+function view_weight_grid(model::Hebb.HebbModel, n_grid::Int; layer=1)
+    # Infer the size of the weight matrix
+    a = Hebb.view_weight(model, 1, layer=layer)
     (dim_x, dim_y) = size(a)
+
+    # if model.opts["bias"]
+    #     dim_x -= 1
+    # end
+
+    # Create the output grid
     out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
+
+    # Populate the grid iteratively
     for ix = 1:n_grid
         for jx = 1:n_grid
-            local_weight = Hebb.view_weight(model, n_grid * (ix - 1) + jx)
+            local_weight = Hebb.view_weight(
+                model,
+                n_grid * (ix - 1) + jx,
+                layer=layer,
+            )
             out_grid[(ix - 1) * dim_x + 1:ix * dim_x,
                      (jx - 1) * dim_y + 1:jx * dim_y] = local_weight
         end
     end
-    return out_grid
+
+    # Return the tranpose for visualization
+    return out_grid'
 end
 
 # -----------------------------------------------------------------------------

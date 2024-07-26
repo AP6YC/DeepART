@@ -1,3 +1,9 @@
+"""
+    learn.jl
+
+# Description
+Definitions for local learning rules.
+"""
 
 # -----------------------------------------------------------------------------
 # LEARNING FUNCTIONS
@@ -41,23 +47,6 @@ function oja_cast(x, W, y, beta)
     return result
 end
 
-# """
-# FuzzyART learning rule with minor caching. Probably deprecated.
-# """
-# function fuzzyart_learn_cast_cache(x, W, beta::Real, cache)
-#     Wy, Wx = size(W)
-#     _x = repeat(x', Wy, 1)
-#     _beta = repeat(beta, 1, Wx)
-
-#     cache[:, :, 1] .= _x
-#     cache[:, :, 2] .= W
-
-#     # result = beta .* minimum(cat(_x, W, dims=3), dims=3) + W .* (one(eltype(_beta)) .- _beta)
-#     # result = beta .* minimum(cache, dims=3) + W .* (one(eltype(_beta)) .- _beta)
-#     result = beta .* min.(_x, W) + W .* (one(eltype(_beta)) .- _beta)
-#     return result
-# end
-
 function widrow_hoff_cast(weights, target, out, input, eta::Real)
     Wy, Wx = size(weights)
     _input = repeat(input', Wy, 1)
@@ -76,14 +65,6 @@ function widrow_hoff_learn!(input, out, weights, target, opts::ModelOpts)
     return
 end
 
-const BETA_RULES = [
-    "wta",
-    "contrast",
-    "softmax",
-    "wavelet",
-    "gaussian",
-]
-
 function ricker_wavelet(t, sigma)
     # sigma = 1.0f0
     return 2.0f0 / (sqrt(3.0f0 * sigma) * pi^(1.0f0 / 4.0f0)) * (1.0f0 - (t / sigma)^2) * exp(-t^2 / (2.0f0 * sigma^2))
@@ -97,7 +78,7 @@ function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
         beta = zeros(Float32, size(out))
         max_ind = argmax(out)
-        beta[max_ind] = one(Float32)
+        beta[max_ind] = opts["beta_d"] * one(Float32)
     elseif opts["beta_rule"] == "contrast"
         # Krotov / contrastive learning
         max_ind = argmax(out)
@@ -107,6 +88,7 @@ function get_beta(out, opts::ModelOpts)
         local_soft[max_ind] = -local_soft[max_ind]
         beta = opts["beta_d"] .* local_soft ./ max_soft
     elseif opts["beta_rule"] == "softmax"
+        # Softmax
         local_soft = Flux.softmax(out)
         max_soft = opts["beta_normalize"] ? maximum(local_soft) : 1.0f0
         beta = opts["beta_d"] .* local_soft ./ max_soft
@@ -132,8 +114,8 @@ function get_beta(out, opts::ModelOpts)
         gaussian_outs = -gaussian_outs
         gaussian_outs[ind_max] = -gaussian_outs[ind_max]
         beta = opts["beta_d"] .* gaussian_outs ./ max_gaussian_outs
-    else
-        error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
+    # else
+    #     error("Incorrect beta rule option ($(opts["beta_rule"])), must be in BETA_RULES")
     end
 
     return beta
@@ -142,20 +124,25 @@ end
 function deepart_learn!(input, out, weights, opts::ModelOpts)
     # return beta .* min.(x, W) + W .* (one(eltype(beta)) .- beta)
     if ndims(weights) == 4
-        # full_size = size(weights[ix])
-        full_size = size(weights)
-        n_kernels = full_size[4]
-        kernel_shape = full_size[1:3]
+        if opts["conv_strategy"] == "unfold"
+            # full_size = size(weights[ix])
+            full_size = size(weights)
+            n_kernels = full_size[4]
+            kernel_shape = full_size[1:3]
 
-        unfolded = Flux.NNlib.unfold(input, full_size)
-        local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
+            unfolded = Flux.NNlib.unfold(input, full_size)
+            local_in = reshape(mean(reshape(unfolded, :, kernel_shape...), dims=1), :)
 
-        # Get the averaged and reshaped local output
-        local_out = reshape(mean(out, dims=(1, 2)), n_kernels)
+            # Get the averaged and reshaped local output
+            local_out = reshape(mean(out, dims=(1, 2)), n_kernels)
 
-        # Reshape the weights to be (n_kernels, n_features)
-        local_weight = reshape(weights, :, n_kernels)'
-
+            # Reshape the weights to be (n_kernels, n_features)
+            local_weight = reshape(weights, :, n_kernels)'
+        elseif opts["conv_strategy"] == "patchwise"
+            local_out = out
+            local_weight = weights
+            local_in = input
+        end
     else
         local_out = out
         local_weight = weights

@@ -1,3 +1,9 @@
+"""
+    dense.jl
+
+# Desription
+Definitions for dense models.
+"""
 
 function get_dense_groupedccchain(
     n_input::Integer,

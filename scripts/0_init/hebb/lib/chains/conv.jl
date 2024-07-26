@@ -1,3 +1,9 @@
+"""
+    conv.jl
+
+# Desription
+Definitions for convolutional models.
+"""
 
 # function get_conv_layer(
 #     n_in::Integer,
