@@ -57,7 +57,8 @@ model_opts:
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
   # n_neurons: [128, 64]
-  n_neurons: [16, 64]
+  n_neurons: [32, 64]
+  # n_neurons: [16, 64]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
 
@@ -73,10 +74,10 @@ model_opts:
   init: rand32
   # init: glorot_uniform
 
-  middle_activation: sigmoid_fast
+  # middle_activation: sigmoid_fast
   # middle_activation: identity
   # middle_activation: tanh_fast
-  # middle_activation: relu
+  middle_activation: relu
   # middle_activation: celu
 
   # positive_weights: true
@@ -85,15 +86,15 @@ model_opts:
   # beta_normalize: false
   beta_normalize: true
 
-  beta_rule: wta
+  # beta_rule: wta
   # beta_rule: contrast
   # beta_rule: softmax
   # beta_rule: wavelet
-  # beta_rule: gaussian
+  beta_rule: gaussian
 
-  # sigma: 0.01
+  sigma: 0.01
   # sigma: 0.05
-  sigma: 0.1
+  # sigma: 0.1
   # sigma: 0.2
   # sigma: 0.5
   # sigma: 1.0
@@ -116,8 +117,8 @@ profile: false
 # dataset: ring
 # dataset: spiral
 # dataset: mnist
-# dataset: fashionmnist
-dataset: usps
+dataset: fashionmnist
+# dataset: usps
 
 n_train: 50000
 n_test: 10000
