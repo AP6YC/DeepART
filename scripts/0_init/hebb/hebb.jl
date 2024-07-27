@@ -35,9 +35,9 @@ import .Hebb
 # -----------------------------------------------------------------------------
 
 @info "------- Setting options -------"
-opts = Hebb.load_opts("base.yml")
+# opts = Hebb.load_opts("base.yml")
 # opts = Hebb.load_opts("fuzzy.yml")
-# opts = Hebb.load_opts("_dense-fuzzy.yml")
+opts = Hebb.load_opts("dense-fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])
@@ -52,7 +52,7 @@ data = Hebb.get_data(opts)
 # n_preview = 2
 n_preview = 4
 
-# dev_x, dev_y = data.train[1]
+dev_x, dev_y = data.train[1]
 # n_input = size(dev_x)[1]
 # n_class = length(unique(data.train.y))
 
@@ -63,6 +63,7 @@ n_preview = 4
 @info "------- Constructing model -------"
 model = Hebb.HebbModel(data, opts["model_opts"])
 display(Hebb.view_weight_grid(model, n_preview))
+display(Hebb.view_weight_grid(model, 8, layer=2))
 
 # -----------------------------------------------------------------------------
 # DEFINITIONS

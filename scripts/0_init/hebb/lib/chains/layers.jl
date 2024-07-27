@@ -21,11 +21,22 @@ function get_dense_deepart_layer(
 
     input_dim = opts["bias"] ? n_in + 1 : n_in
 
+
+    preprocess = if opts["layer_norm"] && !first_layer
+        # LayerNorm(n_in, affine=false)
+        Flux.normalise
+    else
+        identity
+    end
+
     return Flux.@autosize (input_dim,) Chain(
         Chain(
             # RandomTransform(_, 16, opts),
             # first_layer ? identity : sigmoid_fast,
             # first_layer ? identity : opts["middle_activation"],
+            # LayerNorm(_, affine=false),
+            # opts["layer_norm"] ? LayerNorm(input_dim, affine=false) : identity,
+            preprocess,
             first_activation,
             opts["cc"] ? DeepART.CC() : identity,
         ),
@@ -82,11 +93,20 @@ function get_fuzzy_deepart_layer(
         opts["middle_activation"]
     end
 
+    preprocess = if opts["layer_norm"] && !first_layer
+        # LayerNorm(n_in, affine=false)
+        Flux.normalise
+    else
+        identity
+    end
+
     return Flux.@autosize (n_in,) Chain(
         Chain(
             # RandomTransform(_, 16),
             # first_layer ? identity : sigmoid_fast,
             # first_layer ? identity : opts["middle_activation"],
+            # opts["layer_norm"] ? LayerNorm(n_in, affine=false) : identity,
+            preprocess,
             first_activation,
             opts["cc"] ? DeepART.CC() : identity,
         ),
@@ -111,18 +131,28 @@ function get_widrow_hoff_layer(
         opts["middle_activation"]
     end
 
+    preprocess = if opts["layer_norm"]
+        # LayerNorm(n_in, affine=false)
+        Flux.normalise
+    else
+        identity
+    end
+
     return Flux.@autosize (input_dim,) Chain(
         Chain(
             # identity
             # sigmoid_fast,
             # opts["middle_activation"],
-            first_activation
+            # opts["layer_norm"] ? LayerNorm(input_dim, affine=false) : identity,
+            preprocess,
+            first_activation,
         ),
         Dense(
             _, n_out,
             # bias = opts["bias"],
             opts["final_sigmoid"] ? sigmoid_fast : identity,
-            init = opts["init"],
+            # init = opts["init"],
+            init = Flux.glorot_uniform,
             bias = false,
         ),
     )

@@ -11,7 +11,11 @@ model_opts:
   # immediate: true
   immediate: false
 
+  layer_norm: true
+  # layer_norm: false
+
   bias: false
+
   # eta: 0.001
   # eta: 0.005     # The good one
   eta: 0.01
@@ -44,8 +48,8 @@ model_opts:
   # model: conv
   # model: fuzzy_new
   # model: dense_new
-  model: dense_spec
-  # model: fuzzy_spec
+  # model: dense_spec
+  model: fuzzy_spec
   # model: conv_new
 
   conv_strategy: "unfold"
@@ -54,7 +58,7 @@ model_opts:
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
   # n_neurons: [128, 64]
-  n_neurons: [16, 32]
+  n_neurons: [16, 64]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
 
@@ -70,13 +74,14 @@ model_opts:
   init: rand32
   # init: glorot_uniform
 
-  # middle_activation: sigmoid_fast
-  middle_activation: tanh_fast
+  middle_activation: sigmoid_fast
+  # middle_activation: identity
+  # middle_activation: tanh_fast
   # middle_activation: relu
   # middle_activation: celu
 
-  positive_weights: true
-  # positive_weights: false
+  # positive_weights: true
+  positive_weights: false
 
   # beta_normalize: false
   beta_normalize: true
@@ -92,6 +97,7 @@ model_opts:
   sigma: 0.1
   # sigma: 0.2
   # sigma: 0.5
+  # sigma: 1.0
   # sigma: 2.0
 
   cc: true

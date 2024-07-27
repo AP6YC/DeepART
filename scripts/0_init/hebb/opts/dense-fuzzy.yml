@@ -3,6 +3,7 @@
 # n_epochs: 50
 # n_epochs: 10
 # n_epochs: 5
+# n_epochs: 2
 n_epochs: 1
 n_vals: 50
 val_epoch: true
@@ -10,6 +11,8 @@ val_epoch: true
 model_opts:
   # immediate: true
   immediate: false
+
+  layer_norm: true
 
   bias: false
   # eta: 0.001
@@ -70,13 +73,14 @@ model_opts:
   init: rand32
   # init: glorot_uniform
 
-  # middle_activation: sigmoid_fast
-  middle_activation: tanh_fast
+  middle_activation: sigmoid_fast
+  # middle_activation: identity
+  # middle_activation: tanh_fast
   # middle_activation: relu
   # middle_activation: celu
 
-  positive_weights: true
-  # positive_weights: false
+  # positive_weights: true
+  positive_weights: false
 
   # beta_normalize: false
   beta_normalize: true

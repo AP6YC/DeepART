@@ -11,12 +11,15 @@ model_opts:
   # immediate: true
   immediate: false
 
-  # bias: false
-  bias: true
+  # layer_norm: true
+  layer_norm: false
+
+  bias: false
+  # bias: true
 
   # eta: 0.001
-  # eta: 0.005     # The good one
-  eta: 0.01
+  eta: 0.005     # The good one
+  # eta: 0.01
   # eta: 0.05
   # eta: 0.2
   # eta: 0.5
@@ -62,8 +65,8 @@ model_opts:
 
 
   # learning_rule: hebb
-  # learning_rule: oja
-  learning_rule: instar
+  learning_rule: oja
+  # learning_rule: instar
   # learning_rule: fuzzyart
 
   # post_synaptic: true
@@ -83,15 +86,15 @@ model_opts:
   # beta_normalize: false
   beta_normalize: true
 
-  beta_rule: wta
+  # beta_rule: wta
   # beta_rule: contrast
   # beta_rule: softmax
-  # beta_rule: wavelet
+  beta_rule: wavelet
   # beta_rule: gaussian
 
-  sigma: 0.01
+  # sigma: 0.01
   # sigma: 0.05
-  # sigma: 0.1
+  sigma: 0.1
   # sigma: 0.2
   # sigma: 0.5
   # sigma: 1.0
