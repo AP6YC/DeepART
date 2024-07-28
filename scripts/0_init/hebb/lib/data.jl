@@ -8,6 +8,8 @@ const DATASETS = Dict(
         "fashionmnist",
         "mnist",
         "usps",
+        "cifar10",
+        "cifar100",
     ],
     "low_dimensional" => [
         "wine",

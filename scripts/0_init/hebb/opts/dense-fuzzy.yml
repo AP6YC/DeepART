@@ -117,7 +117,8 @@ profile: false
 # dataset: ring
 # dataset: spiral
 # dataset: mnist
-dataset: fashionmnist
+# dataset: fashionmnist
+dataset: cifar10
 # dataset: usps
 
 n_train: 50000

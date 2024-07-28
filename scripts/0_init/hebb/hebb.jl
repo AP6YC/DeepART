@@ -62,7 +62,7 @@ dev_x, dev_y = data.train[1]
 
 @info "------- Constructing model -------"
 model = Hebb.HebbModel(data, opts["model_opts"])
-display(Hebb.view_weight_grid(model, n_preview))
+# display(Hebb.view_weight_grid(model, n_preview))
 # display(Hebb.view_weight_grid(model, 8, layer=2))
 # display(Hebb.view_weight_grid(model, 4, layer=3))
 

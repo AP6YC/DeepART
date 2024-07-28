@@ -39,4 +39,6 @@ include("hebbmodel.jl")
 
 include("loop.jl")
 
+include("blocknet.jl")
+
 end
