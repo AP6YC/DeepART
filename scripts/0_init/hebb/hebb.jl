@@ -127,5 +127,6 @@ else
     end
 end
 
-Hebb.view_weight_grid(model, n_preview, layer=1)
+# Hebb.view_weight_grid(model, n_preview, layer=1)
+# Hebb.view_weight_grid(model, 3, layer=1)
 # Hebb.view_weight_grid(model, 8, layer=2)
