@@ -13,6 +13,8 @@ module Hebb
 
 using Revise
 using DeepART
+
+using AdaptiveResonance
 using Flux
 using ProgressMeter
 using Random

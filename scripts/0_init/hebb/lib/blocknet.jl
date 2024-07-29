@@ -27,10 +27,6 @@ const BlockOpts = Dict{String, Any}
 # BLOCKS
 # -----------------------------------------------------------------------------
 
-# struct ChainBlock <: Block
-#     chain::Flux.Chain
-# end
-
 struct ChainBlock <: Block
     chain::GroupedCCChain
 end
@@ -39,8 +35,20 @@ function forward(block::ChainBlock, x)
     return block.chain(x)
 end
 
+function train(block::ChainBlock, x, y)
+    return train(block.chain, x, y)
+end
+
 struct ARTBlock <: Block
     model::ARTModule
+end
+
+function forward(block::ARTBlock, x)
+    return classify(block.model, x)
+end
+
+function train(block::ARTBlock, x, y)
+    return train(block.model, x, y)
 end
 
 # -----------------------------------------------------------------------------
