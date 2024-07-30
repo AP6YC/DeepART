@@ -23,6 +23,13 @@ abstract type Block end
 
 const BlockOpts = Dict{String, Any}
 
+
+# -----------------------------------------------------------------------------
+# CHAINS
+# -----------------------------------------------------------------------------
+
+
+
 # -----------------------------------------------------------------------------
 # BLOCKS
 # -----------------------------------------------------------------------------
@@ -65,4 +72,11 @@ function forward(net::BlockNet, x)
         x = forward(layer, x)
     end
     return x
+end
+
+function train!(net::BlockNet, x, y)
+    for layer in net.layers
+        train(layer, x, y)
+    end
+    return
 end
