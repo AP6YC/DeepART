@@ -23,12 +23,38 @@ abstract type Block end
 
 const BlockOpts = Dict{String, Any}
 
+const BlockSimOpts = Dict{String, Any}
+
+# const BlockFileOpts = Dict{String, Union{BlockOpts, BlockSimOpts}}
 
 # -----------------------------------------------------------------------------
 # CHAINS
 # -----------------------------------------------------------------------------
 
 
+# """
+# Sanitize the options dictionary.
+# """
+# function sanitize_opts!(opts::SimOpts)
+
+# end
+
+# function load_block_opts(name::AbstractString)::BlockFileOpts
+#     # Load the options
+#     opts = YAML.load_file(
+#         joinpath(@__FILE__, "..", "..", "opts", name);
+#         dicttype=BlockFileOpts
+#     )
+
+#     # Santize the options and do post-processing
+#     sanitize_block_opts!(opts)
+
+#     # Return the options
+#     return opts
+# end
+
+function gen_blocks(opts::BlockOpts)
+end
 
 # -----------------------------------------------------------------------------
 # BLOCKS

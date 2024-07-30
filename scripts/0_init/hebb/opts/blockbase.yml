@@ -1,33 +1,40 @@
+opts_version: 2
+
+sim_opts:
+  n_epochs: 1
+  n_vals: 50
+  val_epoch: true
+  rng_seed: 1234
 block_opts:
   gpu: false
   blocks:
-    1:
+    - index: 1
+      # model_opts:
       inputs: 0
-      n_epochs: 1
-      n_vals: 50
-      val_epoch: true
+      model: fuzzy_spec
       immediate: false
-      model_opts:
-        model: fuzzy_spec
-        conv_strategy: unfold
-        layer_norm: true
-        bias: false
-        eta: 0.01
-        beta_d: 0.001
-        final_sigmoid: false
-        n_neurons: [16, 64]
-    2:
+      conv_strategy: unfold
+      layer_norm: true
+      bias: false
+      eta: 0.01
+      beta_d: 0.001
+      final_sigmoid: false
+      n_neurons: [16, 64]
+      beta_rule: gaussian
+      learning_rule: fuzzyart
+
+    - index: 2
+      # model_opts:
       inputs: 1
-      n_epochs: 1
-      n_vals: 50
-      val_epoch: true
-      model_opts:
-        model: dense_spec
-        immediate: false
-        layer_norm: true
-        bias: false
-        eta: 0.01
-        beta_d: 0.01
-        final_sigmoid: false
-        conv_strategy: unfold
-        n_neurons: [32, 64]
+      model: dense_spec
+      immediate: false
+      layer_norm: true
+      bias: false
+      eta: 0.01
+      beta_d: 0.01
+      final_sigmoid: false
+      conv_strategy: unfold
+      n_neurons: [32, 64]
+      beta_rule: gaussian
+      learning_rule: fuzzyart
+

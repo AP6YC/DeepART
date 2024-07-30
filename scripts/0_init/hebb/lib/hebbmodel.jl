@@ -48,7 +48,6 @@ function get_weight_slice(
     layer::Integer,
     index::Integer,
 )
-
     # weights = get_weights(model.model)
 
     # weights = Flux.params(model.model.chain)
