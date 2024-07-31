@@ -28,10 +28,10 @@ model_opts:
 
   # beta_d: 0.0
   # beta_d: 0.00001
-  beta_d: 0.001    # The good one
+  # beta_d: 0.001    # The good one
   # beta_d: 0.004
   # beta_d: 0.005
-  # beta_d: 0.01       # Divergence
+  beta_d: 0.01       # Divergence
   # beta_d: 0.011       # Divergence
   # beta_d: 0.02       # Divergence
   # beta_d: 0.1
@@ -60,7 +60,7 @@ model_opts:
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
   # n_neurons: [128, 64]
-  n_neurons: [16, 64]
+  n_neurons: [16, 64, 16]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
 
