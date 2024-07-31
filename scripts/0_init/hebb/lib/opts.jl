@@ -81,6 +81,30 @@ const SWITCHES = Dict{String, Any}(
     ],
 )
 
+"""
+All of the options that any one model must provide.
+"""
+const MODEL_DEPENDENCIES = Dict{String, Any}(
+    "common" => [
+        "init",
+        "middle_activation",
+        "cc",
+        "post_synaptic",
+    ],
+    "unique" => Dict{String, Any}(
+        "dense" => [
+        ],
+        "conv" => [
+            "conv_strategy",
+        ],
+        # "fuzzy" => [
+        # ],
+        # "fuzzyartmap" => [
+        # ],
+    )
+)
+
+
 # -----------------------------------------------------------------------------
 # FUNCTIONS
 # -----------------------------------------------------------------------------
@@ -109,7 +133,8 @@ end
 function _sanitize_switches!(opts::ModelOpts)
     # Check for valid switches
     for key in keys(SWITCHES)
-        if !(opts[key] in SWITCHES[key])
+        # Check if the key is valid only if the switch is present
+        if key in keys(opts) && !(opts[key] in SWITCHES[key])
             error("Invalid value for key $key: $(opts[key])")
         end
     end
@@ -135,7 +160,7 @@ function _wavelet_correction(opts::ModelOpts)
 end
 
 """
-Sanitize the options dictionary.
+V1: Sanitize the options dictionary.
 """
 function _sanitize_opts_v1!(opts::SimOpts)
     _sanitize_floats!(opts[MODEL_OPTS])
@@ -147,6 +172,26 @@ function _sanitize_opts_v1!(opts::SimOpts)
     _wavelet_correction(opts[MODEL_OPTS])
 end
 
+function _sanitize_model_dependencies!(opts::ModelOpts)
+    # Check for common dependencies
+    for key in keys(MODEL_DEPENDENCIES["common"])
+        if !(MODEL_DEPENDENCIES["common"][key] in keys(opts))
+            error("Model dependency error: $(MODEL_DEPENDENCIES["common"][key])")
+        end
+    end
+
+    # Check for model-specific dependencies
+    for key in keys(MODEL_DEPENDENCIES["unique"])
+        # Check if the model has unique dependencies
+        if opts["model"] in MODEL_DEPENDENCIES["unique"][key]
+            for dep in MODEL_DEPENDENCIES["unique"][key]
+                if !(dep in keys(opts))
+                    error("Model dependency error: $dep")
+                end
+            end
+        end
+    end
+end
 
 """
 Sanitize the options dictionary.
@@ -159,6 +204,7 @@ function _sanitize_opts_v2!(opts::SimOpts)
         _sanitize_flux!(model_opts)
         _sanitize_switches!(model_opts)
         _wavelet_correction(model_opts)
+        _sanitize_model_dependencies!(model_opts)
     end
 end
 
@@ -181,7 +227,6 @@ function load_opts(name::AbstractString)::SimOpts
     # Return the options
     return opts
 end
-
 
 """
 V1: simulation option getter.
@@ -208,13 +253,6 @@ function get_simopts(opts::SimOpts)
     else
         error("Invalid opts_version: $(opts[OPTS_VERSION])")
     end
-end
-
-function set_seed!(opts::SimOpts)
-    Random.seed!(
-        get_simopts(opts)["rng_seed"]
-    )
-    return
 end
 
 """
@@ -245,4 +283,14 @@ function get_model_opts(opts::SimOpts, index::Integer)
     # return opts["block_opts"]["blocks"][index]["model_opts"]
     # return _get_blocks(opts)[index]["model_opts"]
     return _get_blocks(opts)[index]
+end
+
+"""
+Set the seed for the simulation.
+"""
+function set_seed!(opts::SimOpts)
+    Random.seed!(
+        get_simopts(opts)["rng_seed"]
+    )
+    return
 end

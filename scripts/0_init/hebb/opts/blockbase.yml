@@ -15,13 +15,17 @@ block_opts:
   blocks:
     - index: 1
       inputs: 0
-      model: fuzzy_spec
+      model: fuzzy
+      cc: true
+      init: rand32
+      middle_activation: relu
       immediate: false
-      conv_strategy: unfold
+      post_synaptic: false
+      # conv_strategy: unfold
       layer_norm: true
       bias: false
       eta: 0.01
-      beta_d: 0.001
+      beta_d: 0.01
       final_sigmoid: false
       n_neurons: [16, 64]
       beta_rule: gaussian
@@ -29,8 +33,12 @@ block_opts:
 
     - index: 2
       inputs: 1
-      model: dense_spec
+      model: dense
+      cc: false
+      init: glorot_uniform
+      middle_activation: relu
       immediate: false
+      post_synaptic: false
       layer_norm: true
       bias: false
       eta: 0.01

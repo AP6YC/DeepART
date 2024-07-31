@@ -120,8 +120,8 @@ profile: false
 # dataset: spiral
 # dataset: mnist
 # dataset: fashionmnist
-dataset: cifar10
-# dataset: usps
+# dataset: cifar10
+dataset: usps
 
 n_train: 50000
 n_test: 10000

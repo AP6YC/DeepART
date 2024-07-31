@@ -50,3 +50,12 @@ n_preview = 4
 
 dev_x, dev_y = data.train[1]
 
+
+
+# Get the shape of the dataset
+dev_x, _ = data.train[1]
+n_input = size(dev_x)[1]
+n_class = length(unique(data.train.y))
+
+a = Hebb.ChainBlock(Hebb.get_model_opts(opts, 1), n_inputs = n_input)
+@info a.chain
