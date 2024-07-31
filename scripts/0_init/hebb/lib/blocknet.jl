@@ -34,43 +34,21 @@ const BlockOpts = Dict{String, Any}
 # CHAINS
 # -----------------------------------------------------------------------------
 
-
-# """
-# Sanitize the options dictionary.
-# """
-# function sanitize_opts!(opts::SimOpts)
-
-# end
-
-# function load_block_opts(name::AbstractString)::BlockFileOpts
-#     # Load the options
-#     opts = YAML.load_file(
-#         joinpath(@__FILE__, "..", "..", "opts", name);
-#         dicttype=BlockFileOpts
-#     )
-
-#     # Santize the options and do post-processing
-#     sanitize_block_opts!(opts)
-
-#     # Return the options
-#     return opts
-# end
-
 # -----------------------------------------------------------------------------
 # BLOCKS
 # -----------------------------------------------------------------------------
 
-struct ChainBlock{T <: Flux.Chain} <: Block
-    chain::T
-    opts::BlockOpts
-end
-
-const model_func_map = Dict(
+const CHAIN_FUNC_MAP = Dict(
     "dense" => get_dense_deepart_layer,
     # "conv" => get_conv_deepart_layer,
     "fuzzy" => get_fuzzy_deepart_layer,
     "widrow_hoff" => get_widrow_hoff_layer,
 )
+
+struct ChainBlock{T <: Flux.Chain} <: Block
+    chain::T
+    opts::BlockOpts
+end
 
 function ChainBlock(
     opts::BlockOpts;
@@ -94,7 +72,7 @@ function ChainBlock(
     first_layer = opts["index"] == 1
 
     # Get the layer function
-    layer_func = model_func_map[opts["model"]]
+    layer_func = CHAIN_FUNC_MAP[opts["model"]]
 
     # Create the model
     model = Chain(
@@ -136,10 +114,63 @@ end
 # BLOCKNET
 # -----------------------------------------------------------------------------
 
+
+"""
+Many-to-one map of what types of blocks resolve to what types of structs.
+"""
+const BLOCK_TYPES = Dict(
+    "dense" => "chain",
+    "fuzzy" => "chain",
+    "conv" => "chain",
+    "widrow_hoff" => "chain",
+    "fuzzyartmap" => "art",
+    # "chain" => [
+    #     "dense",
+    #     "fuzzy",
+    #     "conv",
+    #     "widrow_hoff",
+    # ],
+    # "art" => [
+    #     "fuzzyartmap",
+    # ],
+)
+
+"""
+Map of block types to the functions that create them.
+"""
+const BLOCK_FUNC_MAP = Dict(
+    "chain" => ChainBlock,
+    "art" => ARTBlock,
+)
+
+
 struct BlockNet
     layers::Vector{Block}
-    opts::BlockOpts
+    opts::SimOpts
 end
+
+function BlockNet(
+    opts::SimOpts,
+)
+    blocks = Vector{Block}()
+    for block_opts in opts["blocks"]
+        local_block = BLOCK_FUNC_MAP[BLOCK_TYPES[block_opts["model"]]](block_opts)
+        push!(blocks, local_block)
+    end
+
+    return BlockNet(blocks, opts)
+end
+
+# function BlockNet(
+#     blocks::Vector{BlockOpts}
+# )
+#     layers = Vector{Block}()
+#     for block in blocks
+#         push!(layers, BLOCK_TYPES[block["type"]](block))
+#     end
+#     return BlockNet(layers, blocks)
+# end
+
 
 function forward(net::BlockNet, x)
     for layer in net.layers

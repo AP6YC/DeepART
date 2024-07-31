@@ -88,17 +88,32 @@ const MODEL_DEPENDENCIES = Dict{String, Any}(
     "common" => [
         "init",
         "middle_activation",
-        "cc",
         "post_synaptic",
     ],
     "unique" => Dict{String, Any}(
         "dense" => [
+            "beta",
+            "beta_rule",
+            "cc",
+            "learning_rule",
+        ],
+        "fuzzy" => [
+            "beta",
+            "beta_rule",
+            "cc",
+            "learning_rule",
         ],
         "conv" => [
+            "beta",
+            "beta_rule",
             "conv_strategy",
+            "cc",
+            "learning_rule",
         ],
-        # "fuzzy" => [
-        # ],
+        "widrow_hoff" => [
+            "eta",
+            "final_sigmoid",
+        ],
         # "fuzzyartmap" => [
         # ],
     )
