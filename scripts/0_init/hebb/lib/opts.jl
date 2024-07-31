@@ -57,6 +57,7 @@ const SWITCHES = Dict{String, Any}(
         "conv_new",
         "dense_spec",
         "fuzzy_spec",
+        "widrow_hoff",
     ],
 
     "conv_strategy" => [
@@ -158,7 +159,7 @@ end
 
 function _wavelet_correction(opts::ModelOpts)
     # Wavelet correction
-    if opts["beta_rule"] == "wavelet"
+    if haskey(opts, "beta_rule") && (opts["beta_rule"] == "wavelet")
         n_samples = 10000
         plot_range = -0.5
 
@@ -218,8 +219,8 @@ function _sanitize_opts_v2!(opts::SimOpts)
         _sanitize_floats!(model_opts)
         _sanitize_flux!(model_opts)
         _sanitize_switches!(model_opts)
-        _wavelet_correction(model_opts)
         _sanitize_model_dependencies!(model_opts)
+        _wavelet_correction(model_opts)
     end
 end
 

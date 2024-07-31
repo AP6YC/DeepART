@@ -19,15 +19,12 @@ block_opts:
       cc: true
       positive_weights: true
       init: rand32
+      post_synaptic: false
       middle_activation: relu
       immediate: false
-      post_synaptic: false
-      # conv_strategy: unfold
       layer_norm: true
       bias: false
-      eta: 0.01
       beta_d: 0.01
-      # final_sigmoid: false
       n_neurons: [16, 64]
       beta_rule: gaussian
       learning_rule: fuzzyart
@@ -38,16 +35,29 @@ block_opts:
       cc: false
       positive_weights: false
       init: glorot_uniform
+      post_synaptic: false
       middle_activation: relu
       immediate: false
-      post_synaptic: false
       layer_norm: true
       bias: false
-      eta: 0.01
       beta_d: 0.01
-      # final_sigmoid: false
-      # conv_strategy: unfold
       n_neurons: [32, 64]
       beta_rule: gaussian
       learning_rule: fuzzyart
 
+    - index: 3
+      inputs: 2
+      model: widrow_hoff
+      final_sigmoid: false
+      # cc: false
+      positive_weights: false
+      init: glorot_uniform
+      post_synaptic: false
+      middle_activation: relu
+      immediate: false
+      layer_norm: true
+      bias: false
+      eta: 0.01
+      # n_neurons: [32, 64]
+      # beta_rule: gaussian
+      # learning_rule: fuzzyart

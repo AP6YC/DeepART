@@ -49,6 +49,12 @@ function get_dense_chain(
         opts["middle_activation"]
     end
 
+    second_activation = if opts["post_synaptic"]
+        opts["middle_activation"]
+    else
+        identity
+    end
+
     input_dim = opts["bias"] ? n_in + 1 : n_in
 
     preprocess = if opts["layer_norm"] && !first_layer
@@ -72,7 +78,8 @@ function get_dense_chain(
         ),
         Dense(
             _, n_out,
-            opts["post_synaptic"] ? opts["middle_activation"] : identity,
+            # opts["post_synaptic"] ? opts["middle_activation"] : identity,
+            second_activation,
             # bias = opts["bias"],
             bias = false,
             init = opts["init"],
@@ -154,7 +161,8 @@ function get_widrow_hoff_chain(
     n_in::Integer,
     # n_in::Tuple,
     n_out::Integer,
-    opts::ModelOpts,
+    opts::ModelOpts;
+    first_layer::Bool = false,
 )
     input_dim = opts["bias"] ? n_in + 1 : n_in
 
@@ -207,6 +215,7 @@ struct ChainBlock{T <: Flux.Chain} <: Block
     opts::BlockOpts
 end
 
+
 function ChainBlock(
     opts::BlockOpts;
     n_inputs::Integer=0,
@@ -215,17 +224,20 @@ function ChainBlock(
     # n_outputs::Tuple=(0,),
 )
     # Determine the actual number of neurons per layer that we will have
-    n_neurons = opts["n_neurons"]
-    if n_inputs != 0
-        n_neurons = [n_inputs, n_neurons...]
-    end
-    if n_outputs != 0
-        n_neurons = [n_neurons..., n_outputs]
+    if opts["model"] == "widrow_hoff"
+        # Special case for Widrow-Hoff
+        n_neurons = [n_inputs, n_outputs]
+    else
+        # Otherwise, use the n_neurons option and handle the input layer
+        n_neurons = opts["n_neurons"]
+        if n_inputs != 0
+            n_neurons = [n_inputs, n_neurons...]
+        end
     end
 
     # The number of layers is determined by the above
     # (i.e., if we are at the input or output of the model)
-    n_layers = length(n_neurons)
+    n_layers = length(n_neurons) - 1
 
     # Determine if this is the first layer
     first_layer = opts["index"] == 1
@@ -237,7 +249,7 @@ function ChainBlock(
     model = Chain(
         (
             layer_func(n_neurons[ix], n_neurons[ix + 1], opts, first_layer=first_layer)
-            for ix = 1:n_layers - 1
+            for ix = 1:n_layers
         )...,
     )
 
@@ -327,8 +339,7 @@ function BlockNet(
 
     for block_opts in opts["blocks"]
         local_n_inputs = if block_opts["index"] == 1
-            # local_input_size
-                # If the convolutional model is selected, create a convolution input tuple
+            # If the convolutional model is selected, create a convolution input tuple
             if block_opts["model"] in ["conv",]
                 (size(data.train.x)[1:3]..., 1)
             else
@@ -338,10 +349,17 @@ function BlockNet(
             previous_size[1]
         end
 
+        local_n_outputs = if block_opts["index"] == length(opts["blocks"])
+            n_class
+        else
+            0
+        end
+
         # local_block = BLOCK_FUNC_MAP[BLOCK_TYPES[block_opts["model"]]](
         local_block = BLOCK_FUNC_MAP[block_opts["model"]](
             block_opts,
             n_inputs=local_n_inputs,
+            n_outputs=local_n_outputs,
         )
 
         # local_output = local_block.opts["n_neurons"][end]
@@ -349,7 +367,7 @@ function BlockNet(
             local_block.chain,
             (local_n_inputs,)
         )
-        @info previous_size
+        # @info previous_size
         push!(blocks, local_block)
     end
 
