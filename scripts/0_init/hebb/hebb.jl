@@ -36,8 +36,8 @@ import .Hebb
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
-# opts = Hebb.load_opts("fuzzy.yml")
-opts = Hebb.load_opts("dense-fuzzy.yml")
+opts = Hebb.load_opts("fuzzy.yml")
+# opts = Hebb.load_opts("dense-fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])
@@ -127,6 +127,6 @@ else
     end
 end
 
-# Hebb.view_weight_grid(model, n_preview, layer=1)
-# Hebb.view_weight_grid(model, 3, layer=1)
+Hebb.view_weight_grid(model, n_preview, layer=1)
+Hebb.view_weight_grid(model, 3, layer=2)
 # Hebb.view_weight_grid(model, 8, layer=2)

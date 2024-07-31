@@ -4,8 +4,8 @@ opts_version: 1
 # n_epochs: 100
 # n_epochs: 50
 # n_epochs: 10
-# n_epochs: 5
-n_epochs: 1
+n_epochs: 5
+# n_epochs: 1
 n_vals: 50
 val_epoch: true
 
@@ -88,11 +88,11 @@ model_opts:
   # beta_normalize: false
   beta_normalize: true
 
-  # beta_rule: wta
+  beta_rule: wta
   # beta_rule: contrast
   # beta_rule: softmax
   # beta_rule: wavelet
-  beta_rule: gaussian
+  # beta_rule: gaussian
 
   # sigma: 0.01
   # sigma: 0.05
