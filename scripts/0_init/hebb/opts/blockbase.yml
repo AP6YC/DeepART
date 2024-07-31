@@ -5,11 +5,15 @@ sim_opts:
   n_vals: 50
   val_epoch: true
   rng_seed: 1234
+  dataset: cifar10
+  # dataset: usps
+  n_train: 50000
+  n_test: 10000
+
 block_opts:
   gpu: false
   blocks:
     - index: 1
-      # model_opts:
       inputs: 0
       model: fuzzy_spec
       immediate: false
@@ -24,7 +28,6 @@ block_opts:
       learning_rule: fuzzyart
 
     - index: 2
-      # model_opts:
       inputs: 1
       model: dense_spec
       immediate: false
