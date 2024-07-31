@@ -4,8 +4,8 @@ opts_version: 1
 # n_epochs: 100
 # n_epochs: 50
 # n_epochs: 10
-n_epochs: 5
-# n_epochs: 1
+# n_epochs: 5
+n_epochs: 1
 n_vals: 50
 val_epoch: true
 
@@ -60,7 +60,7 @@ model_opts:
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
   # n_neurons: [128, 64]
-  n_neurons: [16, 64, 16]
+  n_neurons: [16, 64, 32]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
 

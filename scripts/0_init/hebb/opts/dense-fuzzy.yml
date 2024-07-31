@@ -58,8 +58,8 @@ model_opts:
 
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
-  # n_neurons: [128, 64]
-  n_neurons: [32, 64]
+  n_neurons: [256, 64]
+  # n_neurons: [32, 64]
   # n_neurons: [16, 64]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
@@ -94,6 +94,7 @@ model_opts:
   # beta_rule: wavelet
   beta_rule: gaussian
 
+  # sigma: 0.001
   sigma: 0.01
   # sigma: 0.05
   # sigma: 0.1
@@ -120,8 +121,8 @@ profile: false
 # dataset: spiral
 # dataset: mnist
 # dataset: fashionmnist
-# dataset: cifar10
-dataset: usps
+dataset: cifar10
+# dataset: usps
 
 n_train: 50000
 n_test: 10000

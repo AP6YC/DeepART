@@ -17,6 +17,9 @@ This abstract type enforces the following contract:
 """
 abstract type Block end
 
+abstract type FluxBlock <: Block end
+
+
 # -----------------------------------------------------------------------------
 # CONSTANTS
 # -----------------------------------------------------------------------------
@@ -200,17 +203,115 @@ function get_widrow_hoff_chain(
     )
 end
 
+
+
+
+
+function get_conv_chain(
+    n_in::Tuple,
+    n_out::Integer,
+    # kernel::Tuple,
+    opts::ModelOpts;
+    first_layer::Bool = false,
+    # n_pool::Tuple = (),
+)
+    # return Flux.@autosize n_in Chain(
+    #     # CC layer
+    #     Chain(
+    #         first_layer ? identity :
+    #             Chain(
+    #                 MaxPool(n_pool),
+    #                 sigmoid_fast,
+    #             ),
+    #         DeepART.CCConv()
+    #     ),
+
+    #     # Conv layer
+    #     Chain(
+    #         Conv(
+    #             kernel, _ => n_out,
+    #             # sigmoid_fast,
+    #             bias=opts["bias"],
+    #             init=opts["init"],
+    #         ),
+    #     ),
+    # )
+
+    @info n_in
+
+    conv_model = Flux.@autosize (n_in,) Chain(
+        Chain(
+            Chain(
+                opts["cc"] ? DeepART.CCConv() : identity,
+            ),
+            Conv(
+                (3, 3), _ => 8,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+        Chain(
+            Chain(
+                MaxPool((2,2)),
+                # sigmoid_fast,
+                opts["middle_activation"],
+                opts["cc"] ? DeepART.CCConv() : identity,
+            ),
+            Conv(
+                (5,5), _ => 16,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+            Chain(
+                Flux.AdaptiveMaxPool((4, 4)),
+                Flux.flatten,
+            ),
+        ),
+        # Chain(
+        #     Chain(
+        #         Flux.AdaptiveMaxPool((4, 4)),
+        #         Flux.flatten,
+        #         # sigmoid_fast,
+        #         opts["middle_activation"],
+        #         opts["cc"] ? DeepART.CC() : identity,
+        #     ),
+        #     Dense(_, 32,
+        #         bias=opts["bias"],
+        #         init=opts["init"],
+        #     ),
+        # ),
+    )
+
+    return conv_model
+end
+
+
+
+
+
 const CHAIN_BLOCK_FUNC_MAP = Dict(
     "dense" => get_dense_chain,
     "fuzzy" => get_fuzzy_chain,
     "widrow_hoff" => get_widrow_hoff_chain,
+    "conv" => get_conv_chain,
 )
+
+const SUPERVISED_MODELS = [
+    "widrow_hoff",
+    "fuzzyartmap",
+]
 
 # -----------------------------------------------------------------------------
 # BLOCKS
 # -----------------------------------------------------------------------------
 
-struct ChainBlock{T <: Flux.Chain} <: Block
+struct ChainBlock{T <: Flux.Chain} <: FluxBlock
+    chain::T
+    # activations::Vector{Vector{Float32}}
+    opts::BlockOpts
+end
+
+struct ConvBlock{T <: Flux.Chain} <: FluxBlock
     chain::T
     opts::BlockOpts
 end
@@ -262,14 +363,52 @@ function ChainBlock(
         end
     end
 
-    return ChainBlock(model, opts)
+    return ChainBlock(
+        model,
+        opts,
+    )
 end
 
-function forward(block::ChainBlock, x)
+
+
+function ConvBlock(
+    opts::BlockOpts;
+    n_inputs::Tuple=(0,),
+    n_outputs::Integer=0,
+)
+    # Determine if this is the first layer
+    first_layer = opts["index"] == 1
+
+    # Get the layer function
+    layer_func = CHAIN_BLOCK_FUNC_MAP[opts["model"]]
+
+    # Create the model
+    model = Chain(
+        (
+            layer_func(n_inputs, 0, opts, first_layer=first_layer)
+        )...,
+    )
+
+    # Enforce positive weights if necessary
+    if opts["positive_weights"]
+        ps = Flux.params(model)
+        for p in ps
+            p .= abs.(p)
+            p .= p ./ maximum(p)
+        end
+    end
+
+    return ConvBlock(
+        model,
+        opts,
+    )
+end
+
+function forward(block::FluxBlock, x)
     return block.chain(x)
 end
 
-function train(block::ChainBlock, x, y)
+function train(block::FluxBlock, x, y)
     return train(block.chain, x, y)
 end
 
@@ -315,8 +454,8 @@ Map of block types to the functions that create them.
 const BLOCK_FUNC_MAP = Dict(
     "dense" => ChainBlock,
     "fuzzy" => ChainBlock,
-    "conv" => ChainBlock,
     "widrow_hoff" => ChainBlock,
+    "conv" => ConvBlock,
     "fuzzyartmap" => ARTBlock,
 )
 
@@ -332,6 +471,7 @@ function BlockNet(
     data::DeepART.DataSplit,
     opts::SimOpts,
 )
+
     dev_x, _ = data.train[1]
     n_input = size(dev_x)[1]
     n_class = length(unique(data.train.y))
@@ -342,30 +482,13 @@ function BlockNet(
     outs = OutsVector()
 
     for block_opts in opts["blocks"]
-        # # If this is the first layer
-        # local_n_inputs = if block_opts["index"] == 1
-        #     # If the convolutional model is selected, create a convolution input tuple
-        #     if block_opts["model"] in ["conv",]
-        #         (size(data.train.x)[1:3]..., 1)
-        #     else
-        #         n_input
-        #     end
-        # # Otherwise, get the size of the previous layer(s)
-        # else
-        #     # Get the combined sizes of the previous layers
-        #     if length(block_opts["inputs"]) > 1
-        #         sum([out_sizes[ix] for ix in block_opts["inputs"]])
-        #     # Otherwise, get the size of the single previous layer
-        #     else
-        #         # previous_size[1]
-        #         out_sizes[block_opts["inputs"]]
-        #     end
-        # end
+
+        is_conv = block_opts["model"] in ["conv",]
 
         # If this is the first layer
         if block_opts["index"] == 1
             # If the convolutional model is selected, create a convolution input tuple
-            local_n_inputs = if (block_opts["model"] in ["conv",])
+            local_n_inputs = if is_conv
                 (size(data.train.x)[1:3]..., 1)
             else
                 n_input
@@ -399,9 +522,10 @@ function BlockNet(
         )
 
         # local_output = local_block.opts["n_neurons"][end]
+        test_size = is_conv ? local_n_inputs : (local_n_inputs,)
         block_out_size = Flux.outputsize(
             local_block.chain,
-            (local_n_inputs,)
+            test_size
         )[1]
 
         # Append the blocks and metadata
@@ -451,9 +575,6 @@ end
 
 function forward(net::BlockNet, x)
 
-    # net.outs[1] .= x
-    # for layer in net.layers
-    # y = x
     for ix in eachindex(net.layers)
         layer = net.layers[ix]
 

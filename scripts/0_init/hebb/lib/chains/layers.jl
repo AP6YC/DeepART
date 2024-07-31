@@ -22,8 +22,8 @@ function get_dense_deepart_layer(
     input_dim = opts["bias"] ? n_in + 1 : n_in
 
     preprocess = if opts["layer_norm"] && !first_layer
-        # LayerNorm(n_in, affine=false)
-        Flux.normalise
+        LayerNorm(input_dim, affine=false)
+        # Flux.normalise
     else
         identity
     end
@@ -93,8 +93,8 @@ function get_fuzzy_deepart_layer(
     end
 
     preprocess = if opts["layer_norm"] && !first_layer
-        # LayerNorm(n_in, affine=false)
-        Flux.normalise
+        LayerNorm(n_in, affine=false)
+        # Flux.normalise
     else
         identity
     end
@@ -131,8 +131,8 @@ function get_widrow_hoff_layer(
     end
 
     preprocess = if opts["layer_norm"]
-        # LayerNorm(n_in, affine=false)
-        Flux.normalise
+        LayerNorm(input_dim, affine=false)
+        # Flux.normalise
     else
         identity
     end
