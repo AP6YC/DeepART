@@ -46,7 +46,8 @@ block_opts:
       learning_rule: fuzzyart
 
     - index: 3
-      inputs: 2
+      # inputs: 2
+      inputs: [1, 2]
       model: widrow_hoff
       final_sigmoid: false
       # cc: false

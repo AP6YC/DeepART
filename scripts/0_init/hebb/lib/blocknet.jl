@@ -290,7 +290,6 @@ end
 # BLOCKNET
 # -----------------------------------------------------------------------------
 
-
 # """
 # Many-to-one map of what types of blocks resolve to what types of structs.
 # """
@@ -321,8 +320,11 @@ const BLOCK_FUNC_MAP = Dict(
     "fuzzyartmap" => ARTBlock,
 )
 
+const OutsVector = Vector{Vector{Float32}}
+
 struct BlockNet
     layers::Vector{Block}
+    outs::OutsVector
     opts::SimOpts
 end
 
@@ -335,27 +337,61 @@ function BlockNet(
     n_class = length(unique(data.train.y))
 
     blocks = Vector{Block}()
-    previous_size = []
+    # previous_size = []
+    out_sizes = []
+    outs = OutsVector()
 
     for block_opts in opts["blocks"]
-        local_n_inputs = if block_opts["index"] == 1
+        # # If this is the first layer
+        # local_n_inputs = if block_opts["index"] == 1
+        #     # If the convolutional model is selected, create a convolution input tuple
+        #     if block_opts["model"] in ["conv",]
+        #         (size(data.train.x)[1:3]..., 1)
+        #     else
+        #         n_input
+        #     end
+        # # Otherwise, get the size of the previous layer(s)
+        # else
+        #     # Get the combined sizes of the previous layers
+        #     if length(block_opts["inputs"]) > 1
+        #         sum([out_sizes[ix] for ix in block_opts["inputs"]])
+        #     # Otherwise, get the size of the single previous layer
+        #     else
+        #         # previous_size[1]
+        #         out_sizes[block_opts["inputs"]]
+        #     end
+        # end
+
+        # If this is the first layer
+        if block_opts["index"] == 1
             # If the convolutional model is selected, create a convolution input tuple
-            if block_opts["model"] in ["conv",]
+            local_n_inputs = if (block_opts["model"] in ["conv",])
                 (size(data.train.x)[1:3]..., 1)
             else
                 n_input
             end
+            # push!(outs, zeros(Float32, local_n_inputs))
+        # Otherwise, get the size of the previous layer(s)
         else
-            previous_size[1]
+            # Get the combined sizes of the previous layers
+            local_n_inputs = if (length(block_opts["inputs"]) > 1)
+                sum([out_sizes[ix] for ix in block_opts["inputs"]])
+            # Otherwise, get the size of the single previous layer
+            else
+                # previous_size[1]
+                out_sizes[block_opts["inputs"]]
+            end
         end
 
-        local_n_outputs = if block_opts["index"] == length(opts["blocks"])
+
+        # If the last layer, set the number of outputs to the number of classes
+        local_n_outputs = if (block_opts["index"] == length(opts["blocks"]))
             n_class
         else
             0
         end
 
-        # local_block = BLOCK_FUNC_MAP[BLOCK_TYPES[block_opts["model"]]](
+        # Generate the block
         local_block = BLOCK_FUNC_MAP[block_opts["model"]](
             block_opts,
             n_inputs=local_n_inputs,
@@ -363,33 +399,80 @@ function BlockNet(
         )
 
         # local_output = local_block.opts["n_neurons"][end]
-        previous_size = Flux.outputsize(
+        block_out_size = Flux.outputsize(
             local_block.chain,
             (local_n_inputs,)
-        )
-        # @info previous_size
+        )[1]
+
+        # Append the blocks and metadata
         push!(blocks, local_block)
+        push!(out_sizes, block_out_size)
+        push!(outs, zeros(Float32, block_out_size))
     end
 
-    return BlockNet(blocks, opts)
+    return BlockNet(
+        blocks,
+        outs,
+        opts,
+    )
 end
 
-# function BlockNet(
-#     blocks::Vector{BlockOpts}
-# )
-#     layers = Vector{Block}()
-#     for block in blocks
-#         push!(layers, BLOCK_TYPES[block["type"]](block))
+# function get_inputs(net::BlockNet, index::Integer)
+#     # If this is the first layer
+#     local_n_inputs = if net.opts["index"] == 1
+#         # If the convolutional model is selected, create a convolution input tuple
+#         if block_opts["model"] in ["conv",]
+#             (size(data.train.x)[1:3]..., 1)
+#         else
+#             n_input
+#         end
+#     # Otherwise, get the size of the previous layer(s)
+#     else
+#         # Get the combined sizes of the previous layers
+#         if length(block_opts["inputs"]) > 1
+#             sum([out_sizes[ix] for ix in block_opts["inputs"]])
+#         # Otherwise, get the size of the single previous layer
+#         else
+#             # previous_size[1]
+#             out_sizes[block_opts["inputs"]]
+#         end
 #     end
-#     return BlockNet(layers, blocks)
+
+#     # inputs = Vector{Any}()
+#     # for block in net.layers
+#     #     push!(inputs, x)
+#     #     x = forward(block, x)
+#     # end
+#     # return inputs
 # end
 
 
+
+
 function forward(net::BlockNet, x)
-    for layer in net.layers
-        x = forward(layer, x)
+
+    # net.outs[1] .= x
+    # for layer in net.layers
+    # y = x
+    for ix in eachindex(net.layers)
+        layer = net.layers[ix]
+
+        if layer.opts["index"] == 1
+            local_input = x
+        else
+            local_input = if length(layer.opts["inputs"]) > 1
+                vcat((net.outs[ix] for ix in layer.opts["inputs"])...)
+            else
+                net.outs[layer.opts["inputs"]]
+            end
+        end
+
+        y = forward(layer, local_input)
+
+        net.outs[ix] .= y
     end
-    return x
+
+    return net.outs[end]
 end
 
 function train!(net::BlockNet, x, y)

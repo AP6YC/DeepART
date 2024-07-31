@@ -60,3 +60,5 @@ dev_x, dev_y = data.train[1]
 # @info a.chain
 
 b = Hebb.BlockNet(data, opts["block_opts"])
+
+Hebb.forward(b, dev_x)
