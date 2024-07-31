@@ -17,6 +17,7 @@ block_opts:
       inputs: 0
       model: fuzzy
       cc: true
+      positive_weights: true
       init: rand32
       middle_activation: relu
       immediate: false
@@ -35,6 +36,7 @@ block_opts:
       inputs: 1
       model: dense
       cc: false
+      positive_weights: false
       init: glorot_uniform
       middle_activation: relu
       immediate: false
