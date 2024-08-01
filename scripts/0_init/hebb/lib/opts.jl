@@ -58,6 +58,7 @@ const SWITCHES = Dict{String, Any}(
         "dense_spec",
         "fuzzy_spec",
         "widrow_hoff",
+        "fuzzyartmap",
     ],
 
     "conv_strategy" => [
@@ -87,9 +88,9 @@ All of the options that any one model must provide.
 """
 const MODEL_DEPENDENCIES = Dict{String, Any}(
     "common" => [
-        "init",
-        "middle_activation",
-        "post_synaptic",
+        # "init",
+        # "middle_activation",
+        # "post_synaptic",
     ],
     "unique" => Dict{String, Any}(
         "dense" => [
@@ -97,12 +98,18 @@ const MODEL_DEPENDENCIES = Dict{String, Any}(
             "beta_rule",
             "cc",
             "learning_rule",
+            "init",
+            "middle_activation",
+            "post_synaptic",
         ],
         "fuzzy" => [
             "beta",
             "beta_rule",
             "cc",
             "learning_rule",
+            "init",
+            "middle_activation",
+            "post_synaptic",
         ],
         "conv" => [
             "beta",
@@ -110,6 +117,9 @@ const MODEL_DEPENDENCIES = Dict{String, Any}(
             "conv_strategy",
             "cc",
             "learning_rule",
+            "init",
+            "middle_activation",
+            "post_synaptic",
         ],
         "widrow_hoff" => [
             "eta",

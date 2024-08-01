@@ -205,9 +205,10 @@ end
 
 
 
-
-
 function get_conv_chain(
+    # size_tuple::Tuple,
+    # head_dim::Integer,
+    # opts::ModelOpts
     n_in::Tuple,
     n_out::Integer,
     # kernel::Tuple,
@@ -215,37 +216,30 @@ function get_conv_chain(
     first_layer::Bool = false,
     # n_pool::Tuple = (),
 )
-    # return Flux.@autosize n_in Chain(
-    #     # CC layer
-    #     Chain(
-    #         first_layer ? identity :
-    #             Chain(
-    #                 MaxPool(n_pool),
-    #                 sigmoid_fast,
-    #             ),
-    #         DeepART.CCConv()
-    #     ),
+    # first_activation = if opts["post_synaptic"]
+    #     identity
+    # else
+    #     opts["middle_activation"]
+    # end
 
-    #     # Conv layer
-    #     Chain(
-    #         Conv(
-    #             kernel, _ => n_out,
-    #             # sigmoid_fast,
-    #             bias=opts["bias"],
-    #             init=opts["init"],
-    #         ),
-    #     ),
-    # )
+    # preprocess = if opts["layer_norm"]
+    #     LayerNorm(_, affine=false)
+    #     # Flux.normalise
+    # else
+    #     identity
+    # end
 
-    @info n_in
+    # @info n_in
 
     conv_model = Flux.@autosize (n_in,) Chain(
+        # get_conv_layer(, 8, (3, 3), opts, first_layer=true),
         Chain(
             Chain(
                 opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
                 (3, 3), _ => 8,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
@@ -253,40 +247,38 @@ function get_conv_chain(
         Chain(
             Chain(
                 MaxPool((2,2)),
-                # sigmoid_fast,
-                opts["middle_activation"],
+                # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+                LayerNorm(_, affine=false),
+                opts["post_synaptic"] ? identity : opts["middle_activation"],
                 opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
                 (5,5), _ => 16,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
+        ),
+        Chain(
             Chain(
                 Flux.AdaptiveMaxPool((4, 4)),
                 Flux.flatten,
+                vec,
+                # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+                LayerNorm(_, affine=false),
+                opts["post_synaptic"] ? identity : opts["middle_activation"],
+                opts["cc"] ? DeepART.CC() : identity,
+            ),
+            Dense(_, 32,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
+                bias=opts["bias"],
+                init=opts["init"],
             ),
         ),
-        # Chain(
-        #     Chain(
-        #         Flux.AdaptiveMaxPool((4, 4)),
-        #         Flux.flatten,
-        #         # sigmoid_fast,
-        #         opts["middle_activation"],
-        #         opts["cc"] ? DeepART.CC() : identity,
-        #     ),
-        #     Dense(_, 32,
-        #         bias=opts["bias"],
-        #         init=opts["init"],
-        #     ),
-        # ),
     )
 
     return conv_model
 end
-
-
-
 
 
 const CHAIN_BLOCK_FUNC_MAP = Dict(
@@ -417,8 +409,40 @@ struct ARTBlock{T <: ARTModule} <: Block
     opts::BlockOpts
 end
 
+function ARTBlock(
+    opts::BlockOpts;
+    n_inputs::Integer=0,
+    n_outputs::Integer=0,
+)
+
+    # Create the head
+    model = AdaptiveResonance.SFAM(
+        rho=opts["rho"],
+        epsilon=1e-4,
+        beta=opts["beta_s"],
+    )
+    model.config = AdaptiveResonance.DataConfig(0.0, 1.0, n_inputs)
+
+    # # model = DeepART.FuzzyARTMap(
+    # model = AdaptiveResonance.DDVFA(
+    #     n_inputs,
+    #     n_outputs,
+    # )
+
+    return ARTBlock(
+        model,
+        opts,
+    )
+end
+
 function forward(block::ARTBlock, x)
-    return classify(block.model, x)
+    y_hat = if block.model.n_categories > 0
+        classify(block.model, x)
+    else
+        0
+    end
+
+    return y_hat
 end
 
 function train(block::ARTBlock, x, y)
@@ -477,7 +501,6 @@ function BlockNet(
     n_class = length(unique(data.train.y))
 
     blocks = Vector{Block}()
-    # previous_size = []
     out_sizes = []
     outs = OutsVector()
 
@@ -506,7 +529,6 @@ function BlockNet(
             end
         end
 
-
         # If the last layer, set the number of outputs to the number of classes
         local_n_outputs = if (block_opts["index"] == length(opts["blocks"]))
             n_class
@@ -523,10 +545,15 @@ function BlockNet(
 
         # local_output = local_block.opts["n_neurons"][end]
         test_size = is_conv ? local_n_inputs : (local_n_inputs,)
-        block_out_size = Flux.outputsize(
-            local_block.chain,
-            test_size
-        )[1]
+
+        if local_block isa ARTBlock
+            block_out_size = n_class
+        else
+            block_out_size = Flux.outputsize(
+                local_block.chain,
+                test_size
+            )[1]
+        end
 
         # Append the blocks and metadata
         push!(blocks, local_block)
@@ -604,18 +631,81 @@ function train!(net::BlockNet, x, y)
 end
 
 
-# function gen_blocks(opts::BlockOpts)
-#     blocks = Vector{Block}()
-#     for block in opts["blocks"]
-#         if block["model"] == "chain"
-#             chain = GroupedCCChain(block["model_opts"])
-#             push!(blocks, ChainBlock(chain))
-#         elseif block["model"] == "art"
-#             model = ARTModule(block["model_opts"])
-#             push!(blocks, ARTBlock(model))
-#         else
-#             error("Invalid block type: $(block["type"])")
-#         end
-#     end
-#     return blocks
+# function get_conv_chain(
+#     n_in::Tuple,
+#     n_out::Integer,
+#     # kernel::Tuple,
+#     opts::ModelOpts;
+#     first_layer::Bool = false,
+#     # n_pool::Tuple = (),
+# )
+#     # return Flux.@autosize n_in Chain(
+#     #     # CC layer
+#     #     Chain(
+#     #         first_layer ? identity :
+#     #             Chain(
+#     #                 MaxPool(n_pool),
+#     #                 sigmoid_fast,
+#     #             ),
+#     #         DeepART.CCConv()
+#     #     ),
+
+#     #     # Conv layer
+#     #     Chain(
+#     #         Conv(
+#     #             kernel, _ => n_out,
+#     #             # sigmoid_fast,
+#     #             bias=opts["bias"],
+#     #             init=opts["init"],
+#     #         ),
+#     #     ),
+#     # )
+
+#     @info n_in
+
+#     conv_model = Flux.@autosize (n_in,) Chain(
+#         Chain(
+#             Chain(
+#                 opts["cc"] ? DeepART.CCConv() : identity,
+#             ),
+#             Conv(
+#                 (3, 3), _ => 8,
+#                 bias=opts["bias"],
+#                 init=opts["init"],
+#             ),
+#         ),
+#         Chain(
+#             Chain(
+#                 MaxPool((2,2)),
+#                 # sigmoid_fast,
+#                 opts["middle_activation"],
+#                 opts["cc"] ? DeepART.CCConv() : identity,
+#             ),
+#             Conv(
+#                 (5,5), _ => 16,
+#                 bias=opts["bias"],
+#                 init=opts["init"],
+#             ),
+#             Chain(
+#                 Flux.AdaptiveMaxPool((4, 4)),
+#                 Flux.flatten,
+#             ),
+#         ),
+#         # Chain(
+#         #     Chain(
+#         #         Flux.AdaptiveMaxPool((4, 4)),
+#         #         Flux.flatten,
+#         #         # sigmoid_fast,
+#         #         opts["middle_activation"],
+#         #         opts["cc"] ? DeepART.CC() : identity,
+#         #     ),
+#         #     Dense(_, 32,
+#         #         bias=opts["bias"],
+#         #         init=opts["init"],
+#         #     ),
+#         # ),
+#     )
+
+#     return conv_model
 # end
+

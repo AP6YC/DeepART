@@ -143,6 +143,10 @@ function view_weight_grid(model::Hebb.HebbModel, n_grid::Int; layer=1)
     return out_grid'
 end
 
+# function view_kernel()
+
+
+
 # -----------------------------------------------------------------------------
 # TRAINING FUNCTIONS
 # -----------------------------------------------------------------------------

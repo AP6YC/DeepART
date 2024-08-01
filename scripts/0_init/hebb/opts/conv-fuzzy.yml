@@ -15,7 +15,7 @@ model_opts:
   # bias: true
 
   eta: 0.01
-  beta_d: 0.01       # Divergence
+  beta_d: 0.001       # Divergence
 
   final_sigmoid: false
   # final_sigmoid: true
@@ -65,11 +65,11 @@ model_opts:
   # beta_normalize: false
   beta_normalize: true
 
-  # beta_rule: wta
+  beta_rule: wta      # 0.7255
   # beta_rule: contrast
   # beta_rule: softmax
   # beta_rule: wavelet
-  beta_rule: gaussian
+  # beta_rule: gaussian     # 0.755
 
   sigma: 0.01
 
@@ -90,9 +90,9 @@ profile: false
 # dataset: moon
 # dataset: ring
 # dataset: spiral
-# dataset: mnist
+dataset: mnist
 # dataset: fashionmnist
-dataset: usps
+# dataset: usps
 
 n_train: 50000
 n_test: 10000

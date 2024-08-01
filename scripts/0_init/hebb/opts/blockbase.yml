@@ -32,7 +32,7 @@ block_opts:
       inputs: 0
       model: conv
       cc: true
-      # positive_weights: true
+      positive_weights: false
       init: rand32
       middle_activation: relu
       layer_norm: true
@@ -60,20 +60,34 @@ block_opts:
       beta_rule: gaussian
       learning_rule: fuzzyart
 
+    # - index: 3
+    #   # inputs: 2
+    #   inputs: [1, 2]
+    #   model: widrow_hoff
+    #   final_sigmoid: false
+    #   # cc: false
+    #   positive_weights: false
+    #   init: glorot_uniform
+    #   post_synaptic: false
+    #   middle_activation: relu
+    #   immediate: false
+    #   layer_norm: true
+    #   bias: false
+    #   eta: 0.01
+
     - index: 3
       # inputs: 2
       inputs: [1, 2]
-      model: widrow_hoff
-      final_sigmoid: false
-      # cc: false
-      positive_weights: false
-      init: glorot_uniform
-      post_synaptic: false
-      middle_activation: relu
-      immediate: false
-      layer_norm: true
-      bias: false
-      eta: 0.01
-      # n_neurons: [32, 64]
-      # beta_rule: gaussian
-      # learning_rule: fuzzyart
+      model: fuzzyartmap
+      rho: 0.6
+      beta_s: 1.0
+      # final_sigmoid: false
+      # # cc: false
+      # positive_weights: false
+      # init: glorot_uniform
+      # post_synaptic: false
+      # middle_activation: relu
+      # immediate: false
+      # layer_norm: true
+      # bias: false
+      # eta: 0.01
