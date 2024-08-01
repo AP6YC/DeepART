@@ -32,15 +32,15 @@ block_opts:
       inputs: 0
       model: conv
       cc: true
-      positive_weights: true
+      # positive_weights: true
       init: rand32
-      post_synaptic: false
       middle_activation: relu
-      immediate: false
       layer_norm: true
+      post_synaptic: false
+      immediate: false
       bias: false
       beta_d: 0.01
-      n_neurons: [16, 64]
+      # n_neurons: [16, 64]
       beta_rule: gaussian
       learning_rule: fuzzyart
 

@@ -37,7 +37,8 @@ import .Hebb
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
 # opts = Hebb.load_opts("fuzzy.yml")
-opts = Hebb.load_opts("dense-fuzzy.yml")
+# opts = Hebb.load_opts("dense-fuzzy.yml")
+opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])

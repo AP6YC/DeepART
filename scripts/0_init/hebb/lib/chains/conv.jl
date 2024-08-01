@@ -41,6 +41,21 @@ function get_inc_conv_model(
     head_dim::Integer,
     opts::ModelOpts
 )::GroupedCCChain
+
+
+    first_activation = if opts["post_synaptic"]
+        identity
+    else
+        opts["middle_activation"]
+    end
+
+    # preprocess = if opts["layer_norm"]
+    #     LayerNorm(_, affine=false)
+    #     # Flux.normalise
+    # else
+    #     identity
+    # end
+
     conv_model = Flux.@autosize (size_tuple,) Chain(
         # get_conv_layer(, 8, (3, 3), opts, first_layer=true),
         Chain(
@@ -49,6 +64,7 @@ function get_inc_conv_model(
             ),
             Conv(
                 (3, 3), _ => 8,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
@@ -57,11 +73,15 @@ function get_inc_conv_model(
             Chain(
                 MaxPool((2,2)),
                 # sigmoid_fast,
-                opts["middle_activation"],
+                # opts["middle_activation"],
+                # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+                LayerNorm(_, affine=false),
+                opts["post_synaptic"] ? identity : opts["middle_activation"],
                 opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
                 (5,5), _ => 16,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
@@ -70,31 +90,38 @@ function get_inc_conv_model(
             Chain(
                 Flux.AdaptiveMaxPool((4, 4)),
                 Flux.flatten,
+                vec,
                 # sigmoid_fast,
-                opts["middle_activation"],
+                # opts["middle_activation"],
+                # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+                LayerNorm(_, affine=false),
+                opts["post_synaptic"] ? identity : opts["middle_activation"],
                 opts["cc"] ? DeepART.CC() : identity,
             ),
             Dense(_, 32,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
         ),
         # Last layers
-        Chain(
-            Chain(
-                # identity,
-                # sigmoid_fast,
-                opts["middle_activation"],
-            ),
-            Chain(
-                Dense(
-                    _, head_dim,
-                    opts["final_sigmoid"] ? sigmoid_fast : identity,
-                    bias=opts["bias"],
-                ),
-                vec,
-            ),
-        ),
+        get_widrow_hoff_layer(32, head_dim, opts),
+        # vec,
+        # Chain(
+        #     Chain(
+        #         # identity,
+        #         # sigmoid_fast,
+        #         opts["middle_activation"],
+        #     ),
+        #     Chain(
+        #         Dense(
+        #             _, head_dim,
+        #             opts["final_sigmoid"] ? sigmoid_fast : identity,
+        #             bias=opts["bias"],
+        #         ),
+        #         vec,
+        #     ),
+        # ),
     )
 
     return GroupedCCChain(conv_model)
