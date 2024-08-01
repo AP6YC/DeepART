@@ -88,6 +88,8 @@ All of the options that any one model must provide.
 """
 const MODEL_DEPENDENCIES = Dict{String, Any}(
     "common" => [
+        "index",
+        "inputs",
         # "init",
         # "middle_activation",
         # "post_synaptic",
@@ -124,9 +126,12 @@ const MODEL_DEPENDENCIES = Dict{String, Any}(
         "widrow_hoff" => [
             "eta",
             "final_sigmoid",
+            "glorot_uniform",
         ],
-        # "fuzzyartmap" => [
-        # ],
+        "fuzzyartmap" => [
+            "rho",
+            "beta_s",
+        ],
     )
 )
 

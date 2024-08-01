@@ -437,7 +437,7 @@ end
 
 function forward(block::ARTBlock, x)
     y_hat = if block.model.n_categories > 0
-        classify(block.model, x)
+        AdaptiveResonance.classify(block.model, x, get_bmu=true)
     else
         0
     end
@@ -546,8 +546,10 @@ function BlockNet(
         # local_output = local_block.opts["n_neurons"][end]
         test_size = is_conv ? local_n_inputs : (local_n_inputs,)
 
+        # Correction for the ouptut shape for ART module blocks
         if local_block isa ARTBlock
             block_out_size = n_class
+        # Otherwise, get the output size from the model
         else
             block_out_size = Flux.outputsize(
                 local_block.chain,
@@ -598,8 +600,6 @@ end
 # end
 
 
-
-
 function forward(net::BlockNet, x)
 
     for ix in eachindex(net.layers)
@@ -617,7 +617,17 @@ function forward(net::BlockNet, x)
 
         y = forward(layer, local_input)
 
-        net.outs[ix] .= y
+        if layer isa ARTBlock
+            y_out = zeros(Float32, length(net.outs[end]))
+            if y > 0
+                y_out[y] = 1.0
+            end
+        else
+            y_out = y
+        end
+
+        # net.outs[ix] .= y
+        net.outs[ix] .= y_out
     end
 
     return net.outs[end]
