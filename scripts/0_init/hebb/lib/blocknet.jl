@@ -605,8 +605,10 @@ function forward(net::BlockNet, x)
     for ix in eachindex(net.layers)
         layer = net.layers[ix]
 
+        # If this is the first layer, use the input data
         if layer.opts["index"] == 1
             local_input = x
+        # Otherwise, get the output from the previous layer(s)
         else
             local_input = if length(layer.opts["inputs"]) > 1
                 vcat((net.outs[ix] for ix in layer.opts["inputs"])...)
@@ -615,21 +617,25 @@ function forward(net::BlockNet, x)
             end
         end
 
+        # Compute the forward pass for the layer
         y = forward(layer, local_input)
 
+        # If the layer is an ART block, convert the output to a one-hot vector
         if layer isa ARTBlock
             y_out = zeros(Float32, length(net.outs[end]))
             if y > 0
                 y_out[y] = 1.0
             end
+        # Otherwise, use the output as-is
         else
             y_out = y
         end
 
-        # net.outs[ix] .= y
+        # Store the output to the cached outputs vector
         net.outs[ix] .= y_out
     end
 
+    # Return the last layer output as the output of the block net
     return net.outs[end]
 end
 
