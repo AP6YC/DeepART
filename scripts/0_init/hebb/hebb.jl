@@ -139,3 +139,33 @@ if preview_weights
     # display(Hebb.view_weight_grid(model, 3, layer=2))
 end
 # Hebb.view_weight_grid(model, 8, layer=2)
+
+
+# using ProgressMeter
+# using UnicodePlots
+
+# n = 20
+# xs = Float64[]
+# p = Progress(n)
+# for iter = 1:n
+#     append!(xs, rand())
+#     sleep(0.5)
+#     plot = lineplot(xs)
+#     str = "\n" * string(plot; color=true) # use ANSI color codes and prepend newline
+#     ProgressMeter.next!(p; showvalues = [(:UnicodePlot, str)])
+# end
+# https://github.com/timholy/ProgressMeter.jl/issues/224
+
+
+# LeNet:
+# model = Chain(
+#     Conv((5,5),1 => 6, relu),
+#     MaxPool((2,2)),
+#     Conv((5,5),6 => 16, relu),
+#     MaxPool((2,2)),
+#     Flux.flatten,
+#     Dense(256=>120,relu),
+#     Dense(120=>84, relu),
+#     Dense(84=>10, sigmoid),
+#     softmax
+# )
