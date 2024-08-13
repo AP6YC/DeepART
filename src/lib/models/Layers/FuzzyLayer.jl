@@ -114,11 +114,14 @@ function (a::Fuzzy)(x::AbstractVecOrMat)
     xT = x
 #   return σ.(a.weight * xT .+ a.bias)
     _weight = a.weight'
-    _x = repeat(xT, 1, size(_weight, 2))
+
+    # NOTE: removing the repeat here because casting works as intended in xw_norm
+    # _x = repeat(xT, 1, size(_weight, 2))
+    _x = xT
 
     xw_norm = sum(abs.(min.(_x, _weight)), dims=1)
 
-    w_norm = sum(abs.(_weight), dims=1)
+    # w_norm = sum(abs.(_weight), dims=1)
     # M = a.activation(vec(xw_norm ./ (ALPHA .+ w_norm)))
     # return M
 

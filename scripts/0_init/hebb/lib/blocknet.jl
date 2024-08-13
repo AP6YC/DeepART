@@ -17,6 +17,9 @@ This abstract type enforces the following contract:
 """
 abstract type Block end
 
+"""
+FluxBlock abstract type, which encapsulates Flux chain-like models.
+"""
 abstract type FluxBlock <: Block end
 
 
@@ -37,6 +40,9 @@ const BlockOpts = Dict{String, Any}
 # CHAINS
 # -----------------------------------------------------------------------------
 
+"""
+Dense chain layer constructor.
+"""
 function get_dense_chain(
     # n_in::Tuple,
     n_in::Integer,
@@ -119,6 +125,9 @@ end
 
 # Flux.trainable(m::RandomTransform) = ()
 
+"""
+Fuzzy chain layer constructor.
+"""
 function get_fuzzy_chain(
     n_in::Integer,
     # n_in::Tuple,
@@ -160,6 +169,9 @@ function get_fuzzy_chain(
     )
 end
 
+"""
+Widrow-Hoff chain layer constructor as a final (supervised) layer.
+"""
 function get_widrow_hoff_chain(
     n_in::Integer,
     # n_in::Tuple,
@@ -203,8 +215,11 @@ function get_widrow_hoff_chain(
     )
 end
 
+"""
+Convolutional chain layer constructor.
 
-
+NOTE: this is not currently set up to be modular and should be used as the first "layer" in a model chain.
+"""
 function get_conv_chain(
     # size_tuple::Tuple,
     # head_dim::Integer,
@@ -280,7 +295,9 @@ function get_conv_chain(
     return conv_model
 end
 
-
+"""
+Map of block types to the functions that create them.
+"""
 const CHAIN_BLOCK_FUNC_MAP = Dict(
     "dense" => get_dense_chain,
     "fuzzy" => get_fuzzy_chain,
@@ -288,27 +305,38 @@ const CHAIN_BLOCK_FUNC_MAP = Dict(
     "conv" => get_conv_chain,
 )
 
+"""
+List of supervised layers.
+"""
 const SUPERVISED_MODELS = [
     "widrow_hoff",
     "fuzzyartmap",
 ]
 
 # -----------------------------------------------------------------------------
-# BLOCKS
+# CHAIN BLOCKS
 # -----------------------------------------------------------------------------
 
+"""
+Block definition for a single dense chain.
+"""
 struct ChainBlock{T <: Flux.Chain} <: FluxBlock
     chain::T
     # activations::Vector{Vector{Float32}}
     opts::BlockOpts
 end
 
+"""
+Block definition for a single convolutional chain.
+"""
 struct ConvBlock{T <: Flux.Chain} <: FluxBlock
     chain::T
     opts::BlockOpts
 end
 
-
+"""
+Constructs a dense chain block.
+"""
 function ChainBlock(
     opts::BlockOpts;
     n_inputs::Integer=0,
@@ -361,8 +389,9 @@ function ChainBlock(
     )
 end
 
-
-
+"""
+Constructs a convolutional chain block.
+"""
 function ConvBlock(
     opts::BlockOpts;
     n_inputs::Tuple=(0,),
@@ -396,19 +425,35 @@ function ConvBlock(
     )
 end
 
+"""
+Inference function for a chain block.
+"""
 function forward(block::FluxBlock, x)
     return block.chain(x)
 end
 
+"""
+Training function for a chain block.
+"""
 function train(block::FluxBlock, x, y)
     return train(block.chain, x, y)
 end
 
+# -----------------------------------------------------------------------------
+# ART BLOCKS
+# -----------------------------------------------------------------------------
+
+"""
+ART block definition.
+"""
 struct ARTBlock{T <: ARTModule} <: Block
     model::T
     opts::BlockOpts
 end
 
+"""
+ART block constructor.
+"""
 function ARTBlock(
     opts::BlockOpts;
     n_inputs::Integer=0,
@@ -435,6 +480,9 @@ function ARTBlock(
     )
 end
 
+"""
+Inference function for an ART block.
+"""
 function forward(block::ARTBlock, x)
     y_hat = if block.model.n_categories > 0
         AdaptiveResonance.classify(block.model, x, get_bmu=true)
@@ -445,6 +493,9 @@ function forward(block::ARTBlock, x)
     return y_hat
 end
 
+"""
+Training function for an ART block.
+"""
 function train(block::ARTBlock, x, y)
     return train(block.model, x, y)
 end
@@ -483,14 +534,23 @@ const BLOCK_FUNC_MAP = Dict(
     "fuzzyartmap" => ARTBlock,
 )
 
+"""
+Definition of the block outputs type.
+"""
 const OutsVector = Vector{Vector{Float32}}
 
+"""
+BlockNet definition as a container of blocks.
+"""
 struct BlockNet
     layers::Vector{Block}
     outs::OutsVector
     opts::SimOpts
 end
 
+"""
+BlockNet constructor.
+"""
 function BlockNet(
     data::DeepART.DataSplit,
     opts::SimOpts,
@@ -599,9 +659,11 @@ end
 #     # return inputs
 # end
 
-
+"""
+Inference definition for a BlockNet.
+"""
 function forward(net::BlockNet, x)
-
+    # Loop through the block layers
     for ix in eachindex(net.layers)
         layer = net.layers[ix]
 
@@ -639,6 +701,9 @@ function forward(net::BlockNet, x)
     return net.outs[end]
 end
 
+"""
+Training definition for a BlockNet.
+"""
 function train!(net::BlockNet, x, y)
     for layer in net.layers
         train(layer, x, y)
