@@ -122,7 +122,8 @@ function get_widrow_hoff_layer(
     n_out::Integer,
     opts::ModelOpts,
 )
-    input_dim = opts["bias"] ? n_in + 1 : n_in
+    # input_dim = opts["bias"] ? n_in + 1 : n_in
+    input_dim = opts["final_bias"] ? n_in + 1 : n_in
 
     first_activation = if opts["post_synaptic"]
         identity

@@ -110,6 +110,8 @@ model_opts:
   # cc: false
 
   # model_spec: []
+  # final_bias: true
+  final_bias: false
 
 profile: false
 # profile: true

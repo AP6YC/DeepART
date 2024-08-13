@@ -244,8 +244,10 @@ function train_hebb(
         input = ins[ix]
 
         if ix == n_layers
+            local_input = model.opts["final_bias"] ? [1.0; input] : input
             widrow_hoff_learn!(
-                input,
+                # input,
+                local_input,
                 out,
                 weights,
                 target,
