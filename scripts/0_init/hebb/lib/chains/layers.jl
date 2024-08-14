@@ -91,6 +91,17 @@ function get_fuzzy_deepart_layer(
     else
         opts["middle_activation"]
     end
+    # if first_layer
+    #     first_activation = identity
+    # elseif opts["post_synaptic"]
+    #     first_activation = identity
+    # else
+    #     if opts["middle_activation"] == Flux.sigmoid_fast
+    #         first_activation(x::Real) = Flux.sigmoid_fast((x - 0.5f0) * 10.0f0)
+    #     else
+    #         first_activation = opts["middle_activation"]
+    #     end
+    # end
 
     preprocess = if opts["layer_norm"] && !first_layer
         LayerNorm(n_in, affine=false)
@@ -123,7 +134,8 @@ function get_widrow_hoff_layer(
     opts::ModelOpts,
 )
     # input_dim = opts["bias"] ? n_in + 1 : n_in
-    input_dim = opts["final_bias"] ? n_in + 1 : n_in
+    # input_dim = opts["final_bias"] ? n_in + 1 : n_in
+    input_dim = n_in
 
     first_activation = if opts["post_synaptic"]
         identity

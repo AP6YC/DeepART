@@ -51,10 +51,12 @@ Random.seed!(opts["rng_seed"])
 data = Hebb.get_data(opts)
 
 # n_preview = 4
-# preview_weights = true
-preview_weights = false
-n_preview= 10
-n_preview_2 = 8
+preview_weights = true
+# preview_weights = false
+# n_preview = 10
+# n_preview_2 = 8
+n_preview = 4
+n_preview_2 = 4
 
 dev_x, dev_y = data.train[1]
 # n_input = size(dev_x)[1]

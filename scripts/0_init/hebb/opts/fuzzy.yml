@@ -5,6 +5,7 @@ opts_version: 1
 # n_epochs: 50
 # n_epochs: 10
 # n_epochs: 5
+# n_epochs: 3
 n_epochs: 1
 n_vals: 50
 val_epoch: true

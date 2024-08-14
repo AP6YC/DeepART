@@ -111,7 +111,7 @@ model_opts:
 
   # model_spec: []
   # final_bias: true
-  final_bias: false
+  # final_bias: false
 
 profile: false
 # profile: true

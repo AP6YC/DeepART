@@ -14,11 +14,17 @@
 #     opts::ModelOpts
 # end
 
+"""
+HebbModel definition as a container for a model and its options.
+"""
 struct HebbModel{T <: CCChain}
     model::T
     opts::ModelOpts
 end
 
+"""
+HebbModel constructor using options and data that the model will be trained on.
+"""
 function HebbModel(
     data::DeepART.DataSplit,
     opts::ModelOpts,
@@ -33,6 +39,9 @@ end
 #  INSPECTION FUNCTIONS
 # -----------------------------------------------------------------------------
 
+"""
+Helper function: inspect the weights of a given layer.
+"""
 function inspect_weights(model::HebbModel, layer::Integer)
     # weights = get_weights(model.model)
     # return weights[layer]
@@ -43,6 +52,9 @@ end
 #     return Flux.params(model.model)
 # end
 
+"""
+Helper function: gets the weights of a neuron with a specified index at a specified layer.
+"""
 function get_weight_slice(
     model::HebbModel,
     layer::Integer,
@@ -76,6 +88,9 @@ function get_weight_slice(
     return local_weight
 end
 
+"""
+Helper function: visualizes the weight index at a specified layer.
+"""
 function view_weight(
     model::HebbModel,
     index::Integer;
@@ -114,6 +129,9 @@ function view_weight(
     return img
 end
 
+"""
+Helper function: visualizes a grid of weights at a specified layer.
+"""
 function view_weight_grid(model::Hebb.HebbModel, n_grid::Int; layer=1)
     # Infer the size of the weight matrix
     a = Hebb.view_weight(model, 1, layer=layer)
@@ -144,7 +162,6 @@ function view_weight_grid(model::Hebb.HebbModel, n_grid::Int; layer=1)
 end
 
 # function view_kernel()
-
 
 
 # -----------------------------------------------------------------------------
@@ -244,7 +261,8 @@ function train_hebb(
         input = ins[ix]
 
         if ix == n_layers
-            local_input = model.opts["final_bias"] ? [1.0; input] : input
+            # local_input = model.opts["final_bias"] ? [1.0; input] : input
+            local_input = input
             widrow_hoff_learn!(
                 # input,
                 local_input,

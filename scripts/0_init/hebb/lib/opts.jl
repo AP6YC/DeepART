@@ -242,7 +242,8 @@ end
 function load_opts(name::AbstractString)::SimOpts
     # Load the options
     opts = YAML.load_file(
-        joinpath(@__FILE__, "..", "..", "opts", name);
+        # joinpath(@__FILE__, "..", "..", "opts", name);
+        DeepART.projectdir("scripts", "0_init", "hebb", "opts", name),
         dicttype=SimOpts
     )
 
