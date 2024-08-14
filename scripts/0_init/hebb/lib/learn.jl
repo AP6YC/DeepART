@@ -139,9 +139,53 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
             # Reshape the weights to be (n_kernels, n_features)
             local_weight = reshape(weights, :, n_kernels)'
         elseif opts["conv_strategy"] == "patchwise"
-            local_out = out
-            local_weight = weights
-            local_in = input
+            full_size = size(weights)
+            n_kernels = full_size[4]
+            kernel_shape = full_size[1:3]
+
+            unfolded = Flux.NNlib.unfold(input, full_size)
+            flat_in = unfolded[:, :, 1]
+            n_windows = size(flat_in, 1)
+            flat_out = reshape(out, n_windows, n_kernels)
+            flat_weights = reshape(weights, :, n_kernels)'
+            # @info "presizes: $(size(unfolded)), $(size(out)), $(size(weights))"
+            for ix in 1:n_windows
+                # local_in = unfolded[:, :, :, ix]
+                # local_in = unfolded[ix, :, 1]
+                # size_in = size(local_in)
+                # local_out = reshape(out[:, :, ix, 1], size_in)
+                # local_weight = reshape(weights[:, :, :, ix], size_in)
+
+                local_in = flat_in[ix, :]
+                local_out = flat_out[ix, :]
+                local_weight = flat_weights
+
+                # local_in = reshape(unfolded[:, :, :, ix], :, kernel_shape...)
+                # @info size(local_in)
+                # local_out = out[:, :, ix]
+                # local_weight = weights[:, :, :, ix]
+                # @info "sizes: $(size(local_in)), $(size(local_out)), $(size(local_weight))"
+                # fuzzyart_learn_cast(local_in, local_weight, local_out)
+                # Get the local learning parameter beta
+                beta = get_beta(local_out, opts)
+                if opts["learning_rule"] == "fuzzyart"
+                    local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+                elseif opts["learning_rule"] == "instar"
+                    # local_weight .+= opts["eta"] .* (beta .- local_out) .* local_in
+                    # local_weight .+= beta .* local_out .* (local_in .- local_out .* local_weight)
+                    local_weight .+= instar_cast(local_in, local_weight, local_out, beta)
+                elseif opts["learning_rule"] == "oja"
+                    local_weight .+= oja_cast(local_in, local_weight, local_out, beta)
+                else
+                    error("Incorrect learning rule option ($(opts["learning_rule"])), must be in LEARNING_RULES")
+                end
+            end
+
+            return
+
+            # local_out = out
+            # local_weight = weights
+            # local_in = input
         end
     else
         local_out = out

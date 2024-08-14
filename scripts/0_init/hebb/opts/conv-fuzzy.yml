@@ -32,8 +32,8 @@ model_opts:
   # model: fuzzy_spec
   model: conv_new
 
-  conv_strategy: "unfold"
-  # conv_strategy: "patchwise"
+  # conv_strategy: "unfold"
+  conv_strategy: "patchwise"
 
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]

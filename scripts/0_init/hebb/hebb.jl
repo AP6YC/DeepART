@@ -36,9 +36,9 @@ import .Hebb
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
-opts = Hebb.load_opts("fuzzy.yml")
+# opts = Hebb.load_opts("fuzzy.yml")
 # opts = Hebb.load_opts("dense-fuzzy.yml")
-# opts = Hebb.load_opts("conv-fuzzy.yml")
+opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])
@@ -51,8 +51,8 @@ Random.seed!(opts["rng_seed"])
 data = Hebb.get_data(opts)
 
 # n_preview = 4
-preview_weights = true
-# preview_weights = false
+# preview_weights = true
+preview_weights = false
 # n_preview = 10
 # n_preview_2 = 8
 n_preview = 4

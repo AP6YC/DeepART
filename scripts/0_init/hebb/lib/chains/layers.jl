@@ -110,6 +110,8 @@ function get_fuzzy_deepart_layer(
         identity
     end
 
+    # local_scale(x) = x * 0.5f0
+
     return Flux.@autosize (n_in,) Chain(
         Chain(
             # RandomTransform(_, 16),
@@ -117,6 +119,7 @@ function get_fuzzy_deepart_layer(
             # first_layer ? identity : opts["middle_activation"],
             # opts["layer_norm"] ? LayerNorm(n_in, affine=false) : identity,
             preprocess,
+            # local_scale,
             first_activation,
             opts["cc"] ? DeepART.CC() : identity,
         ),
