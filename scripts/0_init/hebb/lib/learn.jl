@@ -143,7 +143,14 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
             n_kernels = full_size[4]
             kernel_shape = full_size[1:3]
 
-            unfolded = Flux.NNlib.unfold(input, full_size)
+            unfolded = Flux.NNlib.unfold(
+                input,
+                full_size,
+                # pad=(2,2),
+            )
+            # @info size(unfolded)
+            # @info size(weights)
+            # @info size(out)
             flat_in = unfolded[:, :, 1]
             n_windows = size(flat_in, 1)
             flat_out = reshape(out, n_windows, n_kernels)

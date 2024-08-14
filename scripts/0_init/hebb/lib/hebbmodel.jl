@@ -104,7 +104,16 @@ function view_weight(
         weights = model.model.chain[layer][2].weight
         lmax = maximum(weights)
         lmin = minimum(weights)
-        img = DeepART.Gray.(weights[:, :, 1, index] .- lmin ./ (lmax - lmin))
+        local_weights = weights[:, :, :, index] .- lmin ./ (lmax - lmin)
+        img = DeepART.Gray.(
+            vcat(
+                # local_weights[:, :, 1],
+                # local_weights[:, :, 2],
+                (local_weights[:, :, jx] for jx = 1:size(local_weights)[3])...,
+                # weights[:, :, 1, index] .- lmin ./ (lmax - lmin),
+                # weights[:, :, 2, index] .- lmin ./ (lmax - lmin)
+            ),
+        )
     else
         # # weights = Flux.params(model.model.chain)
         # weights = get_weights(model.model)
