@@ -23,7 +23,6 @@ function get_dense_deepart_layer(
 
     preprocess = if opts["layer_norm"] && !first_layer
         LayerNorm(input_dim, affine=false)
-        # Flux.normalise
     else
         identity
     end
@@ -33,8 +32,6 @@ function get_dense_deepart_layer(
             # RandomTransform(_, 16, opts),
             # first_layer ? identity : sigmoid_fast,
             # first_layer ? identity : opts["middle_activation"],
-            # LayerNorm(_, affine=false),
-            # opts["layer_norm"] ? LayerNorm(input_dim, affine=false) : identity,
             preprocess,
             first_activation,
             opts["cc"] ? DeepART.CC() : identity,

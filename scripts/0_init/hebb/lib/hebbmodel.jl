@@ -77,7 +77,7 @@ function get_weight_slice(
         dim = Int(dim / 2)
     end
 
-    dim = Int(sqrt(dim))
+    dim = Int(floor(sqrt(dim)))
     local_weight = reshape(
         # weights[layer][index, :],
         local_weights,
@@ -107,8 +107,6 @@ function view_weight(
         local_weights = weights[:, :, :, index] .- lmin ./ (lmax - lmin)
         img = DeepART.Gray.(
             vcat(
-                # local_weights[:, :, 1],
-                # local_weights[:, :, 2],
                 (local_weights[:, :, jx] for jx = 1:size(local_weights)[3])...,
                 # weights[:, :, 1, index] .- lmin ./ (lmax - lmin),
                 # weights[:, :, 2, index] .- lmin ./ (lmax - lmin)
@@ -182,10 +180,6 @@ function train_hebb(
     x,
     y;
 ) where T <: AlternatingCCChain
-    # chain = model.model.chain
-    # params = Flux.params(chain)
-    # acts = Flux.activations(chain, x)
-
     params = get_weights(model.model)
     acts = get_activations(model.model, x)
     n_layers = length(params)

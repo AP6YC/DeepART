@@ -80,10 +80,10 @@ model_opts:
   init: rand32
   # init: glorot_uniform
 
-  # middle_activation: sigmoid_fast
   # middle_activation: identity
   # middle_activation: tanh_fast
   middle_activation: relu
+  # middle_activation: sigmoid_fast
   # middle_activation: celu
 
   # positive_weights: true

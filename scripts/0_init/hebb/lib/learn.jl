@@ -148,31 +148,18 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
                 full_size,
                 # pad=(2,2),
             )
-            # @info size(unfolded)
-            # @info size(weights)
-            # @info size(out)
             flat_in = unfolded[:, :, 1]
             n_windows = size(flat_in, 1)
             flat_out = reshape(out, n_windows, n_kernels)
             flat_weights = reshape(weights, :, n_kernels)'
-            # @info "presizes: $(size(unfolded)), $(size(out)), $(size(weights))"
+
+            # Iterate over each unfolded window
             for ix in 1:n_windows
-                # local_in = unfolded[:, :, :, ix]
-                # local_in = unfolded[ix, :, 1]
-                # size_in = size(local_in)
-                # local_out = reshape(out[:, :, ix, 1], size_in)
-                # local_weight = reshape(weights[:, :, :, ix], size_in)
 
                 local_in = flat_in[ix, :]
                 local_out = flat_out[ix, :]
                 local_weight = flat_weights
 
-                # local_in = reshape(unfolded[:, :, :, ix], :, kernel_shape...)
-                # @info size(local_in)
-                # local_out = out[:, :, ix]
-                # local_weight = weights[:, :, :, ix]
-                # @info "sizes: $(size(local_in)), $(size(local_out)), $(size(local_weight))"
-                # fuzzyart_learn_cast(local_in, local_weight, local_out)
                 # Get the local learning parameter beta
                 beta = get_beta(local_out, opts)
                 if opts["learning_rule"] == "fuzzyart"
@@ -188,12 +175,11 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
                 end
             end
 
+            # Break early because learning happened in each window of the convolution
             return
-
-            # local_out = out
-            # local_weight = weights
-            # local_in = input
         end
+
+    # Otherwise, we are in a dense layer
     else
         local_out = out
         local_weight = weights

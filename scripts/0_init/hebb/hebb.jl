@@ -27,6 +27,10 @@ include("lib/lib.jl")
 @info "------- Loading Hebb module -------"
 import .Hebb
 
+if Sys.isunix()
+    using ImageInTerminal
+end
+
 # perf = 0.9310344827586207
 # perf = 0.9655172413793104
 
@@ -37,8 +41,8 @@ import .Hebb
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
 # opts = Hebb.load_opts("fuzzy.yml")
-# opts = Hebb.load_opts("dense-fuzzy.yml")
-opts = Hebb.load_opts("conv-fuzzy.yml")
+opts = Hebb.load_opts("dense-fuzzy.yml")
+# opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])

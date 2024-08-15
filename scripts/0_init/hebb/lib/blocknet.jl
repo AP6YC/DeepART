@@ -436,7 +436,31 @@ end
 Training function for a chain block.
 """
 function train(block::FluxBlock, x, y)
-    return train(block.chain, x, y)
+    # return train(block.chain, x, y)
+    n_layers = length(block.layers)
+    for ix = 1:n_layers
+        # weights = params[ix]
+        # out = outs[ix]
+        # input = ins[ix]
+        # # cache = caches[ix]
+
+        # if ix == n_layers
+        #     widrow_hoff_learn!(
+        #         input,
+        #         out,
+        #         weights,
+        #         target,
+        #         model.opts,
+        #     )
+        # else
+        #     deepart_learn!(
+        #         input,
+        #         out,
+        #         weights,
+        #         model.opts,
+        #     )
+        # end
+    end
 end
 
 # -----------------------------------------------------------------------------
@@ -705,12 +729,46 @@ end
 Training definition for a BlockNet.
 """
 function train!(net::BlockNet, x, y)
-    for layer in net.layers
-        train(layer, x, y)
-    end
-    return
-end
+    # for layer in net.layers
+    #     train(layer, x, y)
+    # end
+    # Loop through the block layers
+    for ix in eachindex(net.layers)
+        layer = net.layers[ix]
 
+        # If this is the first layer, use the input data
+        if layer.opts["index"] == 1
+            local_input = x
+        # Otherwise, get the output from the previous layer(s)
+        else
+            local_input = if length(layer.opts["inputs"]) > 1
+                vcat((net.outs[ix] for ix in layer.opts["inputs"])...)
+            else
+                net.outs[layer.opts["inputs"]]
+            end
+        end
+
+        # Compute the forward pass for the layer
+        y = train!(layer, local_input)
+
+        # If the layer is an ART block, convert the output to a one-hot vector
+        if layer isa ARTBlock
+            y_out = zeros(Float32, length(net.outs[end]))
+            if y > 0
+                y_out[y] = 1.0
+            end
+        # Otherwise, use the output as-is
+        else
+            y_out = y
+        end
+
+        # Store the output to the cached outputs vector
+        net.outs[ix] .= y_out
+    end
+
+    # Return the last layer output as the output of the block net
+    return net.outs[end]
+end
 
 # function get_conv_chain(
 #     n_in::Tuple,
