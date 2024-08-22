@@ -432,35 +432,106 @@ function forward(block::FluxBlock, x)
     return block.chain(x)
 end
 
+
+function get_weights(block::FluxBlock)
+    return Flux.params(block.chain)
+end
+
+function get_activations(block::FluxBlock, x)
+    return Flux.activations(block.chain, x)
+end
+
+function get_incremental_activations(
+    block::FluxBlock,
+    x,
+)
+    n_layers = length(block.chain)
+    ins = []
+    outs = []
+    for ix = 1:n_layers
+        pre_input = (ix == 1) ? x : outs[end]
+        local_acts = Flux.activations(block.chain[ix], pre_input)
+        push!(ins, local_acts[1])
+        push!(outs, local_acts[2])
+    end
+    return ins, outs
+end
+
+
 """
 Training function for a chain block.
 """
-function train(block::FluxBlock, x, y)
-    # return train(block.chain, x, y)
-    n_layers = length(block.layers)
-    for ix = 1:n_layers
-        # weights = params[ix]
-        # out = outs[ix]
-        # input = ins[ix]
-        # # cache = caches[ix]
+function train!(block::FluxBlock, x, y)
+    # Get the names for weights and iteration
+    # params = get_weights(block.chain)
+    params = get_weights(block)
+    n_layers = length(params)
 
-        # if ix == n_layers
-        #     widrow_hoff_learn!(
-        #         input,
-        #         out,
-        #         weights,
-        #         target,
-        #         model.opts,
-        #     )
-        # else
-        #     deepart_learn!(
-        #         input,
-        #         out,
-        #         weights,
-        #         model.opts,
-        #     )
-        # end
+    # Get the correct inputs and outputs for actuall learning
+    # ins, outs = get_incremental_activations(block.chain, x)
+    ins, outs = get_incremental_activations(block, x)
+
+    # Create the target vector
+    target = zeros(Float32, size(outs[end]))
+    # target = -ones(Float32, size(outs[end]))
+    target[y] = 1.0
+
+    # if block.opts["gpu"]
+    #     target = target |> gpu
+    # end
+
+    for ix = 1:n_layers
+        weights = params[ix]
+        out = outs[ix]
+        input = ins[ix]
+
+        if block.opts["model"] == "widrow_hoff"
+            # local_input = model.opts["final_bias"] ? [1.0; input] : input
+            local_input = input
+            # @info "WIDROW-HOFF LEARNING"
+            widrow_hoff_learn!(
+                # input,
+                local_input,
+                out,
+                weights,
+                target,
+                block.opts,
+            )
+        else
+            deepart_learn!(
+                input,
+                out,
+                weights,
+                block.opts,
+            )
+        end
     end
+    # # return train(block.chain, x, y)
+    # n_layers = length(block.layers)
+    # for ix = 1:n_layers
+
+    #     # weights = params[ix]
+    #     # out = outs[ix]
+    #     # input = ins[ix]
+    #     # # cache = caches[ix]
+
+    #     # if ix == n_layers
+    #     #     widrow_hoff_learn!(
+    #     #         input,
+    #     #         out,
+    #     #         weights,
+    #     #         target,
+    #     #         model.opts,
+    #     #     )
+    #     # else
+    #     #     deepart_learn!(
+    #     #         input,
+    #     #         out,
+    #     #         weights,
+    #     #         model.opts,
+    #     #     )
+    #     # end
+    # end
 end
 
 # -----------------------------------------------------------------------------
@@ -520,8 +591,8 @@ end
 """
 Training function for an ART block.
 """
-function train(block::ARTBlock, x, y)
-    return train(block.model, x, y)
+function train!(block::ARTBlock, x, y)
+    return AdaptiveResonance.train!(block.model, x, y)
 end
 
 # -----------------------------------------------------------------------------
@@ -749,12 +820,12 @@ function train!(net::BlockNet, x, y)
         end
 
         # Compute the forward pass for the layer
-        y = train!(layer, local_input)
+        y_hat = train!(layer, local_input, y)
 
         # If the layer is an ART block, convert the output to a one-hot vector
         if layer isa ARTBlock
             y_out = zeros(Float32, length(net.outs[end]))
-            if y > 0
+            if y_hat > 0
                 y_out[y] = 1.0
             end
         # Otherwise, use the output as-is
@@ -769,6 +840,120 @@ function train!(net::BlockNet, x, y)
     # Return the last layer output as the output of the block net
     return net.outs[end]
 end
+
+
+
+
+
+function train_loop(
+    model::BlockNet,
+    data;
+    n_vals::Integer = 100,
+    n_epochs::Integer = 10,
+    val_epoch::Bool = false,
+)
+    loop_dict = LoopDict()
+
+    # Set up the epochs progress bar
+    loop_dict["n_iter"] = if val_epoch
+        length(data.train)
+    else
+        n_epochs
+    end
+
+    # Set up the validation intervals
+    local_n_vals = min(n_vals, loop_dict["n_iter"])
+    loop_dict["interval_vals"] = Int(floor(loop_dict["n_iter"] / local_n_vals))
+    loop_dict["vals"] = zeros(Float32, local_n_vals)
+
+    # Init the progress bar and loop tracking variables
+    p = init_progress(loop_dict)
+
+    # Iterate over each epoch
+    for ie = 1:n_epochs
+        # train_loader = Flux.DataLoader(data.train, batchsize=-1, shuffle=true)
+        train_loader = Flux.DataLoader(data.train, batchsize=-1)
+        if model.opts["gpu"]
+            train_loader = train_loader |> gpu
+        end
+
+        # Iteratively train
+        for (x, y) in train_loader
+            # if model.opts["immediate"]
+            #     train_hebb_immediate(model, x, y)
+            # else
+            #     train_hebb(model, x, y)
+            # end
+            train!(model, x, y)
+
+            if val_epoch
+                update_view_progress!(
+                    p,
+                    loop_dict,
+                    model,
+                    data,
+                )
+            end
+        end
+
+        # Compute validation performance
+        if !val_epoch
+            update_view_progress!(
+                p,
+                loop_dict,
+                model,
+                data,
+            )
+        else
+            # Reset incrementers
+            p = init_progress(loop_dict)
+
+            local_plot = lineplot(
+                loop_dict["vals"],
+            )
+            show(local_plot)
+            println("\n")
+        end
+    end
+
+    perf = test(model, data)
+    @info "perf = $perf"
+    return loop_dict["vals"]
+end
+
+
+function test(
+    model::BlockNet,
+    data::DeepART.DataSplit,
+)
+    n_test = length(data.test)
+
+    y_hats = zeros(Int, n_test)
+    test_loader = Flux.DataLoader(data.test, batchsize=-1)
+    if model.opts["gpu"]
+        y_hats = y_hats |> gpu
+        test_loader = test_loader |> gpu
+    end
+
+    ix = 1
+    for (x, _) in test_loader
+        # y_hats[ix] = argmax(model.model.chain(x))
+        y_hats[ix] = argmax(forward(model, x))
+        ix += 1
+    end
+
+    # y_hats = model(data.test.x |> gpu) |> cpu  # first row is prob. of true, second row p(false)
+    # y_hats = argmaxmodel(data.test.x)  # first row is prob. of true, second row p(false)
+
+    if model.opts["gpu"]
+        y_hats = y_hats |> cpu
+    end
+
+    perf = DeepART.AdaptiveResonance.performance(y_hats, data.test.y)
+    return perf
+end
+
+
 
 # function get_conv_chain(
 #     n_in::Tuple,

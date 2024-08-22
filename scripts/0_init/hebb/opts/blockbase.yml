@@ -5,8 +5,8 @@ sim_opts:
   n_vals: 50
   val_epoch: true
   rng_seed: 1234
-  dataset: cifar10
-  # dataset: usps
+  # dataset: cifar10
+  dataset: usps
   n_train: 50000
   n_test: 10000
 
@@ -28,44 +28,48 @@ block_opts:
     #   n_neurons: [16, 64]
     #   beta_rule: gaussian
     #   learning_rule: fuzzyart
+
+    # - index: 1
+    #   inputs: 0
+    #   model: conv
+    #   cc: true
+    #   positive_weights: false
+    #   conv_strategy: patchwise
+    #   sigma: 0.01
+    #   init: rand32
+    #   middle_activation: relu
+    #   layer_norm: true
+    #   post_synaptic: false
+    #   immediate: false
+    #   bias: false
+    #   beta_d: 0.01
+    #   # n_neurons: [16, 64]
+    #   # beta_rule: gaussian
+    #   beta_rule: wta
+    #   learning_rule: fuzzyart
+
     - index: 1
       inputs: 0
-      model: conv
+      model: dense
       cc: true
       positive_weights: false
       init: rand32
-      middle_activation: relu
-      layer_norm: true
-      post_synaptic: false
-      immediate: false
-      bias: false
-      beta_d: 0.01
-      # n_neurons: [16, 64]
-      beta_rule: gaussian
-      learning_rule: fuzzyart
-
-    - index: 2
-      inputs: 1
-      model: dense
-      cc: false
-      positive_weights: false
-      init: glorot_uniform
       post_synaptic: false
       middle_activation: relu
       immediate: false
       layer_norm: true
       bias: false
       beta_d: 0.01
-      n_neurons: [32, 64]
-      beta_rule: gaussian
+      # n_neurons: [32, 64]
+      n_neurons: [512, 256]
       learning_rule: fuzzyart
+      beta_rule: wta
+      beta_normalize: true
 
-    # - index: 3
-    #   # inputs: 2
-    #   inputs: [1, 2]
-    #   model: widrow_hoff
-    #   final_sigmoid: false
-    #   # cc: false
+    # - index: 2
+    #   inputs: 1
+    #   model: dense
+    #   cc: true
     #   positive_weights: false
     #   init: glorot_uniform
     #   post_synaptic: false
@@ -73,21 +77,42 @@ block_opts:
     #   immediate: false
     #   layer_norm: true
     #   bias: false
-    #   eta: 0.01
+    #   beta_d: 0.01
+    #   n_neurons: [32, 64]
+    #   # beta_rule: gaussian
+    #   beta_rule: wta
+    #   learning_rule: fuzzyart
 
-    - index: 3
+    # - index: 3
+    - index: 2
       # inputs: 2
-      inputs: [1, 2]
-      model: fuzzyartmap
-      rho: 0.6
-      beta_s: 1.0
-      # final_sigmoid: false
-      # # cc: false
-      # positive_weights: false
-      # init: glorot_uniform
-      # post_synaptic: false
-      # middle_activation: relu
-      # immediate: false
-      # layer_norm: true
-      # bias: false
-      # eta: 0.01
+      # inputs: [1, 2]
+      inputs: 1
+      model: widrow_hoff
+      final_sigmoid: false
+      # cc: false
+      positive_weights: false
+      init: glorot_uniform
+      post_synaptic: false
+      middle_activation: relu
+      immediate: false
+      layer_norm: true
+      bias: false
+      eta: 0.01
+
+    # - index: 3
+    #   # inputs: 2
+    #   inputs: [1, 2]
+    #   model: fuzzyartmap
+    #   rho: 0.6
+    #   beta_s: 1.0
+    #   # final_sigmoid: false
+    #   # # cc: false
+    #   # positive_weights: false
+    #   # init: glorot_uniform
+    #   # post_synaptic: false
+    #   # middle_activation: relu
+    #   # immediate: false
+    #   # layer_norm: true
+    #   # bias: false
+    #   # eta: 0.01

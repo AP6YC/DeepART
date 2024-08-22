@@ -51,6 +51,8 @@ function show_val_unicode_plot(loop_dict::LoopDict)
     return
 end
 
+
+
 function train_loop(
     model::HebbModel,
     data;

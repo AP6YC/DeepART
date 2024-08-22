@@ -59,6 +59,28 @@ dev_x, dev_y = data.train[1]
 # a = Hebb.ChainBlock(Hebb.get_model_opts(opts, 1), n_inputs = n_input)
 # @info a.chain
 
-b = Hebb.BlockNet(data, opts["block_opts"])
+model = Hebb.BlockNet(data, opts["block_opts"])
 
-Hebb.forward(b, dev_x)
+Hebb.forward(model, dev_x)
+
+old_perf = Hebb.test(model, data)
+@info "OLD PERF: $old_perf"
+
+
+old_weights = deepcopy(model.layers[2].chain[1][2].weight)
+
+# Hebb.train!(model.layers[1], dev_x, dev_y)
+Hebb.train!(model, dev_x, dev_y)
+
+# @info "------- Training -------"
+# vals = Hebb.train_loop(
+#     model,
+#     data,
+#     n_epochs = opts["sim_opts"]["n_epochs"],
+#     n_vals = opts["sim_opts"]["n_vals"],
+#     val_epoch = opts["sim_opts"]["val_epoch"],
+# )
+
+# new_weights = deepcopy(model.layers[2].chain[1][2].weight)
+
+# @info "WEIGHTS DIFF: $(sum(new_weights .- old_weights))"
