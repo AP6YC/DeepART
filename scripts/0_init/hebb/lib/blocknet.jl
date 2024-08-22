@@ -489,6 +489,9 @@ function train!(block::FluxBlock, x, y)
             # local_input = model.opts["final_bias"] ? [1.0; input] : input
             # local_input = input
             # @info "WIDROW-HOFF LEARNING"
+            @info "WIDROW-HOFF LEARNING:" target out
+            @info target
+            @info out
             widrow_hoff_learn!(
                 input,
                 # local_input,
