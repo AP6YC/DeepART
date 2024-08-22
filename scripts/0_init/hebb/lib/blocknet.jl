@@ -487,11 +487,11 @@ function train!(block::FluxBlock, x, y)
 
         if block.opts["model"] == "widrow_hoff"
             # local_input = model.opts["final_bias"] ? [1.0; input] : input
-            local_input = input
+            # local_input = input
             # @info "WIDROW-HOFF LEARNING"
             widrow_hoff_learn!(
-                # input,
-                local_input,
+                input,
+                # local_input,
                 out,
                 weights,
                 target,
@@ -532,6 +532,7 @@ function train!(block::FluxBlock, x, y)
     #     #     )
     #     # end
     # end
+    return
 end
 
 # -----------------------------------------------------------------------------
@@ -554,7 +555,6 @@ function ARTBlock(
     n_inputs::Integer=0,
     n_outputs::Integer=0,
 )
-
     # Create the head
     model = AdaptiveResonance.SFAM(
         rho=opts["rho"],
