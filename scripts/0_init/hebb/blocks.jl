@@ -72,14 +72,19 @@ old_weights = deepcopy(model.layers[2].chain[1][2].weight)
 # Hebb.train!(model.layers[1], dev_x, dev_y)
 Hebb.train!(model, dev_x, dev_y)
 
+n_preview = 4
+display(Hebb.view_weight_grid(model, n_preview, layer=1))
+
 # @info "------- Training -------"
-# vals = Hebb.train_loop(
-#     model,
-#     data,
-#     n_epochs = opts["sim_opts"]["n_epochs"],
-#     n_vals = opts["sim_opts"]["n_vals"],
-#     val_epoch = opts["sim_opts"]["val_epoch"],
-# )
+vals = Hebb.train_loop(
+    model,
+    data,
+    n_epochs = opts["sim_opts"]["n_epochs"],
+    n_vals = opts["sim_opts"]["n_vals"],
+    val_epoch = opts["sim_opts"]["val_epoch"],
+)
+
+display(Hebb.view_weight_grid(model, n_preview, layer=1))
 
 # new_weights = deepcopy(model.layers[2].chain[1][2].weight)
 

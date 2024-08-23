@@ -139,7 +139,12 @@ end
 """
 Helper function: visualizes a grid of weights at a specified layer.
 """
-function view_weight_grid(model::Hebb.HebbModel, n_grid::Int; layer=1)
+function view_weight_grid(
+    # model::Hebb.HebbModel,
+    model,
+    n_grid::Int;
+    layer=1
+)
     # Infer the size of the weight matrix
     a = Hebb.view_weight(model, 1, layer=layer)
     (dim_x, dim_y) = size(a)
