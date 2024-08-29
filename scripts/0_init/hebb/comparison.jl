@@ -42,7 +42,7 @@ opts_hebb = Hebb.load_opts("dense-fuzzy.yml")
 # opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
-Random.seed!(opts["rng_seed"])
+Random.seed!(opts_hebb["rng_seed"])
 
 # -----------------------------------------------------------------------------
 # DATA
@@ -81,3 +81,16 @@ b_ins, b_outs = Hebb.get_incremental_activations(blocks.layers[1], dev_x)
 
 h_ins[2]
 b_ins[2]
+
+h_outs[2]
+b_outs[2]
+@info all(h_outs[2] .== b_outs[2])
+
+@info hebb.model.chain[2]
+@info blocks.layers[1].chain[2]
+
+@info hebb.model.chain[3]
+@info blocks.layers[2].chain[1]
+
+Hebb.forward(blocks, dev_x)
+# Hebb.classify(hebb, dev_x)

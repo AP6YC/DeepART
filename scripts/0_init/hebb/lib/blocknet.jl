@@ -51,7 +51,7 @@ function get_dense_chain(
     first_layer::Bool = false,
 )
 
-    @info first_layer
+    # @info first_layer
 
     first_activation = if first_layer
         identity
@@ -71,7 +71,8 @@ function get_dense_chain(
 
     preprocess = if opts["layer_norm"] && !first_layer
         # LayerNorm(n_in, affine=false)
-        Flux.normalise
+        LayerNorm(input_dim, affine=false)
+        # Flux.normalise
     else
         identity
     end
@@ -148,7 +149,8 @@ function get_fuzzy_chain(
 
     preprocess = if opts["layer_norm"] && !first_layer
         # LayerNorm(n_in, affine=false)
-        Flux.normalise
+        # Flux.normalise
+        LayerNorm(n_in, affine=false)
     else
         identity
     end
@@ -192,7 +194,8 @@ function get_widrow_hoff_chain(
 
     preprocess = if opts["layer_norm"]
         # LayerNorm(n_in, affine=false)
-        Flux.normalise
+        # Flux.normalise
+        LayerNorm(input_dim, affine=false)
     else
         identity
     end
@@ -538,7 +541,7 @@ function train!(block::FluxBlock, x, y)
     #     #     )
     #     # end
     # end
-    return
+    return outs[end]
 end
 
 # -----------------------------------------------------------------------------
@@ -832,11 +835,11 @@ function train!(net::BlockNet, x, y)
         if layer isa ARTBlock
             y_out = zeros(Float32, length(net.outs[end]))
             if y_hat > 0
-                y_out[y] = 1.0
+                y_out[y_hat] = 1.0
             end
         # Otherwise, use the output as-is
         else
-            y_out = y
+            y_out = y_hat
         end
 
         # Store the output to the cached outputs vector
@@ -846,9 +849,6 @@ function train!(net::BlockNet, x, y)
     # Return the last layer output as the output of the block net
     return net.outs[end]
 end
-
-
-
 
 
 function train_loop(
@@ -1049,7 +1049,6 @@ function get_weight_slice(
     index::Integer,
 )
     # weights = get_weights(model.model)
-
     # weights = Flux.params(model.model.chain)
     # weights = get_weights(model.model)
     weights = get_weights(model.layers[layer])
