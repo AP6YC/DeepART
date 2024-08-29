@@ -40,8 +40,8 @@ end
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
-# opts = Hebb.load_opts("fuzzy.yml")
-opts = Hebb.load_opts("dense-fuzzy.yml")
+opts = Hebb.load_opts("fuzzy.yml")
+# opts = Hebb.load_opts("dense-fuzzy.yml")
 # opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
@@ -144,6 +144,13 @@ if preview_weights
     display(Hebb.view_weight_grid(model, n_preview_2, layer=2))
     # display(Hebb.view_weight_grid(model, 3, layer=2))
 end
+
+display(Hebb.view_weight_grid(model, n_preview))
+
+a = Hebb.view_weight_grid(model, n_preview)
+using Images
+save(DeepART.paper_results_dir("fuzzy_weights.png"), a)
+save(DeepART.results_dir("fuzzy_weights.png"), a)
 # Hebb.view_weight_grid(model, 8, layer=2)
 
 

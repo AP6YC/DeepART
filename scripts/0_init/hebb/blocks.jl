@@ -50,7 +50,6 @@ n_preview = 4
 
 dev_x, dev_y = data.train[1]
 
-
 # Get the shape of the dataset
 # dev_x, _ = data.train[1]
 # n_input = size(dev_x)[1]
@@ -67,7 +66,7 @@ old_perf = Hebb.test(model, data)
 @info "OLD PERF: $old_perf"
 
 
-old_weights = deepcopy(model.layers[2].chain[1][2].weight)
+# old_weights = deepcopy(model.layers[2].chain[1][2].weight)
 
 # Hebb.train!(model.layers[1], dev_x, dev_y)
 Hebb.train!(model, dev_x, dev_y)
@@ -85,7 +84,7 @@ vals = Hebb.train_loop(
 )
 
 display(Hebb.view_weight_grid(model, n_preview, layer=1))
-
+a = Hebb.view_weight_grid(model, n_preview, layer=1)
 # new_weights = deepcopy(model.layers[2].chain[1][2].weight)
 
 # @info "WEIGHTS DIFF: $(sum(new_weights .- old_weights))"

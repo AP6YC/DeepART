@@ -30,7 +30,9 @@ model_opts:
   # beta_d: 0.001    # The good one
   # beta_d: 0.004
   # beta_d: 0.005
-  beta_d: 0.01       # Divergence
+  beta_d: 0.01       # Good one
+  # beta_d: 0.05    # Middle
+  # beta_d: 0.1       # Good for visualization
   # beta_d: 0.011       # Divergence
   # beta_d: 0.02       # Divergence
   # beta_d: 0.1

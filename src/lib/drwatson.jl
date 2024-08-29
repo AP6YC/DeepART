@@ -69,9 +69,10 @@ function paper_results_dir(args...)
     local_hostname = gethostname()
     homedir = if local_hostname == "SASHA-XPS"
         "sap62"
-    elseif local_hostname == "SASHA-PC"
+    elseif local_hostname == "Sasha-PC"
         "Sasha"
     end
+    @info homedir
 
     return joinpath(
         "C:\\",

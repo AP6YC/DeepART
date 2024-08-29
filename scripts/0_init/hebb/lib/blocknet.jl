@@ -50,9 +50,6 @@ function get_dense_chain(
     opts::ModelOpts;
     first_layer::Bool = false,
 )
-
-    # @info first_layer
-
     first_activation = if first_layer
         identity
     elseif opts["post_synaptic"]
@@ -480,7 +477,6 @@ function train!(block::FluxBlock, x, y)
 
     # Create the target vector
     target = zeros(Float32, size(outs[end]))
-    # target = -ones(Float32, size(outs[end]))
     target[y] = 1.0
 
     # if block.opts["gpu"]
@@ -494,13 +490,8 @@ function train!(block::FluxBlock, x, y)
 
         if block.opts["model"] == "widrow_hoff"
             # local_input = model.opts["final_bias"] ? [1.0; input] : input
-            # local_input = input
-            # @info "WIDROW-HOFF LEARNING:" target out
-            # @info target
-            # @info out
             widrow_hoff_learn!(
                 input,
-                # local_input,
                 out,
                 weights,
                 target,
@@ -515,32 +506,7 @@ function train!(block::FluxBlock, x, y)
             )
         end
     end
-    # # return train(block.chain, x, y)
-    # n_layers = length(block.layers)
-    # for ix = 1:n_layers
 
-    #     # weights = params[ix]
-    #     # out = outs[ix]
-    #     # input = ins[ix]
-    #     # # cache = caches[ix]
-
-    #     # if ix == n_layers
-    #     #     widrow_hoff_learn!(
-    #     #         input,
-    #     #         out,
-    #     #         weights,
-    #     #         target,
-    #     #         model.opts,
-    #     #     )
-    #     # else
-    #     #     deepart_learn!(
-    #     #         input,
-    #     #         out,
-    #     #         weights,
-    #     #         model.opts,
-    #     #     )
-    #     # end
-    # end
     return outs[end]
 end
 
@@ -551,8 +517,9 @@ end
 """
 ART block definition.
 """
-struct ARTBlock{T <: ARTModule} <: Block
+struct ARTBlock{T <: ARTModule, U <: Flux.Chain} <: Block
     model::T
+    chain::U
     opts::BlockOpts
 end
 
@@ -570,7 +537,27 @@ function ARTBlock(
         epsilon=1e-4,
         beta=opts["beta_s"],
     )
-    model.config = AdaptiveResonance.DataConfig(0.0, 1.0, n_inputs)
+    # model = AdaptiveResonance.DDVFA(
+    #     # rho=opts["rho"],
+    #     rho_lb=0.4,
+    #     rho_ub=0.75,
+    # )
+
+    model.config = AdaptiveResonance.DataConfig(
+        0.0,
+        # -1.0,
+        1.0,
+        n_inputs,
+    )
+
+    chain = Chain(
+        # LayerNorm(n_inputs, affine=false),
+        # relu,
+        LayerNorm(n_inputs, affine=false),
+        sigmoid_fast,
+        # tanh_fast,
+        # relu,
+    )
 
     # # model = DeepART.FuzzyARTMap(
     # model = AdaptiveResonance.DDVFA(
@@ -580,6 +567,7 @@ function ARTBlock(
 
     return ARTBlock(
         model,
+        chain,
         opts,
     )
 end
@@ -589,7 +577,8 @@ Inference function for an ART block.
 """
 function forward(block::ARTBlock, x)
     y_hat = if block.model.n_categories > 0
-        AdaptiveResonance.classify(block.model, x, get_bmu=true)
+        preprocess_x = block.chain(x)
+        AdaptiveResonance.classify(block.model, preprocess_x, get_bmu=true)
     else
         0
     end
@@ -601,31 +590,18 @@ end
 Training function for an ART block.
 """
 function train!(block::ARTBlock, x, y)
-    return AdaptiveResonance.train!(block.model, x, y)
+    preprocess_x = block.chain(x)
+    return AdaptiveResonance.train!(
+        block.model,
+        preprocess_x,
+        y,
+        # y=y,
+    )
 end
 
 # -----------------------------------------------------------------------------
 # BLOCKNET
 # -----------------------------------------------------------------------------
-
-# """
-# Many-to-one map of what types of blocks resolve to what types of structs.
-# """
-# const BLOCK_TYPES = Dict(
-#     "dense" => "chain",
-#     "fuzzy" => "chain",
-#     "conv" => "chain",
-#     "widrow_hoff" => "chain",
-#     "fuzzyartmap" => "art",
-# )
-
-# """
-# Map of block types to the functions that create them.
-# """
-# const BLOCK_FUNC_MAP = Dict(
-#     "chain" => ChainBlock,
-#     "art" => ARTBlock,
-# )
 
 """
 Map of block types to the functions that create them.
@@ -958,7 +934,6 @@ function test(
     perf = DeepART.AdaptiveResonance.performance(y_hats, data.test.y)
     return perf
 end
-
 
 
 # function get_conv_chain(
