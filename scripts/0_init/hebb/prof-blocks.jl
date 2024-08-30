@@ -46,47 +46,55 @@ Hebb.set_seed!(opts)
 @info "------- Loading dataset -------"
 data = Hebb.get_data(opts)
 
-# n_preview = 2
 n_preview = 4
 
 dev_x, dev_y = data.train[1]
 
-# Get the shape of the dataset
-# dev_x, _ = data.train[1]
-# n_input = size(dev_x)[1]
-# n_class = length(unique(data.train.y))
-
-# a = Hebb.ChainBlock(Hebb.get_model_opts(opts, 1), n_inputs = n_input)
-# @info a.chain
-
 model = Hebb.BlockNet(data, opts["block_opts"])
-
 Hebb.forward(model, dev_x)
 
 old_perf = Hebb.test(model, data)
 @info "OLD PERF: $old_perf"
 
 
-# old_weights = deepcopy(model.layers[2].chain[1][2].weight)
+# Hebb.train!(model, dev_x, dev_y)
 
-# Hebb.train!(model.layers[1], dev_x, dev_y)
-Hebb.train!(model, dev_x, dev_y)
+# n_preview = 4
+# display(Hebb.view_weight_grid(model, n_preview, layer=1))
 
-n_preview = 4
-display(Hebb.view_weight_grid(model, n_preview, layer=1))
+# # @info "------- Training -------"
+# vals = Hebb.train_loop(
+#     model,
+#     data,
+#     n_epochs = opts["sim_opts"]["n_epochs"],
+#     n_vals = opts["sim_opts"]["n_vals"],
+#     val_epoch = opts["sim_opts"]["val_epoch"],
+# )
 
-# @info "------- Training -------"
-vals = Hebb.train_loop(
+
+
+function local_profile(
     model,
     data,
-    n_epochs = opts["sim_opts"]["n_epochs"],
-    n_vals = opts["sim_opts"]["n_vals"],
-    val_epoch = opts["sim_opts"]["val_epoch"],
+    opts,
+    n_epochs,
 )
+    _ = Hebb.train_loop(
+        model,
+        data,
+        # n_epochs = opts["sim_opts"]["n_epochs"],
+        n_epochs = n_epochs,
+        n_vals = opts["sim_opts"]["n_vals"],
+        val_epoch = opts["sim_opts"]["val_epoch"],
+    )
+    return
+end
+
+@static if Sys.iswindows()
+    # compilation
+    @profview local_profile(model, data, opts, 1)
+    # pure runtime
+    @profview local_profile(model, data, opts, 2)
+end
 
 display(Hebb.view_weight_grid(model, n_preview, layer=1))
-# a = Hebb.view_weight_grid(model, n_preview, layer=1)
-
-# new_weights = deepcopy(model.layers[2].chain[1][2].weight)
-
-# @info "WEIGHTS DIFF: $(sum(new_weights .- old_weights))"

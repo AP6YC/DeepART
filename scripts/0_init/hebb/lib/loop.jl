@@ -158,7 +158,11 @@ function test(
     return perf
 end
 
-function profile_test(n_epochs::Integer)
+function profile_test(
+    model,
+    data,
+    opts,
+    n_epochs::Integer)
     _ = train_loop(
         model,
         data,

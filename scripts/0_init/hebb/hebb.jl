@@ -97,12 +97,12 @@ old_perf = Hebb.test(model, data)
 # CUDA.@profile train_loop(
 if opts["profile"]
     @info "------- Profiling -------"
-    @static if Sys.iswindows()
-        # compilation
-        @profview Hebb.profile_test(3)
-        # pure runtime
-        @profview Hebb.profile_test(10)
-    end
+    # @static if Sys.iswindows()
+    #     # compilation
+    #     @profview Hebb.profile_test(3)
+    #     # pure runtime
+    #     @profview Hebb.profile_test(10)
+    # end
 else
     if opts["dataset"] in Hebb.DATASETS["high_dimensional"]
         @info "weights before:"
@@ -148,9 +148,14 @@ end
 display(Hebb.view_weight_grid(model, n_preview))
 
 a = Hebb.view_weight_grid(model, n_preview)
-using Images
-save(DeepART.paper_results_dir("fuzzy_weights.png"), a)
-save(DeepART.results_dir("fuzzy_weights.png"), a)
+
+# using Images
+
+# save(DeepART.paper_results_dir("fuzzy_weights.png"), a)
+# save(DeepART.results_dir("fuzzy_weights.png"), a)
+
+
+
 # Hebb.view_weight_grid(model, 8, layer=2)
 
 
