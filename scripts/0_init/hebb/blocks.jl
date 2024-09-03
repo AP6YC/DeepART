@@ -33,7 +33,8 @@ import .Hebb
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("blockbase.yml")
-opts = Hebb.load_opts("block-res.yml")
+# opts = Hebb.load_opts("block-res.yml")
+opts = Hebb.load_opts("block-conv-res.yml")
 
 @info "------- Options post-processing -------"
 # Random.seed!(opts["sim_opts"]["rng_seed"])
@@ -73,9 +74,8 @@ old_perf = Hebb.test(model, data)
 Hebb.train!(model, dev_x, dev_y)
 
 n_preview = 4
-display(Hebb.view_weight_grid(model, n_preview, layer=1))
+# display(Hebb.view_weight_grid(model, n_preview, layer=1))
 
-# @info "------- Training -------"
 vals = Hebb.train_loop(
     model,
     data,
@@ -84,7 +84,11 @@ vals = Hebb.train_loop(
     val_epoch = opts["sim_opts"]["val_epoch"],
 )
 
-display(Hebb.view_weight_grid(model, n_preview, layer=1))
+display(Hebb.view_weight_grid(model, 2, layer=1))
+
+
+
+
 # a = Hebb.view_weight_grid(model, n_preview, layer=1)
 
 # new_weights = deepcopy(model.layers[2].chain[1][2].weight)
