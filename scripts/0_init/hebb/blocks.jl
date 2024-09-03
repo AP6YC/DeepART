@@ -34,6 +34,7 @@ import .Hebb
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("blockbase.yml")
 # opts = Hebb.load_opts("block-res.yml")
+# opts = Hebb.load_opts("block-fuzzy.yml")
 opts = Hebb.load_opts("block-conv-res.yml")
 
 @info "------- Options post-processing -------"

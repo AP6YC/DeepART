@@ -256,7 +256,8 @@ function get_conv_chain(
                 opts["cc"] ? DeepART.CCConv() : identity,
             ),
             Conv(
-                (3, 3), _ => 8,
+                # (3, 3), _ => 8,
+                (5, 5), _ => 16,
                 opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
@@ -264,7 +265,11 @@ function get_conv_chain(
         ),
         Chain(
             Chain(
-                MaxPool((2,2)),
+                MaxPool(
+                    # (2,2)
+                    (3, 3),
+                    stride=(2,2),
+                ),
                 # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
                 LayerNorm(_, affine=false),
                 opts["post_synaptic"] ? identity : opts["middle_activation"],
@@ -279,7 +284,9 @@ function get_conv_chain(
         ),
         Chain(
             Chain(
-                Flux.AdaptiveMaxPool((4, 4)),
+                Flux.AdaptiveMaxPool(
+                    (4, 4)
+                ),
                 Flux.flatten,
                 vec,
                 # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,

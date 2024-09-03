@@ -61,7 +61,8 @@ model_opts:
   # n_neurons: [128 64 32]
   # n_neurons: [64 128 32 64 16]
   # n_neurons: [128, 64]
-  n_neurons: [16, 64, 32]
+  n_neurons: [16, 64, 32]   # Good for visualizing USPS
+  # n_neurons: [64, 32]
   # n_neurons: [20]
   # n_neurons: [256 128 64]
 
