@@ -35,7 +35,8 @@ import .Hebb
 # opts = Hebb.load_opts("blockbase.yml")
 # opts = Hebb.load_opts("block-res.yml")
 # opts = Hebb.load_opts("block-fuzzy.yml")
-opts = Hebb.load_opts("block-conv-res.yml")
+# opts = Hebb.load_opts("block-conv-res.yml")
+opts = Hebb.load_opts("lenet.yml")
 
 @info "------- Options post-processing -------"
 # Random.seed!(opts["sim_opts"]["rng_seed"])
@@ -86,8 +87,6 @@ vals = Hebb.train_loop(
 )
 
 display(Hebb.view_weight_grid(model, 2, layer=1))
-
-
 
 
 # a = Hebb.view_weight_grid(model, n_preview, layer=1)

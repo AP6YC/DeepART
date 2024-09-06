@@ -59,6 +59,7 @@ const SWITCHES = Dict{String, Any}(
         "fuzzy_spec",
         "widrow_hoff",
         "fuzzyartmap",
+        "lenet",
     ],
 
     "conv_strategy" => [
@@ -117,6 +118,15 @@ const MODEL_DEPENDENCIES = Dict{String, Any}(
             "beta",
             "beta_rule",
             "conv_strategy",
+            "cc",
+            "learning_rule",
+            "init",
+            "middle_activation",
+            "post_synaptic",
+        ],
+        "lenet" => [
+            "beta",
+            "beta_rule",
             "cc",
             "learning_rule",
             "init",

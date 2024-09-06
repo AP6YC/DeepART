@@ -51,7 +51,7 @@ function _get_data_v2(opts::SimOpts)
     # local_opts = opts["sim_opts"]
     local_opts = get_simopts(opts)
 
-    to_flatten = !(get_model_opts(opts, 1)["model"] in ["conv", "conv_new"])
+    to_flatten = !(get_model_opts(opts, 1)["model"] in ["conv", "conv_new", "lenet"])
 
     data = if local_opts["dataset"] in DATASETS["high_dimensional"]
         DeepART.load_one_dataset(

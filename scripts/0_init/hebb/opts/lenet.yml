@@ -34,7 +34,7 @@ block_opts:
 
     - index: 1
       inputs: 0
-      model: conv
+      model: lenet
       cc: true
       positive_weights: false
       conv_strategy: patchwise

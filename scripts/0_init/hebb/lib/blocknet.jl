@@ -223,6 +223,113 @@ Convolutional chain layer constructor.
 
 NOTE: this is not currently set up to be modular and should be used as the first "layer" in a model chain.
 """
+function get_lenet_conv_chain(
+    # size_tuple::Tuple,
+    # head_dim::Integer,
+    # opts::ModelOpts
+    n_in::Tuple,
+    n_out::Integer,
+    # kernel::Tuple,
+    opts::ModelOpts;
+    first_layer::Bool = false,
+    # n_pool::Tuple = (),
+)
+    # first_activation = if opts["post_synaptic"]
+    #     identity
+    # else
+    #     opts["middle_activation"]
+    # end
+
+    # preprocess = if opts["layer_norm"]
+    #     LayerNorm(_, affine=false)
+    #     # Flux.normalise
+    # else
+    #     identity
+    # end
+
+    # @info n_in
+
+    conv_model = Flux.@autosize (n_in,) Chain(
+        # get_conv_layer(, 8, (3, 3), opts, first_layer=true),
+        Chain(
+            Chain(
+                opts["cc"] ? DeepART.CCConv() : identity,
+            ),
+            Conv(
+                # (3, 3), _ => 8,
+                # (5, 5), _ => 16,
+                (5, 5), _ => 6,
+                # pad=(2,2),
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+        Chain(
+            Chain(
+                # MaxPool(
+                MeanPool(
+                    (2,2),
+                    # (3, 3),
+                    stride=(2,2),
+                ),
+                # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+                LayerNorm(_, affine=false),
+                opts["post_synaptic"] ? identity : opts["middle_activation"],
+                opts["cc"] ? DeepART.CCConv() : identity,
+            ),
+            Conv(
+                (5,5), _ => 16,
+                # (5,5), _ => 32,
+                # (5,5), _ => 8,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        #     Chain(
+        #         MeanPool(
+        #             (2, 2),
+        #             stride=(2,2),
+        #         ),
+        #         Flux.flatten,
+        #         vec,
+        #     )
+        ),
+        Chain(
+            Chain(
+                # Flux.AdaptiveMaxPool(
+                #     # (4, 4)
+                #     (5, 5)
+                # ),
+                MeanPool(
+                    (2, 2),
+                    stride=(2,2),
+                ),
+                Flux.flatten,
+                vec,
+                # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+                LayerNorm(_, affine=false),
+                opts["post_synaptic"] ? identity : opts["middle_activation"],
+                opts["cc"] ? DeepART.CC() : identity,
+            ),
+            Dense(
+                # _, 64,
+                _, 120,
+                opts["post_synaptic"] ? opts["middle_activation"] : identity,
+                bias=opts["bias"],
+                init=opts["init"],
+            ),
+        ),
+    )
+
+    return conv_model
+end
+
+"""
+Convolutional chain layer constructor.
+
+NOTE: this is not currently set up to be modular and should be used as the first "layer" in a model chain.
+"""
 function get_conv_chain(
     # size_tuple::Tuple,
     # head_dim::Integer,
@@ -257,7 +364,9 @@ function get_conv_chain(
             ),
             Conv(
                 # (3, 3), _ => 8,
-                (5, 5), _ => 16,
+                # (5, 5), _ => 16,
+                (5, 5), _ => 6,
+                # pad=(2,2),
                 opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
@@ -265,9 +374,10 @@ function get_conv_chain(
         ),
         Chain(
             Chain(
-                MaxPool(
-                    # (2,2)
-                    (3, 3),
+                # MaxPool(
+                MeanPool(
+                    (2,2),
+                    # (3, 3),
                     stride=(2,2),
                 ),
                 # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
@@ -277,15 +387,30 @@ function get_conv_chain(
             ),
             Conv(
                 (5,5), _ => 16,
+                # (5,5), _ => 32,
+                # (5,5), _ => 8,
                 opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
             ),
+        #     Chain(
+        #         MeanPool(
+        #             (2, 2),
+        #             stride=(2,2),
+        #         ),
+        #         Flux.flatten,
+        #         vec,
+        #     )
         ),
         Chain(
             Chain(
-                Flux.AdaptiveMaxPool(
-                    (4, 4)
+                # Flux.AdaptiveMaxPool(
+                #     # (4, 4)
+                #     (5, 5)
+                # ),
+                MeanPool(
+                    (2, 2),
+                    stride=(2,2),
                 ),
                 Flux.flatten,
                 vec,
@@ -294,7 +419,9 @@ function get_conv_chain(
                 opts["post_synaptic"] ? identity : opts["middle_activation"],
                 opts["cc"] ? DeepART.CC() : identity,
             ),
-            Dense(_, 32,
+            Dense(
+                # _, 64,
+                _, 120,
                 opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
                 init=opts["init"],
@@ -313,6 +440,7 @@ const CHAIN_BLOCK_FUNC_MAP = Dict(
     "fuzzy" => get_fuzzy_chain,
     "widrow_hoff" => get_widrow_hoff_chain,
     "conv" => get_conv_chain,
+    "lenet" => get_lenet_conv_chain,
 )
 
 """
@@ -464,6 +592,7 @@ function get_incremental_activations(
         local_acts = Flux.activations(block.chain[ix], pre_input)
         push!(ins, local_acts[1])
         push!(outs, local_acts[2])
+        # push!(outs, local_acts[end])
     end
     return ins, outs
 end
@@ -618,6 +747,7 @@ const BLOCK_FUNC_MAP = Dict(
     "fuzzy" => ChainBlock,
     "widrow_hoff" => ChainBlock,
     "conv" => ConvBlock,
+    "lenet" => ConvBlock,
     "fuzzyartmap" => ARTBlock,
 )
 
@@ -653,7 +783,7 @@ function BlockNet(
 
     for block_opts in opts["blocks"]
 
-        is_conv = block_opts["model"] in ["conv",]
+        is_conv = block_opts["model"] in ["conv", "lenet"]
 
         # If this is the first layer
         if block_opts["index"] == 1
