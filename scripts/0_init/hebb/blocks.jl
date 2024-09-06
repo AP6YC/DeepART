@@ -89,6 +89,15 @@ vals = Hebb.train_loop(
 display(Hebb.view_weight_grid(model, 2, layer=1))
 
 
+# # Create the confusion matrix from this experiment
+# DeepART.plot_confusion_matrix(
+#     data.test.y,
+#     results["y_hats"],
+#     string.(collect(0:9)),
+#     "dense_basic_confusion",
+#     EXP_TOP,
+# )
+
 # a = Hebb.view_weight_grid(model, n_preview, layer=1)
 
 # new_weights = deepcopy(model.layers[2].chain[1][2].weight)

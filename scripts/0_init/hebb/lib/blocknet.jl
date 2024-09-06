@@ -257,8 +257,8 @@ function get_lenet_conv_chain(
             ),
             Conv(
                 # (3, 3), _ => 8,
-                # (5, 5), _ => 16,
-                (5, 5), _ => 6,
+                (5, 5), _ => 16,
+                # (5, 5), _ => 6,
                 # pad=(2,2),
                 opts["post_synaptic"] ? opts["middle_activation"] : identity,
                 bias=opts["bias"],
@@ -295,6 +295,27 @@ function get_lenet_conv_chain(
         #         vec,
         #     )
         ),
+
+        # # TEMP: ADDED BLOCK
+        # Chain(
+        #     Chain(
+        #         # MaxPool(
+        #         MeanPool(
+        #             (2,2),
+        #             stride=(2,2),
+        #         ),
+        #         # opts["layer_norm"] ? LayerNorm(_, affine=false) : identity,
+        #         LayerNorm(_, affine=false),
+        #         opts["post_synaptic"] ? identity : opts["middle_activation"],
+        #         opts["cc"] ? DeepART.CCConv() : identity,
+        #     ),
+        #     Conv(
+        #         (3,3), _ => 16,
+        #         opts["post_synaptic"] ? opts["middle_activation"] : identity,
+        #         bias=opts["bias"],
+        #         init=opts["init"],
+        #     ),
+        # ),
         Chain(
             Chain(
                 # Flux.AdaptiveMaxPool(
@@ -1039,7 +1060,6 @@ function train_loop(
     @info "perf = $perf"
     return loop_dict["vals"]
 end
-
 
 function test(
     model::BlockNet,
