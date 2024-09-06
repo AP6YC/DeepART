@@ -152,9 +152,10 @@ block_opts:
       # inputs: [1, 2,]
       inputs: 2
       model: fuzzyartmap
-      rho: 0.4
+      # rho: 0.4
+      rho: 0.3
       # rho: 0.75
-      beta_s: 0.1
+      beta_s: 0.01
       # beta_s: 0.5
       # beta_s: 1.0
       # final_sigmoid: false
