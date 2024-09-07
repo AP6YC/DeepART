@@ -86,7 +86,24 @@ vals = Hebb.train_loop(
     val_epoch = opts["sim_opts"]["val_epoch"],
 )
 
-display(Hebb.view_weight_grid(model, 2, layer=1))
+# display(Hebb.view_weight_grid(model, 2, layer=1))
+display(Hebb.view_weight_grid(model, 4, layer=1))
+
+display(Hebb.view_weight_grid_spaced(model, 4, 4, layer=1))
+
+using Images
+a = Hebb.view_weight_grid(model, 4, layer=1)
+im_name = "kernel_weights.png"
+save(DeepART.paper_results_dir(im_name), a)
+save(DeepART.results_dir(im_name), a)
+
+# using Hebb
+# begin
+#     # using Revise
+#     include("lib/lib.jl")
+#     import .Hebb
+#     display(Hebb.view_weight_grid_spaced(model, 4, 4, layer=1))
+# end
 
 
 # # Create the confusion matrix from this experiment

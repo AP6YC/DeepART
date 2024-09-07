@@ -173,6 +173,46 @@ function view_weight_grid(
     return out_grid'
 end
 
+"""
+Helper function: visualizes a grid of weights at a specified layer.
+"""
+function view_weight_grid_spaced(
+    model,
+    x_grid::Int,
+    y_grid::Int;
+    layer::Int=1
+)
+    # Infer the size of the weight matrix
+    a = Hebb.view_weight(model, 1, layer=layer)
+    # a = Hebb.view_weight(model, 1)
+
+    (dim_x, dim_y) = size(a)
+
+    # Create the output grid
+    # out_grid = zeros(DeepART.Gray{Float32}, dim_x * n_grid, dim_y * n_grid)
+    out_grid = zeros(DeepART.Gray{Float32}, dim_x * x_grid, dim_y * y_grid)
+
+    # Populate the grid iteratively
+    for ix = 1:n_grid
+        for jx = 1:n_grid
+            local_weight = Hebb.view_weight(
+                model,
+                n_grid * (ix - 1) + jx,
+                layer=layer,
+            )
+            out_grid[
+                (ix - 1) * dim_x + 1:ix * dim_x,
+                (jx - 1) * dim_y + 1:jx * dim_y
+            ] = local_weight
+        end
+    end
+
+    # Return the tranpose for visualization
+    return out_grid'
+end
+
+
+
 # function view_kernel()
 
 

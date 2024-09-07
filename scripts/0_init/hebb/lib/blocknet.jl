@@ -218,6 +218,20 @@ function get_widrow_hoff_chain(
     )
 end
 
+
+# LeNet:
+# model = Chain(
+#     Conv((5,5),1 => 6, relu),
+#     MaxPool((2,2)),
+#     Conv((5,5),6 => 16, relu),
+#     MaxPool((2,2)),
+#     Flux.flatten,
+#     Dense(256=>120,relu),
+#     Dense(120=>84, relu),
+#     Dense(84=>10, sigmoid),
+#     softmax
+# )
+
 """
 Convolutional chain layer constructor.
 

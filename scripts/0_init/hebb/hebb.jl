@@ -40,9 +40,9 @@ end
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
-opts = Hebb.load_opts("fuzzy.yml")
+# opts = Hebb.load_opts("fuzzy.yml")
 # opts = Hebb.load_opts("dense-fuzzy.yml")
-# opts = Hebb.load_opts("conv-fuzzy.yml")
+opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
 Random.seed!(opts["rng_seed"])
@@ -173,17 +173,3 @@ a = Hebb.view_weight_grid(model, n_preview)
 #     ProgressMeter.next!(p; showvalues = [(:UnicodePlot, str)])
 # end
 # https://github.com/timholy/ProgressMeter.jl/issues/224
-
-
-# LeNet:
-# model = Chain(
-#     Conv((5,5),1 => 6, relu),
-#     MaxPool((2,2)),
-#     Conv((5,5),6 => 16, relu),
-#     MaxPool((2,2)),
-#     Flux.flatten,
-#     Dense(256=>120,relu),
-#     Dense(120=>84, relu),
-#     Dense(84=>10, sigmoid),
-#     softmax
-# )
