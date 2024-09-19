@@ -76,9 +76,11 @@ end
 
 function get_beta(out, opts::ModelOpts)
     if opts["beta_rule"] == "wta"
-        beta = zeros(Float32, size(out))
-        max_ind = argmax(out)
-        beta[max_ind] = opts["beta_d"] * one(Float32)
+        # beta = zeros(Float32, size(out))
+        # max_ind = argmax(out)
+        # beta[max_ind] = opts["beta_d"] * one(Float32)
+        beta = opts["beta_d"]
+
     elseif opts["beta_rule"] == "contrast"
         # Krotov / contrastive learning
         max_ind = argmax(out)
@@ -163,7 +165,12 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
                 # Get the local learning parameter beta
                 beta = get_beta(local_out, opts)
                 if opts["learning_rule"] == "fuzzyart"
-                    local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+                    if opts["beta_rule"] == "wta"
+                        jx = argmax(local_out)
+                        local_weight[jx, :] = fuzzyart_learn(local_in, local_weight[jx, :], beta)
+                    else
+                        local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+                    end
                 elseif opts["learning_rule"] == "instar"
                     # local_weight .+= opts["eta"] .* (beta .- local_out) .* local_in
                     # local_weight .+= beta .* local_out .* (local_in .- local_out .* local_weight)
@@ -189,7 +196,13 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
     # Get the local learning parameter beta
     beta = get_beta(local_out, opts)
     if opts["learning_rule"] == "fuzzyart"
-        local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+        # local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+        if opts["beta_rule"] == "wta"
+            jx = argmax(local_out)
+            local_weight[jx, :] = fuzzyart_learn(local_in, local_weight[jx, :], beta)
+        else
+            local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
+        end
     elseif opts["learning_rule"] == "instar"
         # local_weight .+= opts["eta"] .* (beta .- local_out) .* local_in
         # local_weight .+= beta .* local_out .* (local_in .- local_out .* local_weight)
