@@ -1,0 +1,91 @@
+opts_version: 2
+
+sim_opts:
+  n_epochs: 1
+  n_vals: 50
+  val_epoch: true
+  rng_seed: 1234
+  dataset: usps
+  n_train: 50000
+  # n_train: 10000
+  n_test: 10000
+
+block_opts:
+  gpu: false
+  blocks:
+    - index: 1
+      inputs: 0
+      model: dense
+      cc: false
+      positive_weights: false
+      init: rand32
+      # init: glorot_uniform
+      post_synaptic: false
+      middle_activation: relu
+      immediate: false
+      layer_norm: true
+      bias: false
+      beta_d: 0.1
+      n_neurons: [128,]
+      learning_rule: fuzzyart
+      beta_rule: wta
+      beta_normalize: true
+
+    - index: 2
+      inputs: 1
+      model: dense
+      cc: false
+      positive_weights: false
+      init: rand32
+      # init: glorot_uniform
+      post_synaptic: false
+      middle_activation: relu
+      immediate: false
+      layer_norm: true
+      bias: false
+      beta_d: 0.1
+      n_neurons: [64,]
+      learning_rule: fuzzyart
+      beta_rule: wta
+      beta_normalize: true
+
+    - index: 3
+      inputs: 2
+      model: dense
+      cc: false
+      positive_weights: false
+      init: rand32
+      # init: glorot_uniform
+      post_synaptic: false
+      middle_activation: relu
+      immediate: false
+      layer_norm: true
+      bias: false
+      beta_d: 0.1
+      n_neurons: [128,]
+      learning_rule: fuzzyart
+      beta_rule: wta
+      beta_normalize: true
+
+    # - index: 3
+    - index: 4
+      # inputs: [1, 2,]
+      # inputs: [1, 2, 3,]
+      inputs: 3
+      # inputs: 1
+      model: fuzzyartmap
+      rho: 0.4
+      # rho: 0.75
+      # rho: 0.9
+      beta_s: 0.5
+      # beta_s: 1.0
+      # final_sigmoid: false
+      # # cc: false
+      # positive_weights: false
+      # init: glorot_uniform
+      # post_synaptic: false
+      # middle_activation: relu
+      # immediate: false
+      # layer_norm: true
+      # bias: false
+      # eta: 0.01

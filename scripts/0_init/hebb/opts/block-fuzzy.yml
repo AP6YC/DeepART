@@ -129,13 +129,15 @@ block_opts:
     #   bias: false
     #   eta: 0.01
 
-    - index: 2
+    - index: 3
       # inputs: 1
-      inputs: [1, 2]
+      # inputs: [1, 2]
+      inputs: 2
       model: fuzzyartmap
-      rho: 0.75
-      beta_s: 1.0
-      # beta_s: 0.5
+      # rho: 0.75
+      rho: 0.4
+      # beta_s: 1.0
+      beta_s: 0.5
       # final_sigmoid: false
       # # cc: false
       # positive_weights: false
