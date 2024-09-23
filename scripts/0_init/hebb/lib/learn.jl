@@ -153,7 +153,8 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
             flat_in = unfolded[:, :, 1]
             n_windows = size(flat_in, 1)
             flat_out = reshape(out, n_windows, n_kernels)
-            flat_weights = reshape(weights, :, n_kernels)'
+            # flat_weights = reshape(weights, :, n_kernels)'
+            flat_weights = reshape(weights, :, n_kernels)
 
             # Iterate over each unfolded window
             for ix in 1:n_windows
@@ -167,7 +168,8 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
                 if opts["learning_rule"] == "fuzzyart"
                     if opts["beta_rule"] == "wta"
                         jx = argmax(local_out)
-                        local_weight[jx, :] = fuzzyart_learn(local_in, local_weight[jx, :], beta)
+                        # local_weight[jx, :] = fuzzyart_learn(local_in, local_weight[jx, :], beta)
+                        local_weight[:, jx] = fuzzyart_learn(local_in, local_weight[:, jx], beta)
                     else
                         local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
                     end

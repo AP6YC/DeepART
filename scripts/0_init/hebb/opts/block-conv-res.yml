@@ -34,19 +34,20 @@ block_opts:
 
     - index: 1
       inputs: 0
-      model: conv
+      # model: conv
+      model: lenet
       cc: true
       positive_weights: false
       conv_strategy: patchwise
       sigma: 0.01
       init: rand32
-      # middle_activation: relu
-      middle_activation: sigmoid_fast
+      middle_activation: relu
+      # middle_activation: sigmoid_fast
       layer_norm: true
       post_synaptic: false
       immediate: false
       bias: false
-      beta_d: 0.01
+      beta_d: 0.001
       # n_neurons: [16, 64]
       # beta_rule: gaussian
       beta_rule: wta
@@ -59,8 +60,8 @@ block_opts:
       positive_weights: false
       init: rand32
       post_synaptic: false
-      # middle_activation: relu
-      middle_activation: sigmoid_fast
+      middle_activation: relu
+      # middle_activation: sigmoid_fast
       immediate: false
       layer_norm: true
       bias: false
@@ -149,12 +150,14 @@ block_opts:
     # - index: 4
     - index: 3
       # inputs: [1, 2, 3,]
-      # inputs: [1, 2,]
-      inputs: 2
+      inputs: [1, 2,]
+      # inputs: 2
       model: fuzzyartmap
-      rho: 0.4
+      # rho: 0.4
+      rho: 0.2
       # rho: 0.75
-      beta_s: 0.1
+      beta_s: 0.01
+      # beta_s: 0.1
       # beta_s: 0.5
       # beta_s: 1.0
       # final_sigmoid: false
