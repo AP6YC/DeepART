@@ -1,5 +1,17 @@
+"""
+    loop.jl
+
+# Description
+Utilities for training and testing loops.
+"""
+
+# -----------------------------------------------------------------------------
+# FUNCTIONS
+# -----------------------------------------------------------------------------
 
 generate_showvalues(val) = () -> [(:val, val)]
+
+generate_showvalues_n_cat(val, n_cat) = () -> [(:val, val), (:n_cat, n_cat)]
 
 function update_view_progress!(
     # ix_iter,
@@ -25,7 +37,19 @@ function update_view_progress!(
 
     loop_dict["ix_iter"] += 1
 
-    next!(p; showvalues=generate_showvalues(report_value))
+    # if haskey(model.opts, "blocks")
+    if model isa Hebb.BlockNet
+        if model.layers[end] isa Hebb.ARTBlock
+            next!(p; showvalues=generate_showvalues_n_cat(
+                report_value,
+                model.layers[end].model.n_categories,
+            ))
+        else
+            next!(p; showvalues=generate_showvalues(report_value))
+        end
+    else
+        next!(p; showvalues=generate_showvalues(report_value))
+    end
 
     # next!(p; showvalues=generate_showvalues(report_value))
     # return report_value

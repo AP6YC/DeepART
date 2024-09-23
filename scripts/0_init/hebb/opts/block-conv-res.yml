@@ -150,11 +150,11 @@ block_opts:
     # - index: 4
     - index: 3
       # inputs: [1, 2, 3,]
-      inputs: [1, 2,]
-      # inputs: 2
+      # inputs: [1, 2,]
+      inputs: 2
       model: fuzzyartmap
-      # rho: 0.4
-      rho: 0.2
+      rho: 0.4
+      # rho: 0.2
       # rho: 0.75
       beta_s: 0.01
       # beta_s: 0.1
