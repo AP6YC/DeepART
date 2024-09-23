@@ -34,6 +34,7 @@ function get_dense_deepart_layer(
             # first_layer ? identity : opts["middle_activation"],
             preprocess,
             first_activation,
+            # sigmoid_fast,
             opts["cc"] ? DeepART.CC() : identity,
         ),
         Dense(

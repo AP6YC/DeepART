@@ -79,6 +79,7 @@ end
 struct Fuzzy{F, M<:AbstractMatrix}
     weight::M
     activation::F
+    cc_dim::Integer
 end
 
 # function Fuzzy(
@@ -96,7 +97,9 @@ function Fuzzy(
 )
     Fuzzy(
         init(out, in),
+        # init(in, out),
         activation,
+        in,
     )
 end
 
@@ -108,16 +111,18 @@ Flux.@layer Fuzzy
 
 function (a::Fuzzy)(x::AbstractVecOrMat)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
+    # Flux._size_check(a, x, 1 => size(a.weight, 1))
 #   σ = NNlib.fast_act(a.σ, x)  # replaces tanh => tanh_fast, etc
     # a.cache["xT"] = Flux._match_eltype(a, x)  # fixes Float64 input, etc.
-    # @info typeof(x)
-    xT = x
+    # xT = x
 #   return σ.(a.weight * xT .+ a.bias)
     _weight = a.weight'
+    # _weight = a.weight
 
     # NOTE: removing the repeat here because casting works as intended in xw_norm
     # _x = repeat(xT, 1, size(_weight, 2))
-    _x = xT
+    # _x = xT
+    _x = x
 
     xw_norm = sum(abs.(min.(_x, _weight)), dims=1)
 
@@ -125,7 +130,9 @@ function (a::Fuzzy)(x::AbstractVecOrMat)
     # M = a.activation(vec(xw_norm ./ (ALPHA .+ w_norm)))
     # return M
 
-    T = a.activation(vec(xw_norm ./ (size(_weight, 1) ./ 2.0f0)))
+    # T = a.activation(vec(xw_norm ./ (size(_weight, 1) ./ 2.0f0)))
+    # T = a.activation(vec(xw_norm ./ (size(_weight, 2) ./ 2.0f0)))
+    T = a.activation.(vec(xw_norm ./ (a.cc_dim ./ 2.0f0)))
     return T
 end
 
@@ -156,11 +163,13 @@ Flux.trainable(a::Fuzzy) = (; W=a.weight)
 
 function (a::Fuzzy)(x::AbstractArray)
     Flux._size_check(a, x, 1 => size(a.weight, 2))
+    # Flux._size_check(a, x, 1 => size(a.weight, 1))
     reshape(a(reshape(x, size(x,1), :)), :, size(x)[2:end]...)
 end
 
 function Base.show(io::IO, l::Fuzzy)
     print(io, "Fuzzy(", size(l.weight, 2), " => ", size(l.weight, 1))
+    # print(io, "Fuzzy(", size(l.weight, 1), " => ", size(l.weight, 2))
     # l.σ == identity || print(io, ", ", l.σ)
     # l.bias == false && print(io, "; bias=false")
     print(io, ")")

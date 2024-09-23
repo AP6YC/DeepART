@@ -56,15 +56,17 @@ block_opts:
       positive_weights: false
       init: rand32
       post_synaptic: false
-      middle_activation: relu
+      # middle_activation: relu
+      middle_activation: relu6
       immediate: false
       layer_norm: true
       bias: false
-      # beta_d: 0.01
-      beta_d: 0.1
+      beta_d: 0.01
+      # beta_d: 0.1
       # n_neurons: [32, 64]
-      n_neurons: [128,]
+      n_neurons: [128, 64]
       # n_neurons: [512, 256]
+      # n_neurons: [16, 64, 32]   # Good for visualizing USPS
       learning_rule: fuzzyart
       beta_rule: wta
       # beta_rule: gaussian
@@ -72,28 +74,28 @@ block_opts:
       sigma: 0.01
       beta_normalize: true
 
-    - index: 2
-      inputs: 1
-      model: fuzzy
-      cc: true
-      positive_weights: false
-      init: rand32
-      post_synaptic: false
-      middle_activation: relu
-      immediate: false
-      layer_norm: true
-      bias: false
-      # beta_d: 0.01
-      beta_d: 0.1
-      # n_neurons: [32, 64]
-      n_neurons: [64,]
-      # n_neurons: [512, 256]
-      learning_rule: fuzzyart
-      beta_rule: wta
-      # beta_rule: gaussian
-      # beta_rule: softmax
-      sigma: 0.01
-      beta_normalize: true
+    # - index: 2
+    #   inputs: 1
+    #   model: fuzzy
+    #   cc: true
+    #   positive_weights: false
+    #   init: rand32
+    #   post_synaptic: false
+    #   middle_activation: relu
+    #   immediate: false
+    #   layer_norm: true
+    #   bias: false
+    #   # beta_d: 0.01
+    #   beta_d: 0.1
+    #   # n_neurons: [32, 64]
+    #   n_neurons: [64,]
+    #   # n_neurons: [512, 256]
+    #   learning_rule: fuzzyart
+    #   beta_rule: wta
+    #   # beta_rule: gaussian
+    #   # beta_rule: softmax
+    #   sigma: 0.01
+    #   beta_normalize: true
 
     # - index: 2
     #   inputs: 1
@@ -129,15 +131,16 @@ block_opts:
     #   bias: false
     #   eta: 0.01
 
-    - index: 3
-      # inputs: 1
+    # - index: 3
+    - index: 2
+      inputs: 1
       # inputs: [1, 2]
-      inputs: 2
+      # inputs: 2
       model: fuzzyartmap
       # rho: 0.75
       rho: 0.4
       # beta_s: 1.0
-      beta_s: 0.5
+      beta_s: 0.1
       # final_sigmoid: false
       # # cc: false
       # positive_weights: false

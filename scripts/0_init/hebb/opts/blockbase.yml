@@ -56,14 +56,15 @@ block_opts:
       positive_weights: false
       init: rand32
       post_synaptic: false
-      middle_activation: relu
+      # middle_activation: relu
+      middle_activation: relu6
       immediate: false
       layer_norm: true
       bias: false
-      # beta_d: 0.01
-      beta_d: 0.1
-      n_neurons: [32, 64]
-      # n_neurons: [512, 256]
+      beta_d: 0.01
+      # beta_d: 0.1
+      # n_neurons: [32, 64]
+      n_neurons: [512, 256]
       learning_rule: fuzzyart
       beta_rule: wta
       # beta_rule: gaussian
@@ -109,8 +110,10 @@ block_opts:
       inputs: 1
       # inputs: [1, 2]
       model: fuzzyartmap
-      rho: 0.6
-      beta_s: 1.0
+      # rho: 0.6
+      rho: 0.4
+      beta_s: 0.1
+      # beta_s: 1.0
       # beta_s: 0.5
       # final_sigmoid: false
       # # cc: false

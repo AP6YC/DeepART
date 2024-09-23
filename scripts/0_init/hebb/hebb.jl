@@ -40,8 +40,8 @@ end
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("base.yml")
-# opts = Hebb.load_opts("fuzzy.yml")
-opts = Hebb.load_opts("dense-fuzzy.yml")
+opts = Hebb.load_opts("fuzzy.yml")
+# opts = Hebb.load_opts("dense-fuzzy.yml")
 # opts = Hebb.load_opts("conv-fuzzy.yml")
 
 @info "------- Options post-processing -------"
@@ -55,8 +55,8 @@ Random.seed!(opts["rng_seed"])
 data = Hebb.get_data(opts)
 
 # n_preview = 4
-# preview_weights = true
-preview_weights = false
+preview_weights = true
+# preview_weights = false
 # n_preview = 10
 # n_preview_2 = 8
 n_preview = 4
@@ -74,7 +74,7 @@ dev_x, dev_y = data.train[1]
 model = Hebb.HebbModel(data, opts["model_opts"])
 if preview_weights
     display(Hebb.view_weight_grid(model, n_preview))
-    display(Hebb.view_weight_grid(model, n_preview_2, layer=2))
+    # display(Hebb.view_weight_grid(model, n_preview_2, layer=2))
 end
 # display(Hebb.view_weight_grid(model, 4, layer=3))
 
@@ -140,14 +140,15 @@ else
 end
 
 if preview_weights
-    display(Hebb.view_weight_grid(model, n_preview, layer=1))
-    display(Hebb.view_weight_grid(model, n_preview_2, layer=2))
+    # display(Hebb.view_weight_grid(model, n_preview, layer=1))
+    display(Hebb.view_weight_grid(model, n_preview))
+    # display(Hebb.view_weight_grid(model, n_preview_2, layer=2))
     # display(Hebb.view_weight_grid(model, 3, layer=2))
 end
 
 display(Hebb.view_weight_grid(model, n_preview))
 
-a = Hebb.view_weight_grid(model, n_preview)
+# a = Hebb.view_weight_grid(model, n_preview)
 
 # using Images
 
