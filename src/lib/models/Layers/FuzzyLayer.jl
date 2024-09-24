@@ -133,6 +133,8 @@ function (a::Fuzzy)(x::AbstractVecOrMat)
     # T = a.activation(vec(xw_norm ./ (size(_weight, 1) ./ 2.0f0)))
     # T = a.activation(vec(xw_norm ./ (size(_weight, 2) ./ 2.0f0)))
     T = a.activation.(vec(xw_norm ./ (a.cc_dim ./ 2.0f0)))
+    # T = a.activation.(vec(xw_norm ./ (a.cc_dim)))
+    # T = a.activation.(vec(xw_norm ./ (1e-3 .+ w_norm)))
     return T
 end
 

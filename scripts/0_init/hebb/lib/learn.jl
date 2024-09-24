@@ -81,6 +81,8 @@ function get_beta(out, opts::ModelOpts)
         # beta[max_ind] = opts["beta_d"] * one(Float32)
         beta = opts["beta_d"]
 
+    elseif opts["beta_rule"] == "wta-norm"
+        beta = opts["beta_d"] / sqrt(length(out))
     elseif opts["beta_rule"] == "contrast"
         # Krotov / contrastive learning
         max_ind = argmax(out)
@@ -166,7 +168,7 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
                 # Get the local learning parameter beta
                 beta = get_beta(local_out, opts)
                 if opts["learning_rule"] == "fuzzyart"
-                    if opts["beta_rule"] == "wta"
+                    if opts["beta_rule"] == "wta" || opts["beta_rule"] == "wta-norm"
                         jx = argmax(local_out)
                         # local_weight[jx, :] = fuzzyart_learn(local_in, local_weight[jx, :], beta)
                         local_weight[:, jx] = fuzzyart_learn(local_in, local_weight[:, jx], beta)
@@ -199,7 +201,7 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
     beta = get_beta(local_out, opts)
     if opts["learning_rule"] == "fuzzyart"
         # local_weight .= fuzzyart_learn_cast(local_in, local_weight, beta)
-        if opts["beta_rule"] == "wta"
+        if opts["beta_rule"] == "wta" || opts["beta_rule"] == "wta-norm"
             jx = argmax(local_out)
             local_weight[jx, :] = fuzzyart_learn(local_in, local_weight[jx, :], beta)
         else

@@ -77,6 +77,7 @@ const SWITCHES = Dict{String, Any}(
     # Enumeration of beta rules.
     "beta_rule" => [
         "wta",
+        "wta-norm",
         "contrast",
         "softmax",
         "wavelet",

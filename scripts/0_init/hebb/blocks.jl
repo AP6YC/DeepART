@@ -33,6 +33,7 @@ import .Hebb
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("blockbase.yml")
+# opts = Hebb.load_opts("block-dense-fuzzy.yml")
 # opts = Hebb.load_opts("block-res.yml")
 # opts = Hebb.load_opts("block-no-cc.yml")
 opts = Hebb.load_opts("block-fuzzy.yml")
@@ -80,6 +81,7 @@ n_preview = 4
 # display(Hebb.view_weight_grid(model, n_preview, layer=1))
 
 vals = Hebb.train_loop(
+# @profview vals = Hebb.train_loop(
     model,
     data,
     n_epochs = opts["sim_opts"]["n_epochs"],
