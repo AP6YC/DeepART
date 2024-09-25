@@ -82,7 +82,8 @@ function get_beta(out, opts::ModelOpts)
         beta = opts["beta_d"]
 
     elseif opts["beta_rule"] == "wta-norm"
-        beta = opts["beta_d"] / sqrt(length(out))
+        # beta = opts["beta_d"] / sqrt(length(out))
+        beta = opts["beta_d"] * sqrt(length(out))
     elseif opts["beta_rule"] == "contrast"
         # Krotov / contrastive learning
         max_ind = argmax(out)

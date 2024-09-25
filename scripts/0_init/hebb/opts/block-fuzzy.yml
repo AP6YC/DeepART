@@ -53,23 +53,29 @@ block_opts:
     - index: 1
       inputs: 0
       model: fuzzy
+      # model: dense
       cc: true
       positive_weights: false
       init: rand32
       post_synaptic: false
       # middle_activation: relu
-      middle_activation: relu6
+      # middle_activation: relu6
+      middle_activation: sigmoid_fast
       immediate: false
       layer_norm: true
       bias: false
-      # beta_d: 0.01
-      beta_d: 0.1
+      # beta_d: 0.001
+      beta_d: 0.01
+      # beta_d: 0.5
+      # beta_d: 1.0
+      # beta_d: 0.0
       # n_neurons: [32, 64]
-      n_neurons: [128, 64]
-      # n_neurons: [512, 256]
+      # n_neurons: [128, 64, 32]
+      n_neurons: [512, 256]
       # n_neurons: [16, 64, 32]   # Good for visualizing USPS
       learning_rule: fuzzyart
       beta_rule: wta-norm
+      # beta_rule: wta
       # beta_rule: gaussian
       # beta_rule: softmax
       sigma: 0.01
@@ -139,7 +145,9 @@ block_opts:
       # inputs: 2
       model: fuzzyartmap
       # rho: 0.75
-      rho: 0.4
+      # rho: 0.4
+      rho: 0.2
+      # rho: 0.9
       # beta_s: 1.0
       beta_s: 0.1
       # final_sigmoid: false

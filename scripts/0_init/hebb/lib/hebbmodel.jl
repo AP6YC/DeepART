@@ -193,11 +193,11 @@ function view_weight_grid_spaced(
     out_grid = zeros(DeepART.Gray{Float32}, dim_x * x_grid, dim_y * y_grid)
 
     # Populate the grid iteratively
-    for ix = 1:n_grid
-        for jx = 1:n_grid
+    for ix = 1:x_grid
+        for jx = 1:y_grid
             local_weight = Hebb.view_weight(
                 model,
-                n_grid * (ix - 1) + jx,
+                x_grid * (ix - 1) + jx,
                 layer=layer,
             )
             out_grid[
