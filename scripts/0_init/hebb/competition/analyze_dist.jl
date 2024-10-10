@@ -27,10 +27,10 @@ using DataStructures
 
 # Point to the local sweep data directory
 sweep_dir = DeepART.results_dir(
-    "1_baselines",
+    "hebb_competition",
 )
 
-EXP_TOP = "1_analyze"
+EXP_TOP = "hebb_competition"
 
 # Point to the destination directories
 paper_out_dir(args...) = DeepART.paper_results_dir(EXP_TOP, args...)

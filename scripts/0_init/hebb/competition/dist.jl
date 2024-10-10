@@ -34,7 +34,7 @@ DEV = Sys.iswindows()
 # VARIABLES
 # -----------------------------------------------------------------------------
 
-EXP_TOP = "1_baselines_new"
+EXP_TOP = "hebb_competition"
 EXP_NAME = "dist"
 
 N_PROCS = DEV ? 0 : 31
