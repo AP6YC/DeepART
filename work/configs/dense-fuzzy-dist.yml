@@ -1,0 +1,64 @@
+opts_version: 1
+
+n_epochs: 1
+n_vals: 50
+val_epoch: true
+
+model_opts:
+  # immediate: true
+  immediate: false
+
+  layer_norm: true
+
+  bias: false
+  eta: 0.01
+  beta_d: 0.01       # Good one
+
+  final_sigmoid: false
+
+  gpu: false
+
+  # [dense, fuzzy, conv, dense_new, fuzzy_new, conv_new, dense_spec, fuzzy_spec]
+  model: dense_spec
+
+  # [unfold, patchwise]
+  conv_strategy: unfold
+
+  n_neurons: [512, 256]     # 0.88
+  # n_neurons: [512, 256, 128]   # 0.85
+
+  # [hebb, oja, instar, fuzzyart]
+  learning_rule: fuzzyart
+
+  post_synaptic: false
+
+  # [rand32, glorot_uniform]
+  init: rand32
+
+  # [relu, identity, tanh_fast, relu6, sigmoid_fast, celu]
+  middle_activation: relu6
+
+  # positive_weights: true
+  positive_weights: false
+
+  # beta_normalize: false
+  beta_normalize: true
+
+  beta_rule: wta
+
+  sigma: 0.01
+
+  cc: true
+  # cc: false
+
+profile: false
+# profile: true
+
+# [wine, iris, wave, face, flag, halfring, moon, ring, spiral,
+# mnist, fashionmnist, cifar10, cifar100, usps]
+dataset: usps
+
+n_train: 50000
+n_test: 10000
+# flatten: true
+rng_seed: 1235

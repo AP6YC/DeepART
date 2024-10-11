@@ -34,7 +34,7 @@ DEV = Sys.iswindows()
 # VARIABLES
 # -----------------------------------------------------------------------------
 
-EXP_TOP = "hebb_competition"
+EXP_TOP = "hebb_dist"
 EXP_NAME = "dist"
 
 N_PROCS = DEV ? 0 : 31
@@ -53,9 +53,10 @@ sim_params = Dict{String, Any}(
         # "DeepARTDense2",
         # "DeepARTConv2",
         # "SFAM",
-        "DeepARTDense2",
-        "DeepARTConv2",
+        "DeepARTDenseHebb",
+        "DeepARTConvHebb",
         "Oja",
+        "Instar",
         "Contrast",
     ],
     # "rho" => [
@@ -126,7 +127,7 @@ addprocs(N_PROCS, exeflags="--project=.")
 
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
-        "1_baselines_new",
+        "hebb_dist",
         # "sfam",
         # "sweep",
         args...

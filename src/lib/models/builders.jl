@@ -71,9 +71,16 @@ function get_module_from_options(
         )
 
         local_art
-    elseif d["m"] == "DeepARTDense2"
-    elseif d["m"] == "DeepARTConv2"
+    elseif d["m"] == "DeepARTDenseHebb"
+        opts = Hebb.load_opts(config_dir("dense-fuzzy-dist.yml"))
+        model = Hebb.HebbModel(data, opts["model_opts"])
+        model
+    elseif d["m"] == "DeepARTConvHebb"
+        opts = Hebb.load_opts(config_dir("lenet-final-dist.yml"))
+        model = Hebb.HebbModel(data, opts["model_opts"])
+        model
     elseif d["m"] == "Oja"
+    elseif d["m"] == "Instar"
     elseif d["m"] == "Contrast"
     else
         error("Unknown model: $(d["m"])")

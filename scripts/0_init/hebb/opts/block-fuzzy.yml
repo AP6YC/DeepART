@@ -59,8 +59,8 @@ block_opts:
       init: rand32
       post_synaptic: false
       # middle_activation: relu
-      # middle_activation: relu6
-      middle_activation: sigmoid_fast
+      middle_activation: relu6
+      # middle_activation: sigmoid_fast
       immediate: false
       layer_norm: true
       bias: false

@@ -26,6 +26,9 @@ work/**
 # Except for the USPS data folder
 # !work/data/usps/**
 
+# Except the configs
+!work/configs/**
+
 # Override ignore Indoor Scene Recognition dataset
 work/data/indoorCVPR_09/
 

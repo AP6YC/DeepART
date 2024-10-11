@@ -27,10 +27,10 @@ using DataStructures
 
 # Point to the local sweep data directory
 sweep_dir = DeepART.results_dir(
-    "hebb_competition",
+    "hebb_dist",
 )
 
-EXP_TOP = "hebb_competition"
+EXP_TOP = "hebb_dist"
 
 # Point to the destination directories
 paper_out_dir(args...) = DeepART.paper_results_dir(EXP_TOP, args...)
@@ -60,8 +60,11 @@ datasets_list = collect(keys(datasets))
 
 models = Dict(
     "SFAM" => "SFAM",
-    "DeepARTDense" => "MLP \\method",
-    "DeepARTConv" => "CNN \\method",
+    "DeepARTDenseHebb" => "MLP \\method",
+    "DeepARTConvHebb" => "CNN \\method",
+    "Oja" => "Oja",
+    "Instar" => "Instar",
+    "Contrast" => "Contrast",
     # "DeepARTDense" => "\\method (MLP)",
     # "DeepARTConv" => "\\method (CNN)",
     # "DeepARTDense" => "DeepART (MLP)",
