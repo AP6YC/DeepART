@@ -17,6 +17,7 @@ PROJECT_DIR=$HOME/dev/DeepART
 # JULIA_BIN=$HOME/julia
 
 # Date and current folder
+echo --- BEGINNING OF JULIA COMPILE ---
 date
 # ls -la
 
@@ -26,7 +27,7 @@ date
 
 # Run the full experiment from one Julia script
 # $JULIA_BIN $PROJECT_DIR/scripts/0_init/dist_test.jl $N_TASKS
-julia --project=$PROJECT_DIR "using Pkg; Pkg.instantiate()"
+julia --project=$PROJECT_DIR "using Pkg; Pkg.instantiate(); Pkg.precompile();"
 
 # End with echoes
 echo --- END OF JULIA COMPILE ---
