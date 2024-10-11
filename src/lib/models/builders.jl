@@ -5,6 +5,9 @@
 Builders for ART modules from options.
 """
 
+"""
+Dispatcher for the ART module builders using a class-incremental split, build based upon from simply the first task.
+"""
 function get_module_from_options(
     d::AbstractDict,
     data::ClassIncrementalDataSplit,
@@ -15,6 +18,9 @@ function get_module_from_options(
     )
 end
 
+"""
+Dispatcher for building ART modules from options and a supervised dataset.
+"""
 function get_module_from_options(
     d::AbstractDict,
     # data::DataSplit,
