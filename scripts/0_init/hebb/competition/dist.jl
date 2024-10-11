@@ -50,15 +50,20 @@ GPU = false
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        "DeepARTDense",
-        "DeepARTConv",
-        "SFAM",
+        # "DeepARTDense2",
+        # "DeepARTConv2",
+        # "SFAM",
+        "DeepARTDense2",
+        "DeepARTConv2",
+        "Oja",
+        "Contrast",
     ],
-    "rho" => [
-        @onlyif("m" == "SFAM", 0.6),
-        @onlyif("m" == "DeepARTDense", 0.3),
-        @onlyif("m" == "DeepARTConv", 0.3),
-    ],
+    # "rho" => [
+    #     # @onlyif("m" == "SFAM", 0.6),
+    #     @onlyif("m" == "DeepARTDense2", 0.3),
+    #     @onlyif("m" == "DeepARTConv2", 0.3),
+    #     # @onflyif("m")
+    # ],
     "beta_d" => 0.01,
     "beta_s" => 1.0,
     "rng_seed" => collect(1:N_SIMS),
@@ -66,15 +71,15 @@ sim_params = Dict{String, Any}(
     "n_train" => [
         @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 4000),
         @onlyif("m" == "SFAM" && !("dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"]), N_TRAIN),
-        @onlyif("m" == "DeepARTDense", N_TRAIN),
-        @onlyif("m" == "DeepARTConv", N_TRAIN),
+        @onlyif("m" == "DeepARTDense2", N_TRAIN),
+        @onlyif("m" == "DeepARTConv2", N_TRAIN),
     ],
     # "n_test" => N_TEST,
     "n_test" =>[
         @onlyif("m" == "SFAM" && "dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"], 2000),
         @onlyif("m" == "SFAM" && !("dataset" in ["cifar10", "cifar100_fine", "cifar100_coarse"]), N_TEST),
-        @onlyif("m" == "DeepARTDense", N_TEST),
-        @onlyif("m" == "DeepARTConv", N_TEST),
+        @onlyif("m" == "DeepARTDense2", N_TEST),
+        @onlyif("m" == "DeepARTConv2", N_TEST),
     ],
     # "head_dim" => 1024,
     "head_dim" => 784,

@@ -65,6 +65,10 @@ function get_module_from_options(
         )
 
         local_art
+    elseif d["m"] == "DeepARTDense2"
+    elseif d["m"] == "DeepARTConv2"
+    elseif d["m"] == "Oja"
+    elseif d["m"] == "Contrast"
     else
         error("Unknown model: $(d["m"])")
     end
