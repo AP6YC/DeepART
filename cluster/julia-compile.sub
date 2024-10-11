@@ -27,6 +27,10 @@ date
 
 # Run the full experiment from one Julia script
 # $JULIA_BIN $PROJECT_DIR/scripts/0_init/dist_test.jl $N_TASKS
+echo --- Julia bin is at the following: ---
+which julia
+
+echo --- Instantiate and precompile ---
 julia --project=$PROJECT_DIR "using Pkg; Pkg.instantiate(); Pkg.precompile();"
 
 # End with echoes
