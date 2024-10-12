@@ -96,8 +96,10 @@ include("lib/lib.jl")
 # Exported constant for the version of the package
 include("version.jl")
 
-# New work
-include(projectdir("scripts/0_init/hebb/lib/lib.jl"))
+# # New work import
+# include(projectdir("scripts/0_init/hebb/lib/lib.jl"))
+
+# import .Hebb
 
 # -----------------------------------------------------------------------------
 # EXPORTS

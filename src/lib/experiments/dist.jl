@@ -118,7 +118,15 @@ function tt_dist(
     fulld = deepcopy(d)
 
     # Add entries for the results
-    fulld["n_cat"] = art.n_categories
+    # fulld["n_cat"] = art.n_categories
+    # n_cat = if haskey(results, "n_cat")
+    #     results
+    # else
+    #     art.n_cat
+    # end
+    n_cat = get(results, "n_cat", 0)
+    # fulld["n_cat"] = results["n_cat"]
+    fulld["n_cat"] = n_cat
     fulld["perf"] = results["perf"]
     fulld["conf"] = conf
 

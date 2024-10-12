@@ -30,6 +30,12 @@ include("drwatson.jl")
 # Datasets and their utilities
 include("data/lib.jl")
 
+
+# New modules
+include("hebb/lib.jl")
+
+using .Hebb
+
 # Machine learning models and functions
 include("models/lib.jl")
 
@@ -38,6 +44,7 @@ include("utils.jl")
 
 # Plotting functions
 include("plots.jl")
+
 
 # Pluto utils
 # include("pluto.jl")

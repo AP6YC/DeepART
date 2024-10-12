@@ -12,8 +12,8 @@ module Hebb
 # -----------------------------------------------------------------------------
 
 using Revise
-using DeepART
-# using ..DeepART
+# using DeepART
+using ..DeepART
 
 using AdaptiveResonance
 using Flux
@@ -44,6 +44,6 @@ include("loop.jl")
 
 include("blocknet.jl")
 
-include("overloads.jl")
+# include("overloads.jl")
 
 end

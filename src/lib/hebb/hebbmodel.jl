@@ -26,6 +26,19 @@ end
 HebbModel constructor using options and data that the model will be trained on.
 """
 function HebbModel(
+    data::DeepART.SupervisedDataset,
+    opts::ModelOpts,
+)
+    return HebbModel(
+        construct_model(data, opts),
+        opts,
+    )
+end
+
+"""
+HebbModel constructor using options and data that the model will be trained on.
+"""
+function HebbModel(
     data::DeepART.DataSplit,
     opts::ModelOpts,
 )

@@ -79,6 +79,22 @@ function get_loader(
     return loader
 end
 
+function get_loader(
+    # art::CommonARTModule,
+    art::Union{Hebb.HebbModel, Hebb.BlockNet},
+    data::SupervisedDataset,
+)
+    # Create the data loader
+    loader = Flux.DataLoader(data, batchsize=1)
+
+    # If using the gpu, push the data onto it
+    # if art.opts.gpu
+    #     loader = loader |> gpu
+    # end
+
+    return loader
+end
+
 """
 Task-homogenous training loop for a DeepART model.
 
@@ -117,7 +133,7 @@ function basic_train!(
         push!(y_hats, y_hat)
 
         # Update the display iterator
-        out_values = if !(art isa DeepART.FIA)
+        out_values = if !(art isa DeepART.FIA || art isa Hebb.BlockNet || art isa Hebb.HebbModel)
             [(:NCat, art.n_categories)]
         else
             []
@@ -284,7 +300,7 @@ function tt_basic!(
     end
 
     # Compile the final experiment results
-    out_dict = if !(art isa DeepART.FIA)
+    out_dict = if !(art isa DeepART.FIA || art isa Hebb.BlockNet || art isa Hebb.HebbModel)
         Dict(
             "n_cat" => art.n_categories,
             "y_hats" => y_hats,
@@ -327,9 +343,15 @@ function tt_inc!(
     # Compute the performance fromt the test results
     perf = get_perf(data.test, y_hats)
 
+    n_cats = if !(art isa DeepART.FIA || art isa Hebb.BlockNet || art isa Hebb.HebbModel)
+        art.n_categories
+    else
+        0
+    end
+
     # Compile the experiment results
     out_dict = Dict(
-        "n_cat" => art.n_categories,
+        "n_cat" => n_cats,
         "y_hats" => y_hats,
         "perf" => perf,
     )

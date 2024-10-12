@@ -17,7 +17,7 @@ abstract type DeepARTModule end
 """
 Union for functions accepting both [`DeepARTModule`](@ref)s and ART.ARTModules.
 """
-const CommonARTModule = Union{DeepARTModule, ART.ARTModule}
+const CommonARTModule = Union{DeepARTModule, ART.ARTModule, Hebb.BlockNet, Hebb.HebbModel}
 
 # -----------------------------------------------------------------------------
 # DOCSTRINGS
