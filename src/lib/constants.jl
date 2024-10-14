@@ -63,6 +63,9 @@ Aspect ratio correction for heatmap
 """
 const SQUARE_SIZE = 500.0 .* (1.0, 0.87)  # -8Plots.mm
 
+"""
+Inline formatter for percentages in plots.
+"""
 const percentage_formatter = j -> @sprintf("%0.0f%%", 100*j)
 
 const CONDENSED_LINEWIDTH = 2.5

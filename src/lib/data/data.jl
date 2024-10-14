@@ -506,15 +506,36 @@ function get_usps(;
     return dataset
 end
 
+# const HOSTNAME_MAP = Dict(
+#     "SASHA-XPS" => "laptop",
+#     "Sasha-PC" => "pc",
+#     "linux" => "cluster",
+# )
+
+# function get_comp_context()
+#     # Get the current machine's name for dispatch
+#     HOSTNAME = gethostname()
+
+#     context = if Sys.islinux()
+#         HOSTNAME_MAP["linux"]
+#     else
+#         HOSTNAME_MAP[HOSTNAME]
+#     end
+
+#     return context
+# end
+
 """
 Points to the directory containing the Indoor Scene Recognition dataset depending on the host machine.
 """
 function get_isr_dir()
     # Get the current machine's name for dispatch
     HOSTNAME = gethostname()
+    # context = get_comp_context()
 
     # Laptop
     data_dir = if HOSTNAME == "SASHA-XPS"
+    # data_dir = if context == "SASHA-XPS"
         joinpath(
             "C:",
             "Users",
