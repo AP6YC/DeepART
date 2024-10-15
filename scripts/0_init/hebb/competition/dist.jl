@@ -131,6 +131,8 @@ addprocs(N_PROCS, exeflags="--project=.")
     using Revise
     using DeepART
 
+    RERUN = false
+
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
         "hebb_dist",
