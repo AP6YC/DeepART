@@ -53,7 +53,7 @@ sim_params = Dict{String, Any}(
         # "DeepARTDense2",
         # "DeepARTConv2",
         # "SFAM",
-        "DeepARTDenseHebb",
+        # "DeepARTDenseHebb",
         "DeepARTConvHebb",
         # "Oja",
         # "Instar",
