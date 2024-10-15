@@ -6,10 +6,15 @@ function hebb_preprocess(
     # @info (art.opts["model"] == "conv")
     # @info (art.opts["model"] == "conv_new")
     # @info (length(size(x)) == 3)
+    # @info size(x)
+
     local_x = if ((art.opts["model"] == "conv") || (art.opts["model"] == "conv_new")) && (length(size(x)) == 3)
+        reshape(x, size(x)..., 1)
+    elseif ((art.opts["model"] == "conv") || (art.opts["model"] == "conv_new")) && (length(size(x)) == 4)
     # @info art.opts["model"]
     # local_x = if ((art.opts["model"] == "conv") || (art.opts["model"] == "conv_new"))
-        reshape(x, size(x)..., 1)
+        # reshape(x, size(x)..., 1)
+        x
     else
         vec(x)
     end
@@ -25,6 +30,8 @@ function block_preprocess(
     # local_x = if art.layers[1] isa Hebb. && (length(size(x)) == 3)
     local_x = if art.opts["blocks"][1]["model"] == "lenet" && (length(size(x)) == 3)
         reshape(x, size(x)..., 1)
+    elseif art.opts["blocks"][1]["model"] == "lenet" && (length(size(x)) == 4)
+        x
     else
         vec(x)
     end
@@ -42,6 +49,7 @@ function incremental_supervised_train!(
     # @info "inside inc: " size(local_x)
     # y_hat = DeepART.train_hebb(art, x, y)
     # y_hat = Hebb.train_hebb(art, x, y)
+    # @info size(local_x)
     y_hat = argmax(vec(Hebb.train_hebb(art, local_x, y)))
     # return iszero(bmu) ? y_hat : art.head.labels[bmu]
     return y_hat
