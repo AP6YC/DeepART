@@ -340,7 +340,8 @@ function train_hebb(
         end
     end
 
-    return
+    # TODO: out here
+    return outs[end]
 end
 
 function train_hebb_immediate(

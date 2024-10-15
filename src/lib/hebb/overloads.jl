@@ -29,10 +29,10 @@ function incremental_supervised_train!(
     x::RealArray,
     y::Integer,
 )
-    local_x = hebb_preprocess(art, x)
+    local_x = vec(hebb_preprocess(art, x))
     # y_hat = DeepART.train_hebb(art, x, y)
     # y_hat = Hebb.train_hebb(art, x, y)
-    y_hat = Hebb.train_hebb(art, local_x, y)
+    y_hat = argmax(vec(Hebb.train_hebb(art, local_x, y)))
     # return iszero(bmu) ? y_hat : art.head.labels[bmu]
     return y_hat
 end
@@ -45,10 +45,10 @@ function incremental_supervised_train!(
 )
     # y_hat = DeepART.train_hebb(art, x, y)
 
-    local_x = block_preprocess(art, x)
+    local_x = vec(block_preprocess(art, x))
 
     # y_hat = Hebb.train!(art, x, y)
-    y_hat = Hebb.train!(art, local_x, y)
+    y_hat = argmax(vec(Hebb.train!(art, local_x, y)))
     # return iszero(bmu) ? y_hat : art.head.labels[bmu]
     return y_hat
 end
@@ -62,7 +62,7 @@ function incremental_classify(
     local_x = hebb_preprocess(art, x)
 
     # return argmax(art.model.chain(x))
-    return argmax(art.model.chain(local_x))
+    return argmax(vec(art.model.chain(local_x)))
 end
 
 function incremental_classify(
@@ -73,5 +73,6 @@ function incremental_classify(
 
     # return DeepART.classify(art, x, get_bmu=true)
     # return Hebb.forward(art, x)
-    return Hebb.forward(art, local_x)
+    # return Hebb.forward(art, local_x)
+    return argmax(vec(Hebb.forward(art, local_x)))
 end

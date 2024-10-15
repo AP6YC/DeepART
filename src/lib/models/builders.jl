@@ -77,7 +77,7 @@ function get_module_from_options(
         model
     elseif d["m"] == "DeepARTConvHebb"
         # opts = Hebb.load_opts(config_dir("lenet-dist.yml"))
-        opts = Hebb.load_opts(config_dir("conv-fuzzy.yml"))
+        opts = Hebb.load_opts(config_dir("conv-fuzzy-dist.yml"))
         model = Hebb.HebbModel(data, opts["model_opts"])
         model
     elseif d["m"] == "Oja"

@@ -129,6 +129,7 @@ function basic_train!(
         end
         # Train
         y_hat = incremental_supervised_train!(art, xf, cpu(label)[1])
+
         # Push the estimate
         push!(y_hats, y_hat)
 

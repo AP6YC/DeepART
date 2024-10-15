@@ -124,6 +124,6 @@ export
 # -----------------------------------------------------------------------------
 
 # Precompile any concrete-type function signatures
-@precompile_signatures(DeepART)
+# @precompile_signatures(DeepART)
 
 end
