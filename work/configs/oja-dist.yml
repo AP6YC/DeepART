@@ -1,0 +1,78 @@
+opts_version: 1
+
+n_epochs: 1
+n_vals: 50
+val_epoch: true
+
+model_opts:
+  # immediate: true
+  immediate: false
+
+  # layer_norm: true
+  layer_norm: false
+
+  bias: false
+  # bias: true
+
+  eta: 0.01
+  beta_d: 0.01
+
+  final_sigmoid: false
+  # final_sigmoid: true
+
+  gpu: false
+
+  # model: dense
+  # model: small_dense
+  # model: fuzzy
+  # model: conv
+  # model: fuzzy_new
+  # model: dense_new
+  model: dense_spec
+  # model: fuzzy_spec
+  # model: conv_new
+
+  conv_strategy: "unfold"
+  # conv_strategy: "patchwise"
+
+  n_neurons: [512, 256]
+
+  # learning_rule: hebb
+  learning_rule: oja
+  # learning_rule: instar
+  # learning_rule: fuzzyart
+
+  # post_synaptic: true
+  post_synaptic: false
+
+  # init: rand32
+  init: glorot_uniform
+
+  # middle_activation: sigmoid_fast
+  # middle_activation: tanh_fast
+  # middle_activation: relu
+  middle_activation: relu6
+  # middle_activation: celu
+
+  # positive_weights: true
+  positive_weights: false
+
+  beta_normalize: false
+  # beta_normalize: true
+
+  beta_rule: gaussian
+
+  sigma: 0.01
+
+  # cc: true
+  cc: false
+
+profile: false
+# profile: true
+
+dataset: usps
+
+n_train: 50000
+n_test: 10000
+# flatten: true
+rng_seed: 1235

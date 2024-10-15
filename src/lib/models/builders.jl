@@ -81,8 +81,17 @@ function get_module_from_options(
         model = Hebb.HebbModel(data, opts["model_opts"])
         model
     elseif d["m"] == "Oja"
+        opts = Hebb.load_opts(config_dir("oja-dist.yml"))
+        model = Hebb.HebbModel(data, opts["model_opts"])
+        model
     elseif d["m"] == "Instar"
+        opts = Hebb.load_opts(config_dir("instar-dist.yml"))
+        model = Hebb.HebbModel(data, opts["model_opts"])
+        model
     elseif d["m"] == "Contrast"
+        opts = Hebb.load_opts(config_dir("contrast-dist.yml"))
+        model = Hebb.HebbModel(data, opts["model_opts"])
+        model
     else
         error("Unknown model: $(d["m"])")
     end

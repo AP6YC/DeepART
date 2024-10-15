@@ -46,18 +46,18 @@ DISPLAY = DEV
 # GPU = DEV
 # GPU = true
 GPU = false
+# RERUN = true
+RERUN = false
 
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        # "DeepARTDense2",
-        # "DeepARTConv2",
-        # "SFAM",
-        # "DeepARTDenseHebb",
+        "SFAM",
+        "DeepARTDenseHebb",
         "DeepARTConvHebb",
-        # "Oja",
-        # "Instar",
-        # "Contrast",
+        "Oja",
+        "Instar",
+        "Contrast",
     ],
     # "rho" => [
     #     # @onlyif("m" == "SFAM", 0.6),
@@ -86,14 +86,14 @@ sim_params = Dict{String, Any}(
         @onlyif("m" == "DeepARTConvHebb", N_TEST),
         @onlyif("m" == "Oja", N_TEST),
         @onlyif("m" == "Instar", N_TEST),
-        @onlyif("m" == "Constrast", N_TEST),
+        @onlyif("m" == "Contrast", N_TEST),
     ],
     # "head_dim" => 1024,
     "head_dim" => 784,
     "dataset" => [
-        # "mnist",
-        # "fashionmnist",
-        # "cifar10",
+        "mnist",
+        "fashionmnist",
+        "cifar10",
         # "cifar100_fine",
         # "cifar100_coarse",
         "usps",
@@ -146,6 +146,7 @@ addprocs(N_PROCS, exeflags="--project=.")
     local_sim(sim_dict) = DeepART.tt_dist(
         sim_dict,
         sweep_results_dir,
+        rerun=RERUN,
     )
 end
 
@@ -155,6 +156,13 @@ end
 
 # Log the simulation scale
 @info "1_baselines: $(dict_list_count(sim_params)) simulations across $(nprocs())."
+
+if RERUN
+    @warn "--- RERUNNING ALL SIMULATIONS ---"
+else
+    @warn "--- SKIPPING EXISTING SIMULATIONS ---"
+end
+
 
 # Turn the dictionary of lists into a list of dictionaries
 dicts = dict_list(sim_params)

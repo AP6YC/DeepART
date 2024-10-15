@@ -5,15 +5,9 @@
 Distributed experiment drivers.
 """
 
-"""
-Common save function for simulations.
-
-# Arguments
-"""
-function save_sim(
-    dir_func::Function,
+function get_sim_name(
     d::AbstractDict,
-    fulld::AbstractDict,
+    dir_func::Function,
 )
     # Point to the correct save file for the results dictionary
     sim_save_name = dir_func(savename(
@@ -26,6 +20,31 @@ function save_sim(
         #     "m",
         ],
     ))
+    return sim_save_name
+end
+
+"""
+Common save function for simulations.
+
+# Arguments
+"""
+function save_sim(
+    dir_func::Function,
+    d::AbstractDict,
+    fulld::AbstractDict,
+)
+    # # Point to the correct save file for the results dictionary
+    # sim_save_name = dir_func(savename(
+    #     d,
+    #     "jld2";
+    #     # digits=4,
+    #     ignores=[
+    #         "display",
+    #     #     "rng_seed",
+    #     #     "m",
+    #     ],
+    # ))
+    sim_save_name = get_sim_name(d, dir_func)
 
     # Log completion of the simulation
     # @info "Worker $(myid()): saving to $(sim_save_name)"
@@ -71,11 +90,21 @@ Trains and classifies a START module on the provided statements.
 function tt_dist(
     d::AbstractDict,
     # data::DataSplit,
-    dir_func::Function,
+    dir_func::Function;
     # opts::AbstractDict,
+    rerun::Bool=true
 )
     # Initialize the random seed at the beginning of the experiment
     Random.seed!(d["rng_seed"])
+
+    # Idempotent check for sim
+    if !rerun
+        sim_save_name = get_sim_name(d, dir_func)
+        if isfile(sim_save_name)
+            @warn "Simulation $(sim_save_name) already exists. Skipping."
+            return
+        end
+    end
 
     # Load the dataset with the provided options
     isconv = (d["m"] == "DeepARTConv") || (d["m"] == "DeepARTConvHebb")
