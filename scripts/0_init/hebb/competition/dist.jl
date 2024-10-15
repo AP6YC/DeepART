@@ -59,12 +59,12 @@ sim_params = Dict{String, Any}(
         "Instar",
         "Contrast",
     ],
-    # "rho" => [
-    #     # @onlyif("m" == "SFAM", 0.6),
-    #     @onlyif("m" == "DeepARTDense2", 0.3),
-    #     @onlyif("m" == "DeepARTConv2", 0.3),
-    #     # @onflyif("m")
-    # ],
+    "rho" => [
+        @onlyif("m" == "SFAM", 0.6),
+        # @onlyif("m" == "DeepARTDense2", 0.3),
+        # @onlyif("m" == "DeepARTConv2", 0.3),
+        # @onflyif("m")
+    ],
     "beta_d" => 0.01,
     "beta_s" => 1.0,
     "rng_seed" => collect(1:N_SIMS),
