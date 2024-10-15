@@ -44,6 +44,6 @@ include("loop.jl")
 
 include("blocknet.jl")
 
-# include("overloads.jl")
+include("overloads.jl")
 
 end

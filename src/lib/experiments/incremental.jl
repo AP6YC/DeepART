@@ -122,48 +122,48 @@ function incremental_classify(
     return DeepART.classify(art, x, get_bmu=true)
 end
 
-function incremental_supervised_train!(
-    art::Hebb.HebbModel,
-    x::RealArray,
-    y::Integer,
-)
-    # @info art x y
-    # @info art.model.chain[1]
+# function incremental_supervised_train!(
+#     art::Hebb.HebbModel,
+#     x::RealArray,
+#     y::Integer,
+# )
+#     # @info art x y
+#     # @info art.model.chain[1]
 
-    # @info argmax(vec(art.model.chain(x)))
-    # y_hat = DeepART.train_hebb(art, x, y)
-    y_hat = Hebb.train_hebb(art, vec(x), y)
-    # y_hat = Hebb.train_hebb(art, vec(x), y)
-    # return iszero(bmu) ? y_hat : art.head.labels[bmu]
-    return y
-end
+#     # @info argmax(vec(art.model.chain(x)))
+#     # y_hat = DeepART.train_hebb(art, x, y)
+#     y_hat = Hebb.train_hebb(art, vec(x), y)
+#     # y_hat = Hebb.train_hebb(art, vec(x), y)
+#     # return iszero(bmu) ? y_hat : art.head.labels[bmu]
+#     return y
+# end
 
-# Hebb
+# # Hebb
 
-function incremental_supervised_train!(
-    art::Hebb.BlockNet,
-    x::RealArray,
-    y::Integer,
-)
-    # y_hat = DeepART.train_hebb(art, x, y)
-    y_hat = Hebb.train!(art, x, y)
-    # return iszero(bmu) ? y_hat : art.head.labels[bmu]
-    return y_hat
-end
+# function incremental_supervised_train!(
+#     art::Hebb.BlockNet,
+#     x::RealArray,
+#     y::Integer,
+# )
+#     # y_hat = DeepART.train_hebb(art, x, y)
+#     y_hat = Hebb.train!(art, x, y)
+#     # return iszero(bmu) ? y_hat : art.head.labels[bmu]
+#     return y_hat
+# end
 
 
-function incremental_classify(
-    art::Hebb.HebbModel,
-    x::RealArray,
-)
-    # return DeepART.classify(art, x, get_bmu=true)
-    return argmax(vec(art.model.chain(x)))
-end
+# function incremental_classify(
+#     art::Hebb.HebbModel,
+#     x::RealArray,
+# )
+#     # return DeepART.classify(art, x, get_bmu=true)
+#     return argmax(vec(art.model.chain(x)))
+# end
 
-function incremental_classify(
-    art::Hebb.BlockNet,
-    x::RealArray,
-)
-    # return DeepART.classify(art, x, get_bmu=true)
-    return Hebb.forward(art, x)
-end
+# function incremental_classify(
+#     art::Hebb.BlockNet,
+#     x::RealArray,
+# )
+#     # return DeepART.classify(art, x, get_bmu=true)
+#     return Hebb.forward(art, x)
+# end

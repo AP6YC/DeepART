@@ -52,5 +52,8 @@ include("plots.jl")
 # Experiment driver files that aggregate these tools
 include("experiments/lib.jl")
 
+# PATCH: put hebb overloads after experiment definitions
+include("hebb/overloads.jl")
+
 # L2 definitions
 include("l2/lib.jl")

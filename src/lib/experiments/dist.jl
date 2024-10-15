@@ -78,10 +78,10 @@ function tt_dist(
     Random.seed!(d["rng_seed"])
 
     # Load the dataset with the provided options
-    isconv = !(d["m"] == "DeepARTConv")
+    isconv = (d["m"] == "DeepARTConv") || (d["m"] == "DeepARTConvHebb")
     data = load_one_dataset(
         d["dataset"],
-        flatten=isconv,
+        flatten=!isconv,
         gray=true,
         n_train=d["n_train"],
         n_test=d["n_test"],
