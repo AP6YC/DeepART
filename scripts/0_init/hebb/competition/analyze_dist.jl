@@ -30,7 +30,7 @@ sweep_dir = DeepART.results_dir(
     "hebb_dist",
 )
 
-EXP_TOP = "hebb_dist"
+EXP_TOP = "hebb_dist_analyze"
 
 # Point to the destination directories
 paper_out_dir(args...) = DeepART.paper_results_dir(EXP_TOP, args...)
@@ -141,8 +141,8 @@ function gen_tex_table(symb, filename, acc)
     return
 end
 
-gen_tex_table(:perf, "basic.tex", 4)
-gen_tex_table(:n_cat, "cats.tex", 1)
+gen_tex_table(:perf, "basic_hebb.tex", 4)
+gen_tex_table(:n_cat, "cats_hebb.tex", 1)
 
 # -----------------------------------------------------------------------------
 # CONFUSION
