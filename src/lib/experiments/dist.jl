@@ -107,7 +107,7 @@ function tt_dist(
     end
 
     # Load the dataset with the provided options
-    isconv = (d["m"] == "DeepARTConv") || (d["m"] == "DeepARTConvHebb")
+    isconv = (d["m"] == "DeepARTConv") || (d["m"] == "DeepARTConvHebb") || (d["m"] == "DeepARTConvBlock")
     data = load_one_dataset(
         d["dataset"],
         flatten=!isconv,

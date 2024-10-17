@@ -83,12 +83,12 @@ function get_module_from_options(
     elseif d["m"] == "DeepARTDenseBlock"
         # opts = Hebb.load_opts(config_dir("dense-fuzzy-dist.yml"))
         opts = Hebb.load_opts(config_dir("block-fuzzy-dist.yml"))
-        model = Hebb.HebbModel(data, opts["model_opts"])
+        model = Hebb.BlockNet(data, opts["block_opts"])
         model
     elseif d["m"] == "DeepARTConvBlock"
         # opts = Hebb.load_opts(config_dir("lenet-dist.yml"))
         opts = Hebb.load_opts(config_dir("block-conv-dist.yml"))
-        model = Hebb.HebbModel(data, opts["model_opts"])
+        model = Hebb.BlockNet(data, opts["block_opts"])
         model
     elseif d["m"] == "Oja"
         opts = Hebb.load_opts(config_dir("oja-dist.yml"))

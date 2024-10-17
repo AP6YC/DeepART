@@ -51,6 +51,7 @@ Sample getter for a matrix, determining convention depending on the array dimens
 """
 function get_sample(mat::AbstractArray, index::Integer)
     # return mat[:, index]
+    # @info size(mat)
     sample = if ndims(mat) == 4
         reshape(mat[:, :, :, index], size(mat)[1:3]..., 1)
     else

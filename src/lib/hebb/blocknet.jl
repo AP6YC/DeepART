@@ -800,17 +800,101 @@ struct BlockNet
     opts::SimOpts
 end
 
+# """
+# BlockNet constructor.
+# """
+# function BlockNet(
+#     data::DeepART.DataSplit,
+#     opts::SimOpts,
+# )
+
+#     dev_x, _ = data.train[1]
+#     n_input = size(dev_x)[1]
+#     n_class = length(unique(data.train.y))
+
+#     blocks = Vector{Block}()
+#     out_sizes = []
+#     outs = OutsVector()
+
+#     for block_opts in opts["blocks"]
+
+#         is_conv = block_opts["model"] in ["conv", "lenet"]
+
+#         # If this is the first layer
+#         if block_opts["index"] == 1
+#             # If the convolutional model is selected, create a convolution input tuple
+#             local_n_inputs = if is_conv
+#                 (size(data.train.x)[1:3]..., 1)
+#             else
+#                 n_input
+#             end
+#             # push!(outs, zeros(Float32, local_n_inputs))
+#         # Otherwise, get the size of the previous layer(s)
+#         else
+#             # Get the combined sizes of the previous layers
+#             local_n_inputs = if (length(block_opts["inputs"]) > 1)
+#                 sum([out_sizes[ix] for ix in block_opts["inputs"]])
+#             # Otherwise, get the size of the single previous layer
+#             else
+#                 # previous_size[1]
+#                 out_sizes[block_opts["inputs"]]
+#             end
+#         end
+
+#         # If the last layer, set the number of outputs to the number of classes
+#         local_n_outputs = if (block_opts["index"] == length(opts["blocks"]))
+#             n_class
+#         else
+#             0
+#         end
+
+#         # Generate the block
+#         local_block = BLOCK_FUNC_MAP[block_opts["model"]](
+#             block_opts,
+#             n_inputs=local_n_inputs,
+#             n_outputs=local_n_outputs,
+#         )
+
+#         # local_output = local_block.opts["n_neurons"][end]
+#         test_size = is_conv ? local_n_inputs : (local_n_inputs,)
+
+#         # Correction for the ouptut shape for ART module blocks
+#         if local_block isa ARTBlock
+#             block_out_size = n_class
+#         # Otherwise, get the output size from the model
+#         else
+#             block_out_size = Flux.outputsize(
+#                 local_block.chain,
+#                 test_size
+#             )[1]
+#         end
+
+#         # Append the blocks and metadata
+#         push!(blocks, local_block)
+#         push!(out_sizes, block_out_size)
+#         push!(outs, zeros(Float32, block_out_size))
+#     end
+
+#     return BlockNet(
+#         blocks,
+#         outs,
+#         opts,
+#     )
+# end
+
+
 """
 BlockNet constructor.
 """
 function BlockNet(
-    data::DeepART.DataSplit,
+    data::DeepART.SupervisedDataset,
     opts::SimOpts,
 )
-
-    dev_x, _ = data.train[1]
+    # dev_x, _ = data.train[1]
+    dev_x = DeepART.get_sample(data, 1)
     n_input = size(dev_x)[1]
-    n_class = length(unique(data.train.y))
+    # n_class = length(unique(data.train.y))
+    n_class = length(unique(data.y))
 
     blocks = Vector{Block}()
     out_sizes = []
@@ -824,7 +908,10 @@ function BlockNet(
         if block_opts["index"] == 1
             # If the convolutional model is selected, create a convolution input tuple
             local_n_inputs = if is_conv
-                (size(data.train.x)[1:3]..., 1)
+                # (size(data.train.x)[1:3]..., 1)
+                (size(data.x)[1:3]..., 1)
+                # (size(dev_x)..., 1)
+                # size(dev_x)
             else
                 n_input
             end
@@ -878,6 +965,19 @@ function BlockNet(
     return BlockNet(
         blocks,
         outs,
+        opts,
+    )
+end
+
+"""
+BlockNet constructor.
+"""
+function BlockNet(
+    data::DeepART.DataSplit,
+    opts::SimOpts,
+)
+    return BlockNet(
+        data.train,
         opts,
     )
 end
