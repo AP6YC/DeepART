@@ -112,6 +112,7 @@ function tt_dist(
         d["dataset"],
         flatten=!isconv,
         gray=true,
+        # gray=!isconv,
         n_train=d["n_train"],
         n_test=d["n_test"],
     )

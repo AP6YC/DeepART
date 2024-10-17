@@ -47,6 +47,8 @@ end
 
 # Inlude the local package
 using DeepART
+using DeepART.Hebb
+# using .Hebb
 
 # using JSON
 if haskey(ENV, "DOCSARGS")
@@ -138,6 +140,7 @@ makedocs(
     ],
     modules = [DeepART],
     repo = "https://github.com/AP6YC/DeepART/blob/{commit}{path}#L{line}",
+    checkdocs=:exports,
 )
 
 # Documenter can also automatically deploy documentation to gh-pages.

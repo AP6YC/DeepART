@@ -109,6 +109,9 @@ export
     # Constants
     DEEPART_VERSION
 
+    # Modules
+    # Hebb
+
     # Configs
     # NumConfig,
     # OptConfig,

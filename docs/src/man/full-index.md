@@ -10,7 +10,7 @@ This section enumerates the names exported by the package, each of which links t
 
 ```@index
 Pages   = ["full-index.md"]
-Modules = [DeepART]
+Modules = [DeepART, ]
 Order = [:module]
 ```
 
@@ -18,7 +18,7 @@ Order = [:module]
 
 ```@index
 Pages   = ["full-index.md"]
-Modules = [DeepART]
+Modules = [DeepART, ]
 Order = [:function]
 ```
 
@@ -26,7 +26,7 @@ Order = [:function]
 
 ```@index
 Pages   = ["full-index.md"]
-Modules = [DeepART]
+Modules = [DeepART, ]
 Order = [:type]
 ```
 
@@ -34,7 +34,7 @@ Order = [:type]
 
 ```@index
 Pages   = ["full-index.md"]
-Modules = [DeepART]
+Modules = [DeepART, ]
 Order = [:constant]
 ```
 
@@ -45,7 +45,7 @@ This section lists the documentation for every exported name of the `DeepART` pa
 ### [Modules](@id index-modules-docs)
 
 ```@autodocs
-Modules = [DeepART]
+Modules = [DeepART, ]
 Private = false
 Order = [:module]
 ```
@@ -53,7 +53,7 @@ Order = [:module]
 ### [Functions](@id index-functions-docs)
 
 ```@autodocs
-Modules = [DeepART]
+Modules = [DeepART, ]
 Private = false
 Order = [:function]
 ```
@@ -61,7 +61,7 @@ Order = [:function]
 ### [Types](@id index-types-docs)
 
 ```@autodocs
-Modules = [DeepART]
+Modules = [DeepART, ]
 Private = false
 Order = [:type]
 ```
@@ -69,7 +69,7 @@ Order = [:type]
 ### [Constants](@id index-constants-docs)
 
 ```@autodocs
-Modules = [DeepART]
+Modules = [DeepART, ]
 Private = false
 Order = [:constant]
 ```

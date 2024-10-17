@@ -37,14 +37,14 @@ LogLevel(Logging.Info)
     N_TEST = 100
 
     # Load one dataset from the selection
+    isconv = true
     data = DeepART.load_one_dataset(
         DATASET,
+        flatten=!isconv,
+        gray=true,
         n_train=N_TRAIN,
         n_test=N_TEST,
     )
-
-    # Check that we can flatten the dataset for training dense networks
-    fdata = DeepART.flatty(data)
 end
 
 

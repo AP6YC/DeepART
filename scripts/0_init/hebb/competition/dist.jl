@@ -52,20 +52,19 @@ RERUN = false
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        # "SFAM",
-        # "DeepARTDenseHebb",
-        # "DeepARTConvHebb",
-        # "DeepARTDenseBlock",
+        "SFAM",
+        "DeepARTDenseHebb",
+        "DeepARTConvHebb",
+        "DeepARTDenseBlock",
         "DeepARTConvBlock",
-        # "Oja",
-        # "Instar",
-        # "Contrast",
+        "Oja",
+        "Instar",
+        "Contrast",
     ],
     "rho" => [
         @onlyif("m" == "SFAM", 0.6),
         # @onlyif("m" == "DeepARTDense2", 0.3),
         # @onlyif("m" == "DeepARTConv2", 0.3),
-        # @onflyif("m")
     ],
     "beta_d" => 0.01,
     "beta_s" => 1.0,
@@ -83,13 +82,6 @@ sim_params = Dict{String, Any}(
             "Instar",
             "Contrast",
         ], N_TRAIN),
-        # @onlyif("m" == "DeepARTDenseHebb", N_TRAIN),
-        # @onlyif("m" == "DeepARTConvHebb", N_TRAIN),
-        # @onlyif("m" == "DeepARTDenseBlock", N_TRAIN),
-        # @onlyif("m" == "DeepARTConvBlock", N_TRAIN),
-        # @onlyif("m" == "Oja", N_TRAIN),
-        # @onlyif("m" == "Instar", N_TRAIN),
-        # @onlyif("m" == "Contrast", N_TRAIN),
     ],
     # "n_test" => N_TEST,
     "n_test" =>[

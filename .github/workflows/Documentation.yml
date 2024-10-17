@@ -24,7 +24,7 @@ jobs:
       # Setup Julia
       - uses: julia-actions/setup-julia@latest
         with:
-          version: '1.10'
+          version: '1.11'
 
       # Cache Julia artifacts for faster workflow runs
       - uses: julia-actions/cache@v2
