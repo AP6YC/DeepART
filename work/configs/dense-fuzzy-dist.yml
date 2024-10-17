@@ -44,6 +44,7 @@ model_opts:
   # beta_normalize: false
   beta_normalize: true
 
+  # [wta, wta-norm, gaussian, softmax]
   beta_rule: wta
 
   sigma: 0.01

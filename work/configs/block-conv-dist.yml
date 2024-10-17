@@ -2,13 +2,9 @@ opts_version: 2
 
 sim_opts:
   n_epochs: 1
-  # n_epochs: 2
-  # n_vals: 50
-  # n_vals: 25
-  n_vals: 10
+  n_vals: 50
   val_epoch: true
   rng_seed: 1234
-  # dataset: cifar10
   dataset: usps
   n_train: 50000
   n_test: 10000
@@ -32,58 +28,49 @@ block_opts:
     #   beta_rule: gaussian
     #   learning_rule: fuzzyart
 
-    # - index: 1
-    #   inputs: 0
-    #   model: conv
-    #   cc: true
-    #   positive_weights: false
-    #   conv_strategy: patchwise
-    #   sigma: 0.01
-    #   init: rand32
-    #   middle_activation: relu
-    #   layer_norm: true
-    #   post_synaptic: false
-    #   immediate: false
-    #   bias: false
-    #   beta_d: 0.01
-    #   # n_neurons: [16, 64]
-    #   # beta_rule: gaussian
-    #   beta_rule: wta
-    #   learning_rule: fuzzyart
-
     - index: 1
       inputs: 0
-      model: fuzzy
-      # model: dense
+      # model: conv
+      model: lenet
+      cc: true
+      positive_weights: false
+      conv_strategy: patchwise
+      sigma: 0.01
+      init: rand32
+      middle_activation: relu6
+      # middle_activation: sigmoid_fast
+      layer_norm: true
+      post_synaptic: false
+      immediate: false
+      bias: false
+      beta_d: 0.001
+      # n_neurons: [16, 64]
+      # beta_rule: gaussian
+      beta_rule: wta
+      learning_rule: fuzzyart
+
+    - index: 2
+      inputs: 1
+      model: dense
       cc: true
       positive_weights: false
       init: rand32
       post_synaptic: false
-      # middle_activation: relu
       middle_activation: relu6
       # middle_activation: sigmoid_fast
       immediate: false
       layer_norm: true
       bias: false
-      # beta_d: 0.001
-      # beta_d: 0.1
       # beta_d: 0.01
-      # beta_d: 0.5
-      beta_d: 1.0
-      # beta_d: 0.0
-      n_neurons: [512, 256]
-      # n_neurons: [16, 64, 32]   # Good for visualizing USPS
+      beta_d: 0.001
+      n_neurons: [84,]
       learning_rule: fuzzyart
       beta_rule: wta-norm
-      # beta_rule: wta
-      # beta_rule: gaussian
-      # beta_rule: softmax
-      sigma: 0.01
       beta_normalize: true
 
-    # - index: 2
-    #   inputs: 1
-    #   model: fuzzy
+    # - index: 3
+    #   inputs: 2
+    #   model: dense
     #   cc: true
     #   positive_weights: false
     #   init: rand32
@@ -92,16 +79,31 @@ block_opts:
     #   immediate: false
     #   layer_norm: true
     #   bias: false
-    #   # beta_d: 0.01
     #   beta_d: 0.1
-    #   # n_neurons: [32, 64]
+    #   # n_neurons: [256,]
+    #   # n_neurons: [128,]
     #   n_neurons: [64,]
-    #   # n_neurons: [512, 256]
     #   learning_rule: fuzzyart
     #   beta_rule: wta
-    #   # beta_rule: gaussian
-    #   # beta_rule: softmax
-    #   sigma: 0.01
+    #   beta_normalize: true
+
+    # - index: 3
+    #   inputs: 2
+    #   model: dense
+    #   cc: true
+    #   positive_weights: false
+    #   init: rand32
+    #   post_synaptic: false
+    #   middle_activation: relu
+    #   immediate: false
+    #   layer_norm: true
+    #   bias: false
+    #   beta_d: 0.05
+    #   # n_neurons: [256,]
+    #   # n_neurons: [128,]
+    #   n_neurons: [64,]
+    #   learning_rule: fuzzyart
+    #   beta_rule: wta
     #   beta_normalize: true
 
     # - index: 2
@@ -138,19 +140,14 @@ block_opts:
     #   bias: false
     #   eta: 0.01
 
-    # - index: 3
-    - index: 2
-      inputs: 1
-      # inputs: [1, 2]
-      # inputs: 2
+    # - index: 4
+    - index: 3
+      # inputs: [1, 2, 3,]
+      # inputs: [1, 2,]
+      inputs: 2
       model: fuzzyartmap
-      # rho: 0.75
-      # rho: 0.4
-      rho: 0.2
-      # rho: 0.9
-      # beta_s: 1.0
-      # beta_s: 0.1
-      beta_s: 0.2
+      rho: 0.4
+      beta_s: 0.01
       # final_sigmoid: false
       # # cc: false
       # positive_weights: false
