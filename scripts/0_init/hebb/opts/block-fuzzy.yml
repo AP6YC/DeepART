@@ -9,7 +9,8 @@ sim_opts:
   val_epoch: true
   rng_seed: 1234
   # dataset: cifar10
-  dataset: usps
+  # dataset: usps
+  dataset: mnist
   n_train: 50000
   n_test: 10000
 

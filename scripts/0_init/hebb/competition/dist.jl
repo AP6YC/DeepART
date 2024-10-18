@@ -52,11 +52,11 @@ RERUN = false
 # Set the simulation parameters
 sim_params = Dict{String, Any}(
     "m" => [
-        "SFAM",
-        "DeepARTDenseHebb",
-        "DeepARTConvHebb",
-        "DeepARTDenseBlock",
-        "DeepARTConvBlock",
+        # "SFAM",
+        # "DeepARTDenseHebb",
+        # "DeepARTConvHebb",
+        # "DeepARTDenseBlock",
+        # "DeepARTConvBlock",
         "Oja",
         "Instar",
         "Contrast",
@@ -100,12 +100,12 @@ sim_params = Dict{String, Any}(
     # "head_dim" => 1024,
     "head_dim" => 784,
     "dataset" => [
-        "mnist",
+        # "mnist",
         "fashionmnist",
-        "cifar10",
+        # "cifar10",
+        # "usps",
         # "cifar100_fine",
         # "cifar100_coarse",
-        "usps",
     ],
     "display" => DISPLAY,
     "gpu" => GPU,
@@ -140,7 +140,7 @@ addprocs(N_PROCS, exeflags="--project=.")
     using Revise
     using DeepART
 
-    RERUN = false
+    @eval RERUN = $RERUN
 
     # Point to the sweep results
     sweep_results_dir(args...) = DeepART.results_dir(
