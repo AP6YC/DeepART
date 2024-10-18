@@ -49,9 +49,9 @@ model_opts:
   init: glorot_uniform
 
   # middle_activation: sigmoid_fast
-  # middle_activation: tanh_fast
+  middle_activation: tanh_fast
   # middle_activation: relu
-  middle_activation: relu6
+  # middle_activation: relu6
   # middle_activation: celu
 
   # positive_weights: true

@@ -96,7 +96,7 @@ display(Hebb.view_weight_grid_spaced(model, 4, 4, layer=1))
 
 using Images
 a = Hebb.view_weight_grid(model, 4, layer=1)
-im_name = "kernel_weights.png"
+# im_name = "kernel_weights_2.png"
 
 # save(DeepART.paper_results_dir(im_name), a)
 # save(DeepART.results_dir(im_name), a)
@@ -119,7 +119,7 @@ im_name = "kernel_weights.png"
 #     EXP_TOP,
 # )
 
-# a = Hebb.view_weight_grid(model, n_preview, layer=1)
+a = Hebb.view_weight_grid(model, n_preview, layer=1)
 
 # new_weights = deepcopy(model.layers[2].chain[1][2].weight)
 
