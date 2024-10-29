@@ -250,7 +250,9 @@ function _sanitize_opts_v2!(opts::SimOpts)
     end
 end
 
-function load_opts(name::AbstractString)::SimOpts
+function load_opts(
+    name::AbstractString,
+)::SimOpts
     # Load the options
     opts = YAML.load_file(
         # joinpath(@__FILE__, "..", "..", "opts", name);
