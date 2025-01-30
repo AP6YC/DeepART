@@ -34,6 +34,7 @@ using
     Colors,
     Combinatorics,
     CUDA,
+    # cuDNN,
     DataFrames,
     DataStructures,
     DrWatson,
@@ -126,7 +127,7 @@ export
 # PRECOMPILE
 # -----------------------------------------------------------------------------
 
-# Precompile any concrete-type function signatures
-@precompile_signatures(DeepART)
+# # Precompile any concrete-type function signatures
+# @precompile_signatures(DeepART)
 
 end
