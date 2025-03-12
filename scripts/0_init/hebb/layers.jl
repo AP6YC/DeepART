@@ -73,7 +73,7 @@ for ix = 0:n_ext
             n_epochs = opts["sim_opts"]["n_epochs"],
             n_vals = opts["sim_opts"]["n_vals"],
             val_epoch = opts["sim_opts"]["val_epoch"],
-            toshow=false,
+            toshow=true,
         )
 
         perf = vals[end]
