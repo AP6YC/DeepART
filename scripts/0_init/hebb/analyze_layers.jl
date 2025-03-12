@@ -39,6 +39,8 @@ df = collect_results!(outdir())
 
 perfs = groupby(df, :rng)
 
-perfs2 = [copy(perfsi[!, :perf]) for perfsi in perfs]
+perfs2 = [Vector{Float32}(perfsi[!, :perf]) for perfsi in perfs]
 
-# errorline(1:5, perfs2)
+n_perfs = length(perfs2)
+reduce(hcat, perfs2)'
+errorline(1:n_perfs, perfs2)
