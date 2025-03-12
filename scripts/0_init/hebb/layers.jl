@@ -39,7 +39,7 @@ addprocs(16)
     outdir(args...) = DeepART.results_dir("layers", args...)
     mkpath(outdir())
 
-    n_ext = 5
+    n_ext = 8
     n_rand = 25
 end
 
@@ -47,6 +47,19 @@ end
 
 for ix = 0:n_ext
     @distributed for rn_x = 1:n_rand
+
+        # Construct the savename
+        d = Dict(
+            "ix" => ix,
+            "rng" => rn_x,
+        )
+        local_savename = outdir(DrWatson.savename(d, "jld2"))
+
+        # Skip if there is already a file
+        if local_savename.isfile()
+            continue
+        end
+
         @info "------- Setting options -------"
         # opts = Hebb.load_opts("block-fuzzy.yml")
         opts = Hebb.load_opts("block-fuzzy-wh.yml")
@@ -78,18 +91,13 @@ for ix = 0:n_ext
 
         perf = vals[end]
 
-        d = Dict(
-            "ix" => ix,
-            "rng" => rn_x,
-        )
         dout = Dict(
             "ix" => ix,
             "rng" => rn_x,
             "perf" => perf,
             "vals" => vals,
         )
-        saver = outdir(DrWatson.savename(d, "jld2"))
-        DrWatson.tagsave(saver, dout)
+        DrWatson.tagsave(local_savename, dout)
         # DrWatson.safesave(saver, dout)
     end
 end
