@@ -36,21 +36,17 @@ addprocs(10)
 
     n_add = 128
 
-
     outdir(args...) = DeepART.results_dir("layers", args...)
     mkpath(outdir())
 
     n_ext = 5
     n_rand = 25
-
 end
 
 
 
 for ix = 0:n_ext
     @distributed for rn_x = 1:n_rand
-        Random.seed!(rn_x)
-
         @info "------- Setting options -------"
         # opts = Hebb.load_opts("block-fuzzy.yml")
         opts = Hebb.load_opts("block-fuzzy-wh.yml")
@@ -63,6 +59,7 @@ for ix = 0:n_ext
         @info opts["block_opts"]["blocks"][1]["n_neurons"]
 
         @info "------- Options post-processing -------"
+        opts["sim_opts"]["rng_seed"] = rn_x
         Hebb.set_seed!(opts)
 
         @info "------- Loading dataset -------"
@@ -76,6 +73,7 @@ for ix = 0:n_ext
             n_epochs = opts["sim_opts"]["n_epochs"],
             n_vals = opts["sim_opts"]["n_vals"],
             val_epoch = opts["sim_opts"]["val_epoch"],
+            toshow=false,
         )
 
         perf = vals[end]
