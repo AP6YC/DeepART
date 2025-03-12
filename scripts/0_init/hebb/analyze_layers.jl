@@ -45,8 +45,14 @@ perfs2 = [Vector{Float32}(perfsi[!, :perf]) for perfsi in perfs]
 perfs_plot = reduce(hcat, perfs2)'
 n_perfs = size(perfs_plot)[2]
 # p = errorline(1:n_perfs, perfs_plot)
+ticks = 3:1:n_perfs+2
 p = errorline(
-    1:n_perfs,
+    # 1:n_perfs,
+    # 3:n_perfs+2,
+    ticks,
+    xticks=ticks,
+    xlabel="Network Depth",
+    ylabel="Testing Accuracy",
     perfs_plot,
     errorstyle=:stick,
     label="Stick",

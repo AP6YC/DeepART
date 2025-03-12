@@ -43,8 +43,9 @@ addprocs(16)
     n_rand = 25
 end
 
+datasets = ["usps", "mnist", "fashionmnist"]
 
-
+for dataset in datasets
 for ix = 0:n_ext
     @distributed for rn_x = 1:n_rand
 
@@ -52,6 +53,7 @@ for ix = 0:n_ext
         d = Dict(
             "ix" => ix,
             "rng" => rn_x,
+            "data" => dataset
         )
         local_savename = outdir(DrWatson.savename(d, "jld2"))
 
@@ -62,9 +64,11 @@ for ix = 0:n_ext
         end
 
         @info "------- Setting options -------"
-        # opts = Hebb.load_opts("block-fuzzy.yml")
+        # Load the options
         opts = Hebb.load_opts("block-fuzzy-wh.yml")
+        # opts = Hebb.load_opts("block-fuzzy.yml")
 
+        # Extend the network
         if ix > 0
             for jx = 1:ix
                 push!(opts["block_opts"]["blocks"][1]["n_neurons"], n_add)
@@ -72,15 +76,21 @@ for ix = 0:n_ext
         end
         @info opts["block_opts"]["blocks"][1]["n_neurons"]
 
-        @info "------- Options post-processing -------"
+        # Update the dataset
+        opts["sim_opts"]["dataset"] = dataset
+
+        # Update the random seed
         opts["sim_opts"]["rng_seed"] = rn_x
         Hebb.set_seed!(opts)
 
-        @info "------- Loading dataset -------"
+        # @info "------- Loading dataset -------"
+        # Load the dataset
         data = Hebb.get_data(opts)
 
+        # Create the network
         model = Hebb.BlockNet(data, opts["block_opts"])
 
+        # Train/test
         vals = Hebb.train_loop(
             model,
             data,
@@ -90,17 +100,19 @@ for ix = 0:n_ext
             toshow=true,
         )
 
+        # Extract results
         perf = vals[end]
 
         dout = Dict(
-            "ix" => ix,
-            "rng" => rn_x,
             "perf" => perf,
             "vals" => vals,
         )
-        DrWatson.tagsave(local_savename, dout)
+        dsave = merge(d, dout)
+
+        DrWatson.tagsave(local_savename, dsave)
         # DrWatson.safesave(saver, dout)
     end
+end
 end
 
 # rmprocs(workers())
