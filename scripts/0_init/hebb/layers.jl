@@ -14,12 +14,21 @@
 
 @info "------- Loading dependencies -------"
 using Revise
+using Distributed
+
+addprocs(10)
+
+@everywhere begin
+
 using DeepART
 using DrWatson
 using Flux
 using Random
 using Plots
 using Random
+
+using StatsPlots
+using DataFrames
 
 
 @info "------- Loading definitions -------"
@@ -37,9 +46,14 @@ mkpath(outdir())
 n_ext = 5
 n_rand = 25
 
-for ix = 0:n_ext
-for rn_x = 1:n_rand
+end
 
+
+
+for ix = 0:n_ext
+@distributed for rn_x = 1:n_rand
+
+Random.seed!(rn_x)
 # ix = 0
 # begin
 
@@ -88,7 +102,13 @@ DrWatson.tagsave(saver, dout)
 end
 end
 
+rmprocs(workers())
+
 df = collect_results!(outdir())
 
+perfs = groupby(df, :rng)
 
+perfs2 = [copy(perfsi[!, :perf]) for perfsi in perfs]
+
+# errorline(1:5, perfs2)
 
