@@ -83,7 +83,7 @@ function train_loop(
     n_vals::Integer = 100,
     n_epochs::Integer = 10,
     val_epoch::Bool = false,
-    toshow::Book = true,
+    toshow::Bool = true,
 )
     loop_dict = LoopDict()
 
