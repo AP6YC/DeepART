@@ -16,7 +16,7 @@
 using Revise
 using Distributed
 
-addprocs(10)
+addprocs(16)
 
 @everywhere begin
 
@@ -94,5 +94,5 @@ for ix = 0:n_ext
     end
 end
 
-rmprocs(workers())
+# rmprocs(workers())
 
