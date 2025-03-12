@@ -28,7 +28,7 @@ end
 function instar_cast(x, W, y, beta)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
-    _beta = repeat(beta, 1, Wx)
+    _beta = repeat([beta], 1, Wx)
     _y = repeat(y, 1, Wx)
 
     # dW = beta .* y .* (x .- W)
@@ -39,7 +39,7 @@ end
 function oja_cast(x, W, y, beta)
     Wy, Wx = size(W)
     _x = repeat(x', Wy, 1)
-    _beta = repeat(beta, 1, Wx)
+    _beta = repeat([beta], 1, Wx)
     _y = repeat(y, 1, Wx)
 
     # dW = beta .* y .* (x .- y .* W)
@@ -213,7 +213,9 @@ function deepart_learn!(input, out, weights, opts::ModelOpts)
         # local_weight .+= beta .* local_out .* (local_in .- local_out .* local_weight)
         local_weight .+= instar_cast(local_in, local_weight, local_out, beta)
     elseif opts["learning_rule"] == "oja"
-        local_weight .+= oja_cast(local_in, local_weight, local_out, beta)
+        # @info "Local in is" local_in
+        # local_weight .+= oja_cast(local_in, local_weight, local_out, beta)
+        local_weight += oja_cast(local_in, local_weight, local_out, beta)
     else
         error("Incorrect learning rule option ($(opts["learning_rule"])), must be in LEARNING_RULES")
     end

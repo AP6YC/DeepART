@@ -65,7 +65,7 @@ using
 using LinearAlgebra: norm   # Trace and norms
 
 # Precompile concrete type methods
-import PrecompileSignatures: @precompile_signatures
+# import PrecompileSignatures: @precompile_signatures
 
 # -----------------------------------------------------------------------------
 # VARIABLES

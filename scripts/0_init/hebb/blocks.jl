@@ -21,6 +21,9 @@ using DeepART
 using Flux
 using Random
 
+
+begin
+
 @info "------- Loading definitions -------"
 include("lib/lib.jl")
 
@@ -33,8 +36,13 @@ import .Hebb
 
 @info "------- Setting options -------"
 # opts = Hebb.load_opts("blockbase.yml")
+
 # opts = Hebb.load_opts("block-dense-fuzzy.yml")
-opts = Hebb.load_opts("block-fuzzy.yml")
+opts = Hebb.load_opts("block-fuzzy-wh.yml")
+# opts = Hebb.load_opts("block-oja-wh.yml")
+# opts = Hebb.load_opts("block-fuzzy.yml")
+
+
 # opts = Hebb.load_opts("block-res.yml")
 # opts = Hebb.load_opts("block-no-cc.yml")
 # opts = Hebb.load_opts("block-conv-res.yml")
@@ -65,6 +73,7 @@ dev_x, dev_y = data.train[1]
 # @info a.chain
 
 model = Hebb.BlockNet(data, opts["block_opts"])
+@info model.layers[1].chain[1][2].weight[1:10]
 
 Hebb.forward(model, dev_x)
 
@@ -88,6 +97,9 @@ vals = Hebb.train_loop(
     n_vals = opts["sim_opts"]["n_vals"],
     val_epoch = opts["sim_opts"]["val_epoch"],
 )
+
+@info model.layers[1].chain[1][2].weight[1:10]
+end
 
 # display(Hebb.view_weight_grid(model, 2, layer=1))
 display(Hebb.view_weight_grid(model, 4, layer=1))

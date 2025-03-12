@@ -1,14 +1,14 @@
 opts_version: 2
 
 sim_opts:
-  n_epochs: 1
-  # n_epochs: 2
+  # n_epochs: 1
+  n_epochs: 2
   n_vals: 50
   val_epoch: true
   rng_seed: 1234
   # dataset: cifar10
-  # dataset: usps
-  dataset: mnist
+  dataset: usps
+  # dataset: mnist
   n_train: 50000
   n_test: 10000
 
