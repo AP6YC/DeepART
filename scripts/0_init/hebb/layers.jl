@@ -56,7 +56,8 @@ for ix = 0:n_ext
         local_savename = outdir(DrWatson.savename(d, "jld2"))
 
         # Skip if there is already a file
-        if local_savename.isfile()
+        if isfile(local_savename)
+            @info "----- SKIPPING FILE $local_savename -----"
             continue
         end
 
