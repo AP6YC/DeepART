@@ -42,5 +42,5 @@ perfs = groupby(df, :rng)
 perfs2 = [Vector{Float32}(perfsi[!, :perf]) for perfsi in perfs]
 
 n_perfs = length(perfs2)
-reduce(hcat, perfs2)'
+# reduce(hcat, perfs2)'
 errorline(1:n_perfs, perfs2)

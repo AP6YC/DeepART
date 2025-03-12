@@ -1005,6 +1005,7 @@ function train_loop(
     n_vals::Integer = 100,
     n_epochs::Integer = 10,
     val_epoch::Bool = false,
+    toshow::Bool = true
 )
     loop_dict = LoopDict()
 
@@ -1050,23 +1051,25 @@ function train_loop(
             end
         end
 
-        # Compute validation performance
-        if !val_epoch
-            update_view_progress!(
-                p,
-                loop_dict,
-                model,
-                data,
-            )
-        else
-            # Reset incrementers
-            p = init_progress(loop_dict)
+        if toshow
+            # Compute validation performance
+            if !val_epoch
+                update_view_progress!(
+                    p,
+                    loop_dict,
+                    model,
+                    data,
+                )
+            else
+                # Reset incrementers
+                p = init_progress(loop_dict)
 
-            local_plot = lineplot(
-                loop_dict["vals"],
-            )
-            show(local_plot)
-            println("\n")
+                local_plot = lineplot(
+                    loop_dict["vals"],
+                )
+                show(local_plot)
+                println("\n")
+            end
         end
     end
 
