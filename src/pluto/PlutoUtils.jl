@@ -8,7 +8,6 @@ This is a set of extensions that are meant to be used in Pluto notebooks and wit
 - Sasha Petrenko <petrenkos@mst.edu>
 """
 
-
 module PlutoUtils
 
 using

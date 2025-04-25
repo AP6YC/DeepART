@@ -5,16 +5,4 @@
 # in Python.
 # -----------------------------------------------------------------------------
 
-jupyterlab
-# tensorflow
-
-matplotlib
-scikit-learn
-numpy
-pandas
-
-# tensorflow-hub
-# l2metrics
-# l2logger
-
-# pip3 install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+-e "src/deepart[dev]"
