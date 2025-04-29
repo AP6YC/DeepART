@@ -32,6 +32,10 @@ __all__ = [
 # Set the version variable of the package
 __version__ = "1.0.0"
 
+def get_device():
+    device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
+    return device
+
 
 class LocalUpdate(ABC):
 
@@ -60,6 +64,13 @@ class Hebb(LocalUpdate):
         super().__init__()
         self.eta = eta
         self.previous = []
+        # self.device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
+        return
+
+    # def gpu(self):
+    #     # print(f"Using {device} device")
+
+    #     return
 
     def update_model(
         self,
@@ -165,20 +176,38 @@ def get_data():
     ])
 
     # mnist_train = datasets.MNIST(root='./data', train=True, download=True, transform=transform,
-    mnist_train = datasets.USPS(root='./data', train=True, download=True, transform=transform,
-        target_transform=transforms.Lambda(lambda y: torch.zeros(10, dtype=torch.float).scatter_(0, torch.tensor(y), value=1))
+    mnist_train = datasets.USPS(
+        root='./data',
+        train=True,
+        download=True,
+        transform=transform,
+        target_transform=transforms.Lambda(
+            lambda y: torch.zeros(10, dtype=torch.float).scatter_(0, torch.tensor(y), value=1)
+        )
         # target_transform=transforms.Compose([
         #     transforms.ToTensor(),
         #     transforms.Lambda(lambda y: F.one_hot(y, num_classes=10)),
         # ])
     )
     # loader = DataLoader(mnist_train, batch_size=32, shuffle=True)
-    loader = DataLoader(mnist_train, batch_size=1024, shuffle=True)
+    loader = DataLoader(
+        mnist_train,
+        batch_size=1024,
+        shuffle=True,
+    )
 
     # Prepare MNIST test data
     # mnist_test = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
-    mnist_test = datasets.USPS(root='./data', train=False, download=True, transform=transform)
-    test_loader = DataLoader(mnist_test, batch_size=1024, shuffle=False)
+    mnist_test = datasets.USPS(
+        root='./data',
+        train=False,
+        download=True,
+        transform=transform)
+    test_loader = DataLoader(
+        mnist_test,
+        batch_size=1024,
+        shuffle=False
+    )
 
     return loader, test_loader
 
@@ -192,10 +221,10 @@ def get_model():
     updater = Hebb(eta=0.05)
 
     # GPU = False
-    GPU = True
+    # GPU = True
 
-    if GPU:
-        model = model.to(device)
+    # if GPU:
+        # model = model.to(device)
     return model, updater
 
     # model.fc[-1].weight
