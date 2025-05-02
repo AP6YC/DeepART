@@ -19,6 +19,7 @@ A repository containing implementations and experiments for the upcoming paper _
 
 - [Table of Contents](#table-of-contents)
 - [Basic Usage](#basic-usage)
+- [Python](#python)
 - [Attribution](#attribution)
   - [Authors](#authors)
   - [Datasets](#datasets)
@@ -55,6 +56,20 @@ or through the terminal with
 
 ```shell
 julia --project="." "scripts/1_baselines/single/conv.jl"
+```
+
+## Python
+
+The Python component of this project can be installed on `python=3.12` with
+
+```sh
+pip install -r requirements
+```
+
+or in editable mode with
+
+```sh
+pip install -e "./src/deepart
 ```
 
 ## Attribution
