@@ -1,9 +1,8 @@
 
-import logging
-
 import torch
 import torch.nn as nn
-from abc import ABC, abstractmethod
+
+from ._base import LocalUpdate
 
 # -----------------------------------------------------------------------------
 # INTERFACES
@@ -13,22 +12,6 @@ __all__ = [
     "LocalUpdate",
     "Hebb",
 ]
-
-
-class LocalUpdate(ABC):
-
-    def __init__(self):
-        self.logger = logging.getLogger(
-            f"{__name__}-{self.__class__.__name__}"
-        )
-
-    @abstractmethod
-    def update(
-        self,
-        x: torch.Tensor,
-        w: torch.Tensor,
-    ):
-        pass
 
 # -----------------------------------------------------------------------------
 # OPTIMIZERS
