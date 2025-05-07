@@ -3,10 +3,16 @@ import torch
 from torch.utils.data import DataLoader
 
 from torchvision import datasets, transforms
+from pathlib import Path
 
 __all__ = [
     "get_data",
 ]
+
+
+def projectdir():
+    # './data'
+    return Path.cwd() / "data"
 
 
 def get_data():
@@ -18,7 +24,7 @@ def get_data():
 
     # mnist_train = datasets.MNIST(root='./data', train=True, download=True, transform=transform,
     mnist_train = datasets.USPS(
-        root='./data',
+        root=projectdir(),
         train=True,
         download=True,
         transform=transform,
@@ -40,7 +46,7 @@ def get_data():
     # Prepare MNIST test data
     # mnist_test = datasets.MNIST(root='./data', train=False, download=True, transform=transform)
     mnist_test = datasets.USPS(
-        root='./data',
+        root=projectdir(),
         train=False,
         download=True,
         transform=transform)
@@ -51,4 +57,3 @@ def get_data():
     )
 
     return loader, test_loader
-

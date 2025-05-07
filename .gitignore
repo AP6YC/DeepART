@@ -5,6 +5,8 @@
 notebooks/data/
 notebooks/model.pth
 
+data/
+
 .DS_Store
 
 # IDE ignores
