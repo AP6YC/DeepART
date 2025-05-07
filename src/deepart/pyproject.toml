@@ -120,7 +120,8 @@ dev = [
     "build",
     "setuptools",
     "twine",
-    "jupyterlab"
+    "jupyterlab",
+    "ipywidgets",
 ]
 test = [
     "pytest",
