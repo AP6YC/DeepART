@@ -5,8 +5,19 @@ import torch.nn as nn
 # -----------------------------------------------------------------------------
 
 __all__ = [
-    "SimpleHebbNet"
+    "SimpleHebbNet",
+    "ComplementCode",
 ]
+
+
+class ComplementCode(nn.Module):
+    def __init__(self, in_dim):
+        self.dim = in_dim
+        return
+
+    def forward(self, x):
+
+        return
 
 
 class SimpleRes(nn.Module):

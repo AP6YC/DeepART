@@ -10,6 +10,9 @@ from tqdm.auto import tqdm
 import torch.nn.functional as F
 
 from matplotlib import pyplot as plt
+from matplotlib import ticker
+
+from sklearn.manifold import TSNE
 
 # -----------------------------------------------------------------------------
 # FUNCTIONS
@@ -24,23 +27,9 @@ def get_model():
     model = models.SimpleHebbNet(input_dim, output_dim)
     updater = optimizers.Hebb(eta=0.01)
 
-    # GPU = False
-    # GPU = True
-
     # if GPU:
     #     model = model.to(device)
     return model, updater
-
-    # model.fc[-1].weight
-    # a = torch.randn((1, 10))
-    # b = torch.randn((1, 50))
-    # c = torch.randn((1, 10))
-    # d = torch.einsum('bp,bq->bpq', (a-c), b)
-    # d.shape
-
-    # mnist_train[1][0].max()
-    # mnist_train[1][0].shape
-    # mnist_train[1][1]
 
 
 class ExpContainer():
@@ -119,10 +108,63 @@ class ExpContainer():
         return self.perfs
 
     def plot_test(self):
-        return plt.plot(range(self.n_epochs), self.perfs)
+        return plt.plot(range(len(self.perfs)), self.perfs)
 
     def plot_loss(self):
         return plt.plot(range(len(self.lossi)), self.lossi)
+
+    def tsne(self):
+        # def get_points(model, test_loader):
+        def get_points(exp):
+            exp.model.eval()
+            outputs = []
+            targets = []
+            with torch.no_grad():
+                for data_in, target in exp.test_loader:
+                    if exp.GPU:
+                        data_in = data_in.to(exp.device)
+                        target = target.to(exp.device)
+
+                    output = exp.model(data_in)
+                    outputs.append(output)
+                    targets.append(target)
+
+            outputs = torch.cat(outputs)
+            targets = torch.cat(targets)
+            if exp.GPU:
+                outputs = outputs.to("cpu")
+                targets = targets.to("cpu")
+            return outputs, targets
+
+        def add_2d_scatter(ax, points, colors, title=None):
+            x, y = points.T
+            ax.scatter(x, y, s=50, c=colors, alpha=0.8)
+            ax.set_title(title)
+            ax.xaxis.set_major_formatter(ticker.NullFormatter())
+            ax.yaxis.set_major_formatter(ticker.NullFormatter())
+
+        def plot_2d(points, colors, title):
+            fig, ax = plt.subplots(figsize=(3, 3), facecolor="white", constrained_layout=True)
+            fig.suptitle(title, size=16)
+            add_2d_scatter(ax, points, colors)
+            plt.show()
+
+        x, y = get_points(self)
+
+        t_sne = TSNE(
+            n_components=2,
+            perplexity=30,
+            init="random",
+            max_iter=250,
+            random_state=0,
+        )
+
+        S_t_sne = t_sne.fit_transform(x)
+
+        cmap = plt.get_cmap('tab10')
+        colors = [cmap(i) for i in y]
+        return plot_2d(S_t_sne, colors, "USPS DeepART TSNE")
+
 
 # def test(model, test_loader, toprint=False):
 #     model.eval()
