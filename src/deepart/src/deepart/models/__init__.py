@@ -27,7 +27,7 @@ class SimpleRes(nn.Module):
 class SimpleHebbNet(nn.Module):
     def __init__(self, input_dim, output_dim):
         super().__init__()
-        nh = 100
+        nh = 300
         # nh2 = 50
         # nh3 = 25
         self.fc = nn.Sequential(
@@ -50,6 +50,8 @@ class SimpleHebbNet(nn.Module):
             SimpleRes(nh, nh),
             nn.Tanh(),
 
+            # SimpleRes(nh, nh),
+            # nn.Tanh(),
 
             # SimpleRes(nh2, nh2),
             # nn.Tanh(),

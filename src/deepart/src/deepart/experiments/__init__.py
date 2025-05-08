@@ -22,7 +22,7 @@ def get_model():
     input_dim = 16 * 16
     output_dim = 10
     model = models.SimpleHebbNet(input_dim, output_dim)
-    updater = optimizers.Hebb(eta=0.05)
+    updater = optimizers.Hebb(eta=0.01)
 
     # GPU = False
     # GPU = True
@@ -65,7 +65,7 @@ class ExpContainer():
         self.lossi = []
         self.perfs = []
 
-        self.n_epochs = 25
+        self.n_epochs = 50
         # self.stepi = []
 
         return
@@ -102,6 +102,7 @@ class ExpContainer():
         for ie in tqdm(range(self.n_epochs)):
             for data_in, target in self.train_loader:
 
+                # Push the minibatch to the device
                 if self.GPU:
                     data_in = data_in.to(self.device)
                     target = target.to(self.device)
@@ -112,6 +113,8 @@ class ExpContainer():
                 self.loss(self.model(data_in), target)
 
             self.perfs.append(self.test())
+            # self.updater.eta *= 0.975
+            self.updater.decay()
 
         return self.perfs
 

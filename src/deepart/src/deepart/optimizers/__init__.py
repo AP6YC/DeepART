@@ -25,9 +25,14 @@ class Hebb(LocalUpdate):
     where y_i is the output, x_j is the input, and eta is the learning rate.
     """
 
-    def __init__(self, eta=0.01):
+    def __init__(
+        self,
+        eta=0.01,
+        decay_rate=0.975,
+    ):
         super().__init__()
         self.eta = eta
+        self.decay_rate = decay_rate
         self.previous = []
         # self.device = torch.accelerator.current_accelerator().type if torch.accelerator.is_available() else "cpu"
         return
@@ -36,6 +41,10 @@ class Hebb(LocalUpdate):
     #     # print(f"Using {device} device")
 
     #     return
+
+    def decay(self):
+        self.eta *= self.decay_rate
+        return
 
     def update_model(
         self,
