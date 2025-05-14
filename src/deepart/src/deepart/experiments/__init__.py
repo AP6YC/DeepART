@@ -13,6 +13,7 @@ from matplotlib import pyplot as plt
 from matplotlib import ticker
 
 from sklearn.manifold import TSNE
+from sklearn.metrics import ConfusionMatrixDisplay
 
 # -----------------------------------------------------------------------------
 # FUNCTIONS
@@ -25,7 +26,7 @@ def get_model():
     input_dim = 16 * 16
     output_dim = 10
     model = models.SimpleHebbNet(input_dim, output_dim)
-    updater = optimizers.Hebb(eta=0.01)
+    updater = optimizers.Instar(eta=0.01)
 
     # if GPU:
     #     model = model.to(device)
@@ -113,6 +114,27 @@ class ExpContainer():
     def plot_loss(self):
         return plt.plot(range(len(self.lossi)), self.lossi)
 
+    def plot_conf(self):
+        # from sklearn.metrics import ConfusionMatrixDisplay
+        preds = []
+        trues = []
+        with torch.no_grad():
+            for data_in, target in self.test_loader:
+
+                if self.GPU:
+                    data_in = data_in.to(self.device)
+                    target = target.to(self.device)
+
+                output = self.model(data_in)
+                pred = output.argmax(dim=1).cpu()
+                trues.append(target.cpu())
+                preds.append(pred)
+
+        p = ConfusionMatrixDisplay.from_predictions(
+            trues, preds, labels=list(range(10))
+        )
+        return p
+
     def tsne(self):
         # def get_points(model, test_loader):
         def get_points(exp):
@@ -165,6 +187,30 @@ class ExpContainer():
         colors = [cmap(i) for i in y]
         return plot_2d(S_t_sne, colors, "USPS DeepART TSNE")
 
+
+def plot_conf(exp: ExpContainer):
+    # from sklearn.metrics import ConfusionMatrixDisplay
+    preds = []
+    trues = []
+    with torch.no_grad():
+        for data_in, target in exp.test_loader:
+
+            if exp.GPU:
+                data_in = data_in.to(exp.device)
+                target = target.to(exp.device)
+
+            output = exp.model(data_in)
+            pred = output.argmax(dim=1)
+            trues.append(target.cpu().tolist())
+            preds.append(pred.cpu().tolist())
+
+    # print(trues)
+    # print(preds)
+    print(exp.asdf)
+    p = ConfusionMatrixDisplay.from_predictions(
+        trues[0], preds[0], labels=list(range(10))
+    )
+    return p
 
 # def test(model, test_loader, toprint=False):
 #     model.eval()
