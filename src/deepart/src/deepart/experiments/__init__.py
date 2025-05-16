@@ -206,9 +206,12 @@ def plot_conf(exp: ExpContainer):
 
     # print(trues)
     # print(preds)
-    print(exp.asdf)
+    # print(exp.asdf)
     p = ConfusionMatrixDisplay.from_predictions(
-        trues[0], preds[0], labels=list(range(10))
+        trues[0],
+        preds[0],
+        labels=list(range(10)),
+        normalize="pred",
     )
     return p
 

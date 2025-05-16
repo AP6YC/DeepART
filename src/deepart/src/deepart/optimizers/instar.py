@@ -94,5 +94,6 @@ class Instar(LocalUpdate):
 
         # OPTION 2: EINSUM
         d_ws = self.eta * torch.einsum('bp,bq->bpq', y, x - y @ w)  # shape: (output_dim, input_dim)
+        # d_ws = self.eta * torch.einsum('bp,bq->bpq', y, x - w)  # shape: (output_dim, input_dim)
 
         return torch.mean(d_ws, dim=0)

@@ -52,3 +52,4 @@ __all__ = [
 
 # Set the version variable of the package
 __version__ = "1.0.0"
+

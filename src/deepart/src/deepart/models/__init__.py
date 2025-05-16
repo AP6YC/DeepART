@@ -23,14 +23,17 @@ class ComplementCode(nn.Module):
 class SimpleRes(nn.Module):
     def __init__(self, in_dim, out_dim):
         super(SimpleRes, self).__init__()
+        self.norm = nn.LayerNorm(out_dim)
         self.dense = nn.Linear(in_dim, out_dim, bias=False)
         self.weight = self.dense.weight
         return
 
     def forward(self, x):
-        residual = x
-        out = self.dense(x)
-        out += residual
+        # out = self.dense(x)
+        # out = self.norm(out)
+        out = self.norm(x)
+        out = self.dense(out)
+        out += x
         # out = nn.Tanh(out)
         return out
 
