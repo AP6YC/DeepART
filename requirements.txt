@@ -5,4 +5,13 @@
 # in Python.
 # -----------------------------------------------------------------------------
 
--e "src/deepart[dev]"
+# -e "src/deepart[dev]"
+numpy
+scikit-learn
+tqdm
+
+torch
+torchvision
+torchaudio
+matplotlib
+jupyterlab
