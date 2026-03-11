@@ -1,5 +1,6 @@
 import torch
 import torch.nn as nn
+from .deepart_wrapper import ComplementCode, DeepARTWrapper
 
 # -----------------------------------------------------------------------------
 # MODELS
@@ -8,16 +9,8 @@ import torch.nn as nn
 __all__ = [
     "SimpleHebbNet",
     "ComplementCode",
+    "DeepARTWrapper",
 ]
-
-
-class ComplementCode(nn.Module):
-    def __init__(self, in_dim):
-        self.dim = in_dim
-        return
-
-    def forward(self, x):
-        return torch.cat([1 - x, x], dim=1)
 
 
 class SimpleRes(nn.Module):
