@@ -1,17 +1,19 @@
 ### A Pluto.jl notebook ###
-# v0.19.43
+# v1.1.0
 
 using Markdown
 using InteractiveUtils
 
 # This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
 macro bind(def, element)
-    quote
+    #! format: off
+    return quote
         local iv = try Base.loaded_modules[Base.PkgId(Base.UUID("6e696c72-6542-2067-7265-42206c756150"), "AbstractPlutoDingetjes")].Bonds.initial_value catch; b -> missing; end
         local el = $(esc(element))
         global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : iv(el)
         el
     end
+    #! format: on
 end
 
 # ╔═╡ 4c9c839d-de70-44b8-b5e9-ec56dbde1918
@@ -61,9 +63,6 @@ config_dict = OrderedDict(
 # ╔═╡ b2ff33a2-f746-4228-8787-d0f52d4d9528
 @bind config confirm(PlutoUtils.config_input(config_dict))
 
-# ╔═╡ 6a536ecd-b256-4fc1-ae38-d0bf5a1dd6bd
-# DeepART.inspect_truth_errors(data.test, y_hat, selected, n_show)
-
 # ╔═╡ 084cb7df-5c4d-432f-baa5-7db92cceefd6
 # DeepART.inspect_prediction_errors(data.test, y_hat, selected, n_show)
 
@@ -75,8 +74,11 @@ md"""
 # ╔═╡ b7a0014f-5155-4350-9e1d-b3f77e2d256e
 data = DeepART.get_mnist()
 
+# ╔═╡ 6a536ecd-b256-4fc1-ae38-d0bf5a1dd6bd
+DeepART.inspect_truth_errors(data.test, y_hat, selected, n_show)
+
 # ╔═╡ aee8d6c2-4c69-4b7a-a458-5a91f8f44536
-# DeepART.view_filts(convart.model)
+DeepART.view_filts(convart.model)
 
 # ╔═╡ feef3708-184f-413c-a801-d02f2fa2f5fd
 # DeepART.tryit()
@@ -133,10 +135,10 @@ PlutoUtils.hint(md"Don't forget to bring a towel")
 # ╟─9354d864-7504-47ee-b5c0-e34a8fac75c3
 # ╟─33ceb4c7-22fb-4ea9-9c05-7a37975e8e7f
 # ╟─b2ff33a2-f746-4228-8787-d0f52d4d9528
-# ╠═6a536ecd-b256-4fc1-ae38-d0bf5a1dd6bd
+# ╟─6a536ecd-b256-4fc1-ae38-d0bf5a1dd6bd
 # ╠═084cb7df-5c4d-432f-baa5-7db92cceefd6
 # ╟─c8b4db44-dcce-48c7-a327-8ffcc528b574
-# ╠═b7a0014f-5155-4350-9e1d-b3f77e2d256e
+# ╟─b7a0014f-5155-4350-9e1d-b3f77e2d256e
 # ╠═aee8d6c2-4c69-4b7a-a458-5a91f8f44536
 # ╠═feef3708-184f-413c-a801-d02f2fa2f5fd
 # ╟─e376f339-ea0e-452f-8a86-ac2cb43f6a37

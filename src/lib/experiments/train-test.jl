@@ -19,23 +19,33 @@ function Base.getindex(
     return get_sample(data, ix), data.y[ix]
 end
 
-"""
-Overload for getting a UnitRange of a [`SupervisedDataset`](@ref).
-"""
+# """
+# Overload for getting a UnitRange of a [`SupervisedDataset`](@ref).
+# """
+# function Base.getindex(
+#     data::SupervisedDataset,
+#     ix::UnitRange,
+# )
+#     dims_x = size(data.x)
+#     n_dims_x = ndims(data.x)
+
+#     samples = if n_dims_x == 4
+#         reshape(data.x[:, :, :, ix], dims_x[1:3]..., 1)
+#     else
+#         data.x[:, ix]
+#     end
+
+#     return samples, data.y[ix]
+# end
+
 function Base.getindex(
     data::SupervisedDataset,
-    ix::UnitRange,
+    ix::AbstractVector{<:Integer},
 )
-    dims_x = size(data.x)
-    n_dims_x = ndims(data.x)
+    x_indices = ntuple(_ -> Colon(), ndims(data.x) - 1)
+    y_indices = ntuple(_ -> Colon(), ndims(data.y) - 1)
 
-    samples = if n_dims_x == 4
-        reshape(data.x[:, :, :, ix], dims_x[1:3]..., 1)
-    else
-        data.x[:, ix]
-    end
-
-    return samples, data.y[ix]
+    return data.x[x_indices..., ix], data.y[y_indices..., ix]
 end
 
 """

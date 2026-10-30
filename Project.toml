@@ -1,7 +1,7 @@
 name = "DeepART"
 uuid = "2f2b42e1-d110-40e3-96de-4cff2a12a718"
-authors = ["Sasha Petrenko <sap625@umsystem.edu>"]
 version = "0.1.0"
+authors = ["Sasha Petrenko <sap625@umsystem.edu>"]
 
 [deps]
 AdaptiveResonance = "3d72adc0-63d3-4141-bf9b-84450dd0395b"

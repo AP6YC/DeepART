@@ -152,8 +152,10 @@ function get_mnist(;
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
-    trainset = MLDatasets.MNIST(:train)
-    testset = MLDatasets.MNIST(:test)
+    # trainset = MLDatasets.MNIST(:train)
+    # testset = MLDatasets.MNIST(:test)
+    trainset = MLDatasets.MNIST.traindata(Float32)
+    testset = MLDatasets.MNIST.traindata(Float32)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
@@ -195,8 +197,10 @@ function get_cifar10(;
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
-    trainset = MLDatasets.CIFAR10(:train)
-    testset = MLDatasets.CIFAR10(:test)
+    # trainset = MLDatasets.CIFAR10(:train)
+    # testset = MLDatasets.CIFAR10(:test)
+    trainset = MLDatasets.CIFAR10.traindata(Float32)
+    testset = MLDatasets.CIFAR10.traindata(Float32)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
@@ -257,8 +261,10 @@ function get_cifar100_fine(;
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
-    trainset = MLDatasets.CIFAR100(:train)
-    testset = MLDatasets.CIFAR100(:test)
+    # trainset = MLDatasets.CIFAR100(:train)
+    # testset = MLDatasets.CIFAR100(:test)
+    trainset = MLDatasets.CIFAR100.traindata(Float32)
+    testset = MLDatasets.CIFAR100.traindata(Float32)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
@@ -315,8 +321,10 @@ function get_cifar100_coarse(;
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
-    trainset = MLDatasets.CIFAR100(:train)
-    testset = MLDatasets.CIFAR100(:test)
+    # trainset = MLDatasets.CIFAR100(:train)
+    # testset = MLDatasets.CIFAR100(:test)
+    trainset = MLDatasets.CIFAR100.traindata(Float32)
+    testset = MLDatasets.CIFAR100.traindata(Float32)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
@@ -366,8 +374,10 @@ function get_fashionmnist(;
     n_train::Integer=IInf,
     n_test::Integer=IInf,
 )
-    trainset = MLDatasets.FashionMNIST(:train)
-    testset = MLDatasets.FashionMNIST(:test)
+    # trainset = MLDatasets.FashionMNIST(:train)
+    # testset = MLDatasets.FashionMNIST(:test)
+    trainset = MLDatasets.FashionMNIST.traindata(Float32)
+    testset = MLDatasets.FashionMNIST.traindata(Float32)
 
     X_train, y_train = trainset[:]
     X_test, y_test = testset[:]
